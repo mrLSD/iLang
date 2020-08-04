@@ -1,30 +1,46 @@
 language: rust
-rust:
-  - stable
-  - beta
-  - nightly
+# sudo is required to enable kcov to use the personality syscall
+sudo: required
+cache: cargo
 
-before_install:
-  - curl -L https://github.com/mozilla/grcov/releases/latest/download/grcov-linux-x86_64.tar.bz2 | tar jxf -
+rust:
+  - nightly
+  - beta
+  - stable
 
 matrix:
   include:
-    - os: linux
-      rust: nightly
+    - rust: nightly
+      before_script:
+        - export PATH=$HOME/.cargo/bin:$PATH
+        - cargo install cargo-update   || echo "cargo-update already installed"
+        - cargo install cargo-travis   || echo "cargo-travis already installed"
+        - cargo install-update -a
+        - mkdir -p target/kcov-master
+      script:
+        cargo coveralls --verbose --all-features
+
+addons:
+  apt:
+    packages:
+      - libcurl4-openssl-dev
+      - libelf-dev
+      - libdw-dev
+      - binutils-dev
+      - cmake
+    sources:
+      - kalakris-cmake
+
+cache:
+  directories:
+    - /home/travis/.cargo
+
+before_cache:
+  - rm -rf /home/travis/.cargo/registry
 
 script:
-    - export CARGO_INCREMENTAL=0
-    - export RUSTFLAGS="-Zprofile -Ccodegen-units=1 -Copt-level=0 -Clink-dead-code -Coverflow-checks=off -Zpanic_abort_tests -Cpanic=abort"
-    - export RUSTDOCFLAGS="-Cpanic=abort"
-    - cargo build --verbose $CARGO_OPTIONS
-    - cargo test --verbose $CARGO_OPTIONS
-    - |
-      zip -0 ccov.zip `find . \( -name "YOUR_PROJECT_NAME*.gc*" \) -print`;
-      ./grcov ccov.zip -s . -t lcov --llvm --branch --ignore-not-existing --ignore "/*" -o lcov.info;
-      bash <(curl -s https://codecov.io/bash) -f lcov.info;
-script:
-  - cargo build --all
-  - cargo test --all
+  - eval cargo build --verbose 
+  - eval cargo test --verbose 
 
-git:
-  depth: 5
+after_success: |
+  case "$TRAVIS_RUST_VERSION" in

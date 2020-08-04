@@ -60,8 +60,8 @@ jobs:
           cargo test --verbose
           grcov ./target/debug/ -s . -t lcov --llvm --ignore-not-existing --ignore *.cargo/* --ignore *core* --ignore *std* --ignore *alloc/* --ignore *rustup* -o lcov.info
 
-      - name: Push grcov results to Coveralls via GitHub Action
-        uses: coverallsapp/github-action@master
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          path-to-lcov: "lcov.info"
+#      - name: Push grcov results to Coveralls via GitHub Action
+#        uses: coverallsapp/github-action@master
+#        with:
+#          github-token: ${{ secrets.GITHUB_TOKEN }}
+#          path-to-lcov: "lcov.info"
