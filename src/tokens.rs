@@ -32,6 +32,15 @@ pub fn name(val: &str) -> IResult<Span, Span> {
     alphanum_and_underscore0(data)
 }
 
+/*pub fn funcdef<'a>(val: &str) -> IResult<Span, String> {
+    let data = Span::new(val);
+    let def = terminated(tag("def"), space1);
+    let t = map(tuple((alpha1, alphanumeric0)), |(a1, a2)| format!("{:?}{:?}", a1, a2));
+    let res = preceded(def, t)(data);
+    println!("{:?}", res);
+    res
+}*/
+
 #[cfg(test)]
 mod test {
     use crate::tokens::*;
