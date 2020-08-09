@@ -19,6 +19,7 @@ addons:
       - gcc
       - binutils-dev
       - libiberty-dev
+      - tree
 
 after_success: |
   wget https://github.com/SimonKagstrom/kcov/archive/master.tar.gz &&
@@ -32,6 +33,8 @@ after_success: |
   sudo make install &&
   cd ../.. &&
   rm -rf kcov-master &&
+  tree &&
+  ls -la target/debug/  &&
   for file in target/debug/libi_lang*; do mkdir -p "target/cov/$(basename $file)"; kcov --exclude-pattern=/.cargo,/usr/lib --verify "target/cov/$(basename $file)" "$file"; done &&
   bash <(curl -s https://codecov.io/bash) &&
   echo "Uploaded code coverage"
