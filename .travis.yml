@@ -28,7 +28,8 @@ after_success: |
   cd build &&
   cmake .. &&
   make &&
-  make install DESTDIR=../../kcov-build &&
+  echo "Install kcov"
+  sudo make install &&
   cd ../.. &&
   rm -rf kcov-master &&
   for file in target/debug/libi_lang*; do mkdir -p "target/cov/$(basename $file)"; kcov --exclude-pattern=/.cargo,/usr/lib --verify "target/cov/$(basename $file)" "$file"; done &&
