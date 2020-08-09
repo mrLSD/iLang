@@ -6,8 +6,11 @@ main = (
         let-binding 
     )*
 
+// Basic rules
+ident = alpha+ (alphanum | "_")* 
+
 // Namespaces declaration
-namespace = "namespace" [rec] (parent-namespaces ".")* namespace-name
+namespace = "namespace" ["rec"] (parent-namespaces ".")* namespace-name
 parent-namespaces = ident
 namespace-name = ident
 
@@ -55,4 +58,4 @@ expression-operations = (
             "*" | "/" |
             "<<<" | ">>>"
         ) 
-!!!
+```

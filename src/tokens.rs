@@ -1,6 +1,5 @@
 //! Parser tokens representation
-//! 
-use crate::char::AsChar;
+//!
 use nom::{
     character::complete::alpha1,
     error::ParseError,
@@ -8,6 +7,13 @@ use nom::{
     InputTakeAtPosition,
 };
 use nom_locate::LocatedSpan;
+
+use crate::{
+    ast,
+    char::AsChar,
+};
+use nom::branch::alt;
+use nom::bytes::complete::tag;
 
 /// Span is basic lexical component
 pub(crate) type Span<'a> = LocatedSpan<&'a str>;
@@ -23,13 +29,36 @@ where
     input.split_at_position_complete(|item| !item.is_a(f))
 }
 
-/// Get NAME parameter
+/// Get ident token
 /// First always should be Alpha char.
 /// RULES: (alpha+)(alpha | number | '_')*
-pub fn name(val: &str) -> IResult<Span, Span> {
-    let data = Span::new(val);
+pub fn ident(data: Span) -> IResult<Span, ast::Ident> {
     let _ = alpha1(data)?;
-    alphanum_and_underscore0(data)
+    let (i, o) = alphanum_and_underscore0(data)?;
+    Ok((i, ast::Ident(o)))
+}
+
+pub fn expression_operations(data: Span) -> IResult<Span, ast::ExpressionOperation> {
+    let (i, o) = alt((
+        tag("+"),
+        tag("-"),
+        tag("*"),
+        tag("/"),
+        tag("<<<"),
+        tag(">>>"),
+    ))(data)?;
+    Ok((
+        i,
+        match *o.fragment() {
+            "+" => ast::ExpressionOperation::Plus,
+            "-" => ast::ExpressionOperation::Plus,
+            "*" => ast::ExpressionOperation::Plus,
+            "/" => ast::ExpressionOperation::Plus,
+            "<<<" => ast::ExpressionOperation::Plus,
+            ">>>" => ast::ExpressionOperation::Plus,
+            _ => unreachable!(),
+        },
+    ))
 }
 
 /*pub fn funcdef<'a>(val: &str) -> IResult<Span, String> {
@@ -43,25 +72,26 @@ pub fn name(val: &str) -> IResult<Span, Span> {
 
 #[cfg(test)]
 mod test {
+    use crate::ast::Ident;
     use crate::tokens::*;
 
     #[test]
     fn test_name() {
-        assert!(name("test").is_ok());
-        assert!(name("123test").is_err());
-        assert!(name("test123").is_ok());
-        assert!(name("test123test").is_ok());
+        assert!(ident(Span::new("test")).is_ok());
+        assert!(ident(Span::new("123test")).is_err());
+        assert!(ident(Span::new("test123")).is_ok());
+        assert!(ident(Span::new("test123test")).is_ok());
 
-        let n = name("test123 test");
+        let n = ident(Span::new("test123 test"));
         assert!(n.is_ok());
         let n = n.unwrap();
-        assert_eq!(*n.1.fragment(), "test123");
+        assert_eq!(*n.1, Span::new("test123"));
         assert_eq!(*n.0.fragment(), " test");
 
-        let n = name("test_123a(test)");
+        let n = ident(Span::new("test_123a(test)"));
         assert!(n.is_ok());
         let n = n.unwrap();
-        assert_eq!(*n.1.fragment(), "test_123a");
+        assert_eq!(n.1.clone(), Ident(Span::new("test_123a")));
         assert_eq!(*n.0.fragment(), "(test)");
     }
 }
