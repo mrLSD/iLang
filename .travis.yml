@@ -36,11 +36,5 @@ after_success: |
   bash <(curl -s https://codecov.io/bash) &&
   echo "Uploaded code coverage"
 
-cache: cargo
-
-script:
-  - cargo build --all
-  - cargo test --all
-
 git:
   depth: 5
