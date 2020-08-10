@@ -14,7 +14,7 @@ pub struct Ident<'a>(pub Span<'a>);
 #[derive(Debug, Clone, PartialEq)]
 pub enum ExpressionOperation {
     Plus,
-    Minis,
+    Minus,
     Multiply,
     Divide,
     ShiftLeft,
