@@ -1,8 +1,21 @@
-//! Parser tokens representation
+//! Parser tokens for grammar
+//!
+//! Parse grammar lexical constructions to AST tokens.
 //!
 use nom::{
-    character::complete::alpha1,
+    branch::alt,
+    bytes::complete::tag,
+    character::complete::{
+        alpha1,
+        char,
+        multispace0,
+    },
     error::ParseError,
+    sequence::{
+        delimited,
+        preceded,
+        terminated,
+    },
     IResult,
     InputTakeAtPosition,
 };
@@ -12,14 +25,27 @@ use crate::{
     ast,
     char::AsChar,
 };
-use nom::branch::alt;
-use nom::bytes::complete::tag;
 
 /// Span is basic lexical component
 pub(crate) type Span<'a> = LocatedSpan<&'a str>;
 
+/// Parse Ident from brackets
+/// ## RULE:
+/// ```
+/// [MULTISPACE] "(" [MULTISPACE] ident [MULTISPACE] ")" [MULTISPACE]
+/// ```
+pub fn get_ident_from_brackets(data: Span) -> IResult<Span, ast::Ident> {
+    preceded(
+        delimited(multispace0, char('('), multispace0),
+        terminated(ident, delimited(multispace0, char(')'), multispace0)),
+    )(data)
+}
+
 /// Alphanum characters with underscores. Based on ASCII.
-/// RULES: (alpha | number | '_')*
+/// ## RULES:
+/// ```
+/// (alpha | number | '_')*
+/// ```
 pub fn alphanum_and_underscore0<T, E: ParseError<T>>(input: T) -> IResult<T, T, E>
 where
     T: InputTakeAtPosition,
@@ -30,14 +56,27 @@ where
 }
 
 /// Get ident token
+///
 /// First always should be Alpha char.
-/// RULES: (alpha+)(alpha | number | '_')*
+/// ## RULES:
+/// ```
+/// (alpha+)(alpha | number | '_')*
+/// ```
 pub fn ident(data: Span) -> IResult<Span, ast::Ident> {
     let _ = alpha1(data)?;
     let (i, o) = alphanum_and_underscore0(data)?;
     Ok((i, ast::Ident(o)))
 }
 
+/// Parse expression operations
+/// ## RULES:
+/// ```
+/// expression-operations = (
+///     "+" | "-" |
+///     "*" | "/" |
+///     "<<<" | ">>>"
+/// )
+/// ```
 pub fn expression_operations(data: Span) -> IResult<Span, ast::ExpressionOperation> {
     let (i, o) = alt((
         tag("+"),
@@ -61,14 +100,15 @@ pub fn expression_operations(data: Span) -> IResult<Span, ast::ExpressionOperati
     ))
 }
 
-/*pub fn funcdef<'a>(val: &str) -> IResult<Span, String> {
-    let data = Span::new(val);
-    let def = terminated(tag("def"), space1);
-    let t = map(tuple((alpha1, alphanumeric0)), |(a1, a2)| format!("{:?}{:?}", a1, a2));
-    let res = preceded(def, t)(data);
-    println!("{:?}", res);
-    res
-}*/
+/// Parse parameter value
+/// ## RULES:
+/// ```
+/// (ident | "(" ident ")")
+/// ```
+pub fn parameter_value(data: Span) -> IResult<Span, ast::ParameterValue> {
+    let (i, o) = alt((ident, get_ident_from_brackets))(data)?;
+    Ok((i, ast::ParameterValue(o)))
+}
 
 #[cfg(test)]
 mod test {
