@@ -30,3 +30,24 @@ pub struct ParameterValue<'a>(pub Ident<'a>);
 /// especial for ParameterValue
 #[derive(Debug, Clone, PartialEq)]
 pub struct ParameterType<'a>(pub Ident<'a>);
+
+/// Return type for functions
+pub type ReturnType<'a> = ParameterType<'a>;
+
+/// Parameter value type - contain Values and its type
+#[derive(Debug, Clone, PartialEq)]
+pub struct ParameterValueType<'a>(pub (ParameterValue<'a>, ParameterType<'a>));
+
+/// Parameters value list for brackets case
+#[derive(Debug, Clone, PartialEq)]
+pub enum ParameterListBrackets<'a> {
+    ParameterValue(ParameterValue<'a>),
+    ParameterValueType(ParameterValueType<'a>),
+}
+
+/// List of parameters values
+#[derive(Debug, Clone, PartialEq)]
+pub enum ParameterValueList<'a> {
+    ParameterValue(ParameterValue<'a>),
+    ParameterListBrackets(ParameterListBrackets<'a>),
+}
