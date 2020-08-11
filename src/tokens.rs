@@ -112,7 +112,7 @@ pub fn parameter_value(data: Span) -> IResult<Span, ast::ParameterValue> {
 
 #[cfg(test)]
 mod test {
-    use crate::ast::Ident;
+    use crate::ast::*;
     use crate::tokens::*;
 
     #[test]
@@ -137,7 +137,21 @@ mod test {
 
     #[test]
     fn test_expression_operations() {
-        let res = expression_operations(Span::new("+x"));
-        assert!(res.is_ok());
+        assert_eq!(expression_operations(Span::new("+x")).unwrap().1, ExpressionOperation::Plus);
+        assert_eq!(expression_operations(Span::new("-x")).unwrap().1, ExpressionOperation::Minus);
+        
+        assert_eq!(expression_operations(Span::new("*x")).unwrap().1, ExpressionOperation::Multiply);
+        assert_eq!(expression_operations(Span::new("/x")).unwrap().1, ExpressionOperation::Divide);
+        
+        assert_eq!(expression_operations(Span::new("<<<x")).unwrap().1, ExpressionOperation::ShiftLeft);
+        assert_eq!(expression_operations(Span::new(">>>x")).unwrap().1, ExpressionOperation::ShiftRight);
     }
+    
+    #[test]
+    fn test_parameter_value() {
+        assert_eq!(parameter_value(Span::new("test")).unwrap().1, ParameterValue(Ident(Span::new("test"))));
+        assert_eq!(parameter_value(Span::new("asd123 test")).unwrap().1, ParameterValue(Ident(Span::new("asd123"))));
+        assert!(parameter_value(Span::new("123test")).is_err());
+    }
+    
 }
