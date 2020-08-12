@@ -153,5 +153,23 @@ mod test {
         assert_eq!(parameter_value(Span::new("asd123 test")).unwrap().1, ParameterValue(Ident(Span::new("asd123"))));
         assert!(parameter_value(Span::new("123test")).is_err());
     }
-    
+
+    #[test]
+    fn test_get_ident_from_brackets() {
+        let res = get_ident_from_brackets(Span::new("test123 test"));
+        assert!(res.is_err());
+        
+        let n = get_ident_from_brackets(Span::new("(test123) test"));
+        assert!(n.is_ok());
+        let n = n.unwrap();
+        assert_eq!((n.1).0.fragment(), &"test123");
+        // Spaces removed
+        assert_eq!(n.0.fragment(), &"test");
+
+        let n = get_ident_from_brackets(Span::new(" ( test123 ) test"));
+        assert!(n.is_ok());
+        let n = n.unwrap();
+        assert_eq!((n.1).0.fragment(), &"test123");
+        assert_eq!(n.0.fragment(), &"test");
+    }
 }
