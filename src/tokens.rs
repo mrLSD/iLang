@@ -25,6 +25,8 @@ use crate::{
     ast,
     char::AsChar,
 };
+use nom::combinator::opt;
+use nom::multi::many1;
 
 /// Span is basic lexical component
 pub(crate) type Span<'a> = LocatedSpan<&'a str>;
@@ -34,10 +36,13 @@ pub(crate) type Span<'a> = LocatedSpan<&'a str>;
 /// ```js
 /// [MULTISPACE] "(" [MULTISPACE] ident [MULTISPACE] ")" [MULTISPACE]
 /// ```
-pub fn get_ident_from_brackets(data: Span) -> IResult<Span, ast::Ident> {
+pub fn get_ident_from_brackets<I, O1, E: ParseError<I>, F>(func: F) -> impl Fn(I) -> IResult<Span, ast::Ident>
+    where
+        F: Fn(I) -> IResult<Span, ast::Ident>,
+{
     preceded(
         delimited(multispace0, char('('), multispace0),
-        terminated(ident, delimited(multispace0, char(')'), multispace0)),
+        terminated(func, delimited(multispace0, char(')'), multispace0)),
     )(data)
 }
 
@@ -110,6 +115,30 @@ pub fn parameter_value(data: Span) -> IResult<Span, ast::ParameterValue> {
     Ok((i, ast::ParameterValue(o)))
 }
 
+/// Parse parameter type. It can contain type sequence
+/// ## RULES:
+/// ```js
+/// (parameter_value ["*"] | "(" parameter_value ["*"] ")")+
+/// ```
+pub fn parameter_type(data: Span) -> IResult<Span, ()> {
+    let res = parameter_value(data);
+    println!("{:#?}", res);
+    let res = many1(
+        terminated(parameter_value, tag("*"))
+    )(data);
+    println!("{:#?}", res);
+    Ok((data, ()))
+}
+
+/// ## RULES:
+/// ```js
+/// (parameter-value ":" parameter-type | "(" parameter-value ":" parameter-type ")")
+/// ```
+pub fn parameter_value_type(data: Span) -> IResult<Span, ast::ParameterValue> {
+    let (i, o) = alt((ident, get_ident_from_brackets))(data)?;
+    Ok((i, ast::ParameterValue(o)))
+}
+
 #[cfg(test)]
 mod test {
     use crate::ast::*;
@@ -150,7 +179,19 @@ mod test {
     #[test]
     fn test_parameter_value() {
         assert_eq!(parameter_value(Span::new("test")).unwrap().1, ParameterValue(Ident(Span::new("test"))));
-        assert_eq!(parameter_value(Span::new("asd123 test")).unwrap().1, ParameterValue(Ident(Span::new("asd123"))));
+        
+        let n = parameter_value(Span::new("asd123 test")).unwrap();
+        let fragment = ((n.1).0).0.fragment();
+        assert_eq!(fragment, &"asd123");
+
+        let n = parameter_value(Span::new("(asd123) test")).unwrap();
+        let fragment = ((n.1).0).0.fragment();
+        assert_eq!(fragment, &"asd123");
+
+        let n = parameter_value(Span::new(" ( asd123 ) test")).unwrap();
+        let fragment = ((n.1).0).0.fragment();
+        assert_eq!(fragment, &"asd123");
+        
         assert!(parameter_value(Span::new("123test")).is_err());
     }
 
@@ -171,5 +212,21 @@ mod test {
         let n = n.unwrap();
         assert_eq!((n.1).0.fragment(), &"test123");
         assert_eq!(n.0.fragment(), &"test");
+    }
+    
+    #[test]
+    fn test_parameter_type() {
+        //let n = parameter_type(Span::new("(asd123) test")).unwrap();
+        //let fragment = n.1.fragment();
+        //assert_eq!(fragment, &"asd123");
+
+        //let n = parameter_type(Span::new(" ( asd123 ) test")).unwrap();
+        //let fragment = n.1.fragment();
+        //assert_eq!(fragment, &"asd123");
+
+        let n = parameter_type(Span::new("asd123*dsa123*")).unwrap();
+        //let fragment = n.1.fragment();
+        //assert_eq!(fragment, &"asd123");
+
     }
 }
