@@ -11,6 +11,7 @@ use nom::{
         multispace0,
     },
     error::ParseError,
+    multi::many1,
     sequence::{
         delimited,
         preceded,
@@ -25,8 +26,6 @@ use crate::{
     ast,
     char::AsChar,
 };
-use nom::combinator::opt;
-use nom::multi::many1;
 
 /// Span is basic lexical component
 pub(crate) type Span<'a> = LocatedSpan<&'a str>;
@@ -36,13 +35,10 @@ pub(crate) type Span<'a> = LocatedSpan<&'a str>;
 /// ```js
 /// [MULTISPACE] "(" [MULTISPACE] ident [MULTISPACE] ")" [MULTISPACE]
 /// ```
-pub fn get_ident_from_brackets<I, O1, E: ParseError<I>, F>(func: F) -> impl Fn(I) -> IResult<Span, ast::Ident>
-    where
-        F: Fn(I) -> IResult<Span, ast::Ident>,
-{
+pub fn get_ident_from_brackets(data: Span) -> IResult<Span, ast::Ident> {
     preceded(
         delimited(multispace0, char('('), multispace0),
-        terminated(func, delimited(multispace0, char(')'), multispace0)),
+        terminated(ident, delimited(multispace0, char(')'), multispace0)),
     )(data)
 }
 
@@ -123,9 +119,7 @@ pub fn parameter_value(data: Span) -> IResult<Span, ast::ParameterValue> {
 pub fn parameter_type(data: Span) -> IResult<Span, ()> {
     let res = parameter_value(data);
     println!("{:#?}", res);
-    let res = many1(
-        terminated(parameter_value, tag("*"))
-    )(data);
+    let res = many1(terminated(parameter_value, tag("*")))(data);
     println!("{:#?}", res);
     Ok((data, ()))
 }
@@ -166,20 +160,41 @@ mod test {
 
     #[test]
     fn test_expression_operations() {
-        assert_eq!(expression_operations(Span::new("+x")).unwrap().1, ExpressionOperation::Plus);
-        assert_eq!(expression_operations(Span::new("-x")).unwrap().1, ExpressionOperation::Minus);
-        
-        assert_eq!(expression_operations(Span::new("*x")).unwrap().1, ExpressionOperation::Multiply);
-        assert_eq!(expression_operations(Span::new("/x")).unwrap().1, ExpressionOperation::Divide);
-        
-        assert_eq!(expression_operations(Span::new("<<<x")).unwrap().1, ExpressionOperation::ShiftLeft);
-        assert_eq!(expression_operations(Span::new(">>>x")).unwrap().1, ExpressionOperation::ShiftRight);
+        assert_eq!(
+            expression_operations(Span::new("+x")).unwrap().1,
+            ExpressionOperation::Plus
+        );
+        assert_eq!(
+            expression_operations(Span::new("-x")).unwrap().1,
+            ExpressionOperation::Minus
+        );
+
+        assert_eq!(
+            expression_operations(Span::new("*x")).unwrap().1,
+            ExpressionOperation::Multiply
+        );
+        assert_eq!(
+            expression_operations(Span::new("/x")).unwrap().1,
+            ExpressionOperation::Divide
+        );
+
+        assert_eq!(
+            expression_operations(Span::new("<<<x")).unwrap().1,
+            ExpressionOperation::ShiftLeft
+        );
+        assert_eq!(
+            expression_operations(Span::new(">>>x")).unwrap().1,
+            ExpressionOperation::ShiftRight
+        );
     }
-    
+
     #[test]
     fn test_parameter_value() {
-        assert_eq!(parameter_value(Span::new("test")).unwrap().1, ParameterValue(Ident(Span::new("test"))));
-        
+        assert_eq!(
+            parameter_value(Span::new("test")).unwrap().1,
+            ParameterValue(Ident(Span::new("test")))
+        );
+
         let n = parameter_value(Span::new("asd123 test")).unwrap();
         let fragment = ((n.1).0).0.fragment();
         assert_eq!(fragment, &"asd123");
@@ -191,7 +206,7 @@ mod test {
         let n = parameter_value(Span::new(" ( asd123 ) test")).unwrap();
         let fragment = ((n.1).0).0.fragment();
         assert_eq!(fragment, &"asd123");
-        
+
         assert!(parameter_value(Span::new("123test")).is_err());
     }
 
@@ -199,7 +214,7 @@ mod test {
     fn test_get_ident_from_brackets() {
         let res = get_ident_from_brackets(Span::new("test123 test"));
         assert!(res.is_err());
-        
+
         let n = get_ident_from_brackets(Span::new("(test123) test"));
         assert!(n.is_ok());
         let n = n.unwrap();
@@ -213,7 +228,7 @@ mod test {
         assert_eq!((n.1).0.fragment(), &"test123");
         assert_eq!(n.0.fragment(), &"test");
     }
-    
+
     #[test]
     fn test_parameter_type() {
         //let n = parameter_type(Span::new("(asd123) test")).unwrap();
@@ -227,6 +242,5 @@ mod test {
         let n = parameter_type(Span::new("asd123*dsa123*")).unwrap();
         //let fragment = n.1.fragment();
         //assert_eq!(fragment, &"asd123");
-
     }
 }
