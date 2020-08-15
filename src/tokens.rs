@@ -26,6 +26,8 @@ use crate::{
     ast,
     char::AsChar,
 };
+use nom::multi::separated_list;
+use nom::sequence::{separated_pair, tuple};
 
 /// Span is basic lexical component
 pub(crate) type Span<'a> = LocatedSpan<&'a str>;
@@ -107,7 +109,7 @@ pub fn expression_operations(data: Span) -> IResult<Span, ast::ExpressionOperati
 /// (ident | "(" ident ")")
 /// ```
 pub fn parameter_value(data: Span) -> IResult<Span, ast::ParameterValue> {
-    let (i, o) = alt((ident, get_ident_from_brackets))(data)?;
+    let (i, o) = delimited(multispace0, alt((ident, get_ident_from_brackets)), multispace0)(data)?;
     Ok((i, ast::ParameterValue(o)))
 }
 
@@ -117,10 +119,18 @@ pub fn parameter_value(data: Span) -> IResult<Span, ast::ParameterValue> {
 /// (parameter_value ["*"] | "(" parameter_value ["*"] ")")+
 /// ```
 pub fn parameter_type(data: Span) -> IResult<Span, ()> {
-    let res = parameter_value(data);
-    println!("{:#?}", res);
-    let res = many1(terminated(parameter_value, tag("*")))(data);
-    println!("{:#?}", res);
+    let res_first_type = delimited(multispace0, parameter_value, multispace0)(data)?;
+    
+    let (i, o) = tuple((
+        many1(terminated(
+            parameter_value,
+            delimited(multispace0, tag("*"), multispace0),
+    )), parameter_value))(data)?;
+    // let res_pair_type = separated_pair(delimited(multispace0, parameter_value, multispace0), delimited(multispace0, tag("*"), multispace0), delimited(multispace0, parameter_value, multispace0))(data);
+    
+    // if res_pair_type.is_err() {
+    //     return Ok(res_first_type); 
+    // }
     Ok((data, ()))
 }
 
@@ -239,7 +249,11 @@ mod test {
         //let fragment = n.1.fragment();
         //assert_eq!(fragment, &"asd123");
 
-        let n = parameter_type(Span::new("asd123*dsa123*")).unwrap();
+        //let n = parameter_type(Span::new(" ( asd123 ) * dsa123 * ")).unwrap();
+        //let n = parameter_type(Span::new(" asd123 * dsa123 * ")).unwrap();
+        //let n = parameter_type(Span::new("asd123")).unwrap();
+        //let n = parameter_type(Span::new(" asd123 ")).unwrap();
+        let n = parameter_type(Span::new("asd1 *  asd2 * asd3 * asd4")).unwrap();
         //let fragment = n.1.fragment();
         //assert_eq!(fragment, &"asd123");
     }
