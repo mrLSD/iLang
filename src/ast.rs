@@ -29,14 +29,14 @@ pub struct ParameterValue<'a>(pub Ident<'a>);
 /// Parameter type used for broad cases type representation
 /// especial for ParameterValue
 #[derive(Debug, Clone, PartialEq)]
-pub struct ParameterType<'a>(pub Ident<'a>);
+pub struct ParameterType<'a>(pub Vec<ParameterValue<'a>>);
 
 /// Return type for functions
 pub type ReturnType<'a> = ParameterType<'a>;
 
 /// Parameter value type - contain Values and its type
 #[derive(Debug, Clone, PartialEq)]
-pub struct ParameterValueType<'a>(pub (ParameterValue<'a>, ParameterType<'a>));
+pub struct ParameterValueType<'a>(pub (ParameterValue<'a>,));
 
 /// Parameters value list for brackets case
 #[derive(Debug, Clone, PartialEq)]

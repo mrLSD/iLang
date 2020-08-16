@@ -12,6 +12,7 @@ use nom::{
     },
     error::ParseError,
     multi::many1,
+    sequence::tuple,
     sequence::{
         delimited,
         preceded,
@@ -26,8 +27,6 @@ use crate::{
     ast,
     char::AsChar,
 };
-use nom::multi::separated_list;
-use nom::sequence::{separated_pair, tuple};
 
 /// Span is basic lexical component
 pub(crate) type Span<'a> = LocatedSpan<&'a str>;
@@ -109,7 +108,11 @@ pub fn expression_operations(data: Span) -> IResult<Span, ast::ExpressionOperati
 /// (ident | "(" ident ")")
 /// ```
 pub fn parameter_value(data: Span) -> IResult<Span, ast::ParameterValue> {
-    let (i, o) = delimited(multispace0, alt((ident, get_ident_from_brackets)), multispace0)(data)?;
+    let (i, o) = delimited(
+        multispace0,
+        alt((ident, get_ident_from_brackets)),
+        multispace0,
+    )(data)?;
     Ok((i, ast::ParameterValue(o)))
 }
 
@@ -118,20 +121,22 @@ pub fn parameter_value(data: Span) -> IResult<Span, ast::ParameterValue> {
 /// ```js
 /// (parameter_value ["*"] | "(" parameter_value ["*"] ")")+
 /// ```
-pub fn parameter_type(data: Span) -> IResult<Span, ()> {
+pub fn parameter_type(data: Span) -> IResult<Span, ast::ParameterType> {
     let res_first_type = delimited(multispace0, parameter_value, multispace0)(data)?;
-    
-    let (i, o) = tuple((
+
+    let res = tuple((
         many1(terminated(
             parameter_value,
             delimited(multispace0, tag("*"), multispace0),
-    )), parameter_value))(data)?;
-    // let res_pair_type = separated_pair(delimited(multispace0, parameter_value, multispace0), delimited(multispace0, tag("*"), multispace0), delimited(multispace0, parameter_value, multispace0))(data);
-    
-    // if res_pair_type.is_err() {
-    //     return Ok(res_first_type); 
-    // }
-    Ok((data, ()))
+        )),
+        parameter_value,
+    ))(data);
+    if res.is_err() {
+        return Ok((res_first_type.0, ast::ParameterType(vec![res_first_type.1])));
+    }
+    let (i, (mut param1, param2)) = res.unwrap();
+    param1.append(&mut vec![param2]);
+    Ok((i, ast::ParameterType(param1)))
 }
 
 /// ## RULES:
