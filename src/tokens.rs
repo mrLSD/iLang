@@ -246,19 +246,36 @@ mod test {
 
     #[test]
     fn test_parameter_type() {
-        //let n = parameter_type(Span::new("(asd123) test")).unwrap();
-        //let fragment = n.1.fragment();
-        //assert_eq!(fragment, &"asd123");
+        let n = parameter_type(Span::new("(asd123) test")).unwrap();
+        //println!("{:#?}", ((n.1).0[0].0).0.fragment());
+        let fragment = ((n.1).0[0].0).0.fragment();
+        assert_eq!(fragment, &"asd123");
 
-        //let n = parameter_type(Span::new(" ( asd123 ) test")).unwrap();
-        //let fragment = n.1.fragment();
-        //assert_eq!(fragment, &"asd123");
+        let n = parameter_type(Span::new(" ( asd123 ) test")).unwrap();
+        let fragment = ((n.1).0[0].0).0.fragment();
+        assert_eq!(fragment, &"asd123");
 
-        //let n = parameter_type(Span::new(" ( asd123 ) * dsa123 * ")).unwrap();
-        //let n = parameter_type(Span::new(" asd123 * dsa123 * ")).unwrap();
+        let n = parameter_type(Span::new(" ( asd1 ) * asd2 * "));
+        assert!(n.is_ok());
+        let n = n.unwrap();
+        let fragment = ((n.1).0[0].0).0;
+        assert_eq!(fragment.fragment(), &"asd1");
+        assert_eq!(n.0.fragment(), &"* asd2 * ");
+        assert_eq!((n.1).0.len(), 1);
+        
+        let n = parameter_type(Span::new(" asd1 * asd2 "));
+        assert!(n.is_ok());
+        let n = n.unwrap();
+        let fragment = ((n.1).0[0].0).0;
+        assert_eq!(fragment.fragment(), &"asd1");
+        let fragment = ((n.1).0[1].0).0;
+        assert_eq!(fragment.fragment(), &"asd2");
+        assert_eq!((n.1).0.len(), 2);
+        
         //let n = parameter_type(Span::new("asd123")).unwrap();
         //let n = parameter_type(Span::new(" asd123 ")).unwrap();
         let n = parameter_type(Span::new("asd1 *  asd2 * asd3 * asd4")).unwrap();
+        //println!("{:#?}", n);
         //let fragment = n.1.fragment();
         //assert_eq!(fragment, &"asd123");
     }
