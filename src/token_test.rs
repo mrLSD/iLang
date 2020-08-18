@@ -152,3 +152,10 @@ fn test_parameter_type() {
     assert_eq!(o.0[2].0.fragment(), &"asd3");
     assert_eq!(o.0.len(), 3);
 }
+
+#[test]
+fn test_parameter_value_type() {
+    let n = parameter_value_type(Span::new("val1: type1"));
+    assert!(n.is_ok());
+    let (_, o) = n.unwrap();
+}

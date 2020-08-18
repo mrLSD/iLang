@@ -59,19 +59,6 @@ where
     )
 }
 
-pub fn get_with_brackets_option<'a, O, F>(func: F) -> impl Fn(Span<'a>) -> IResult<Span, O>
-    where
-        F: Copy + Fn(Span<'a>) -> IResult<Span, O>,
-{
-        let parser1 = delimited_space(func);
-        let parser2 = preceded(
-            delimited_space(char('(')),
-            terminated(func, delimited_space(char(')'))),
-        );
-        alt((parser1, parser2))
-}
-
-
 /// Parse Ident from brackets
 /// ## RULE:
 /// ```js
@@ -188,8 +175,17 @@ pub fn parameter_type(data: Span) -> IResult<Span, ast::ParameterType> {
 /// ```js
 /// (parameter-value ":" parameter-type | "(" parameter-value ":" parameter-type ")")
 /// ```
-pub fn parameter_value_type(data: Span) -> IResult<Span, ast::ParameterValue> {
-    let x = tuple((parameter_value, preceded(delimited_space(tag(":")), parameter_type)));
-    let (i, o) = alt((ident, get_ident_from_brackets))(data)?;
-    Ok((i, ast::ParameterValue(o)))
+pub fn parameter_value_type(data: Span) -> IResult<Span, ()> {
+    let value_type = tuple((
+        parameter_value,
+        preceded(delimited_space(tag(":")), parameter_type),
+    ));
+    let value_type_bracketes = get_from_brackets(tuple((
+        parameter_value,
+        preceded(delimited_space(tag(":")), parameter_type),
+    )));
+
+    let (i, o) = alt((value_type, value_type_bracketes))(data)?;
+    println!("{:#?}", o);
+    Ok((i, ()))
 }
