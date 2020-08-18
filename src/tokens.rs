@@ -11,7 +11,7 @@ use nom::{
         multispace0,
     },
     error::ParseError,
-    multi::many1,
+    multi::many0,
     sequence::tuple,
     sequence::{
         delimited,
@@ -31,16 +31,23 @@ use crate::{
 /// Span is basic lexical component
 pub(crate) type Span<'a> = LocatedSpan<&'a str>;
 
+pub fn get_from_brackets<'a, O, F>(func: F) -> impl Fn(Span<'a>) -> IResult<Span, O>
+where
+    F: Fn(Span<'a>) -> IResult<Span, O>,
+{
+    preceded(
+        delimited(multispace0, char('('), multispace0),
+        terminated(func, delimited(multispace0, char(')'), multispace0)),
+    )
+}
+
 /// Parse Ident from brackets
 /// ## RULE:
 /// ```js
 /// [MULTISPACE] "(" [MULTISPACE] ident [MULTISPACE] ")" [MULTISPACE]
 /// ```
 pub fn get_ident_from_brackets(data: Span) -> IResult<Span, ast::Ident> {
-    preceded(
-        delimited(multispace0, char('('), multispace0),
-        terminated(ident, delimited(multispace0, char(')'), multispace0)),
-    )(data)
+    get_from_brackets(ident)(data)
 }
 
 /// Alphanum characters with underscores. Based on ASCII.
@@ -128,9 +135,30 @@ pub fn ident_value(data: Span) -> IResult<Span, ast::Ident> {
 /// Parse parameter type. It can contain type sequence
 /// ## RULES:
 /// ```js
-/// (ident_value ["*" ident_value] | "(" ident_value ["*" ident_value] ")")+
+/// (ident-value ["*" ident-value] | "(" ident-value ["*" ident-value] ")")+
 /// ```
 pub fn parameter_type(data: Span) -> IResult<Span, ast::ParameterType> {
+    let type_list = tuple((
+        ident_value,
+        many0(preceded(
+            delimited(multispace0, tag("*"), multispace0),
+            ident_value,
+        )),
+    ));
+    let type_list_bracketes = get_from_brackets(tuple((
+        ident_value,
+        many0(preceded(
+            delimited(multispace0, tag("*"), multispace0),
+            ident_value,
+        )),
+    )));
+
+    let (i, (first, mut second)) = alt((type_list, type_list_bracketes))(data)?;
+    let mut res_list = vec![first];
+    res_list.append(&mut second);
+    Ok((i, ast::ParameterType(res_list)))
+    /*
+
     let res_first_type = delimited(multispace0, parameter_value, multispace0)(data)?;
 
     let res = tuple((
@@ -145,7 +173,7 @@ pub fn parameter_type(data: Span) -> IResult<Span, ast::ParameterType> {
     }
     let (i, (mut param1, param2)) = res.unwrap();
     param1.append(&mut vec![param2]);
-    Ok((i, ast::ParameterType(param1)))
+    Ok((i, ast::ParameterType(param1)))*/
 }
 
 /// ## RULES:
@@ -252,67 +280,65 @@ mod test {
         assert_eq!((n.1).0.fragment(), &"test123");
         assert_eq!(n.0.fragment(), &"test");
     }
-
+    
     #[test]
     fn test_parameter_type() {
-        let n = parameter_type(Span::new("(asd123) test")).unwrap();
-        //println!("{:#?}", ((n.1).0[0].0).0.fragment());
-        let fragment = ((n.1).0[0].0).0.fragment();
-        assert_eq!(fragment, &"asd123");
+        let n = parameter_type(Span::new("asd1 test"));
+        assert!(n.is_ok());
+        let (i, o) = n.unwrap();
+        assert_eq!(o.0[0].0.fragment(), &"asd1");
+        assert_eq!(i.fragment(), &"test");
+        assert_eq!(o.0.len(), 1);
 
-        let n = parameter_type(Span::new(" ( asd123 ) test")).unwrap();
-        let fragment = ((n.1).0[0].0).0.fragment();
-        assert_eq!(fragment, &"asd123");
-        assert_eq!(n.0.fragment(), &"test");
+        let n = parameter_type(Span::new(" ( asd1 ) test"));
+        assert!(n.is_ok());
+        let (i, o) = n.unwrap();
+        assert_eq!(o.0[0].0.fragment(), &"asd1");
+        assert_eq!(i.fragment(), &"test");
+        assert_eq!(o.0.len(), 1);
+
+        let n = parameter_type(Span::new("* asd1 * asd2 * "));
+        assert!(n.is_err());
 
         let n = parameter_type(Span::new(" ( asd1 ) * asd2 * "));
         assert!(n.is_ok());
-        let n = n.unwrap();
-        let fragment = ((n.1).0[0].0).0;
-        assert_eq!(fragment.fragment(), &"asd1");
-        assert_eq!(n.0.fragment(), &"* asd2 * ");
-        assert_eq!((n.1).0.len(), 1);
-        
+        let (i, o) = n.unwrap();
+        assert_eq!(o.0[0].0.fragment(), &"asd1");
+        assert_eq!(o.0[1].0.fragment(), &"asd2");
+        assert_eq!(i.fragment(), &"* ");
+        assert_eq!(o.0.len(), 2);
+
         let n = parameter_type(Span::new(" asd1 * asd2 "));
         assert!(n.is_ok());
-        let n = n.unwrap();
-        let fragment = ((n.1).0[0].0).0;
-        assert_eq!(fragment.fragment(), &"asd1");
-        let fragment = ((n.1).0[1].0).0;
-        assert_eq!(fragment.fragment(), &"asd2");
-        assert_eq!((n.1).0.len(), 2);
+        let (i, o) = n.unwrap();
+        assert_eq!(o.0[0].0.fragment(), &"asd1");
+        assert_eq!(o.0[1].0.fragment(), &"asd2");
+        assert_eq!(o.0.len(), 2);
 
         let n = parameter_type(Span::new(" ( asd1 ) * ( asd2 ) "));
         assert!(n.is_ok());
-        let n = n.unwrap();
-        let fragment = ((n.1).0[0].0).0;
-        assert_eq!(fragment.fragment(), &"asd1");
-        let fragment = ((n.1).0[1].0).0;
-        assert_eq!(fragment.fragment(), &"asd2");
-        assert_eq!((n.1).0.len(), 2);
+        let (i, o) = n.unwrap();
+        assert_eq!(o.0[0].0.fragment(), &"asd1");
+        assert_eq!(o.0[1].0.fragment(), &"asd2");
+        assert_eq!(o.0.len(), 2);
 
         let n = parameter_type(Span::new("asd1 * ( asd2 ) * asd3"));
         assert!(n.is_ok());
-        let n = n.unwrap();
-        let fragment = ((n.1).0[0].0).0;
-        assert_eq!(fragment.fragment(), &"asd1");
-        let fragment = ((n.1).0[1].0).0;
-        assert_eq!(fragment.fragment(), &"asd2");
-        let fragment = ((n.1).0[2].0).0;
-        assert_eq!(fragment.fragment(), &"asd3");
-        assert_eq!((n.1).0.len(), 3);
+        let (i, o) = n.unwrap();
+        assert_eq!(o.0[0].0.fragment(), &"asd1");
+        assert_eq!(o.0[1].0.fragment(), &"asd2");
+        assert_eq!(o.0[2].0.fragment(), &"asd3");
+        assert_eq!(o.0.len(), 3);
 
-        // let n = parameter_type(Span::new("* asd1 * ( asd2 ) * asd3"));
-        // assert!(n.is_ok());
-        // let n = n.unwrap();
-        // let fragment = ((n.1).0[0].0).0;
-        // assert_eq!(fragment.fragment(), &"asd1");
-        // let fragment = ((n.1).0[1].0).0;
-        // assert_eq!(fragment.fragment(), &"asd2");
-        // let fragment = ((n.1).0[2].0).0;
-        // assert_eq!(fragment.fragment(), &"asd3");
-        // assert_eq!((n.1).0.len(), 3);
+        let n = parameter_type(Span::new("* asd1 * ( asd2 ) * asd3"));
+        assert!(n.is_err());
 
-        //println!("{:#?}", n);
+        let n = parameter_type(Span::new("(asd1 * ( asd2 ) * asd3)"));
+        assert!(n.is_ok());
+        let (i, o) = n.unwrap();
+        assert_eq!(o.0[0].0.fragment(), &"asd1");
+        assert_eq!(o.0[1].0.fragment(), &"asd2");
+        assert_eq!(o.0[2].0.fragment(), &"asd3");
+        assert_eq!(o.0.len(), 3);
     }
 }

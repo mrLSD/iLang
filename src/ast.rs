@@ -29,7 +29,7 @@ pub struct ParameterValue<'a>(pub Ident<'a>);
 /// Parameter type used for broad cases type representation
 /// especial for ParameterValue
 #[derive(Debug, Clone, PartialEq)]
-pub struct ParameterType<'a>(pub Vec<ParameterValue<'a>>);
+pub struct ParameterType<'a>(pub Vec<Ident<'a>>);
 
 /// Return type for functions
 pub type ReturnType<'a> = ParameterType<'a>;
