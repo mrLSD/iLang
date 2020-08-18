@@ -31,8 +31,9 @@ parameter-list-brackets = "(" [(
         ) [","]]* ")"
 parameter-value-list = (parameter-value | parameter-list-brackets)
 parameter-value-type = (parameter-value ":" parameter-type | "(" parameter-value ":" parameter-type ")")
-parameter-value = (ident | "(" ident ")")
-parameter-type = (parameter_value ["*"] | "(" parameter_value ["*"] ")")+
+parameter-value = ident-value 
+ident-value = (ident | "(" ident ")") 
+parameter-type = (ident-value ["*" ident-value] | "(" ident-value ["*" ident-value] ")")+
 return-type = parameter-type 
 function-body = [(let-binding | function-call)*] return-statement
 return-statement = func-value
