@@ -27,19 +27,50 @@ use crate::{
     ast,
     char::AsChar,
 };
+use nom::combinator::map;
 
 /// Span is basic lexical component
 pub(crate) type Span<'a> = LocatedSpan<&'a str>;
 
+/// Apply parser func for delimited space
+/// ## RULE:
+/// ```js
+/// [MULTISPACE] parser-func [MULTISPACE]
+/// ```
+pub fn delimited_space<'a, O, F>(func: F) -> impl Fn(Span<'a>) -> IResult<Span, O>
+where
+    F: Fn(Span<'a>) -> IResult<Span, O>,
+{
+    delimited(multispace0, func, multispace0)
+}
+
+/// Apply parser for brackets case
+/// ## RULE:
+/// ```js
+/// [MULTISPACE] "(" [MULTISPACE] parser-func [MULTISPACE] ")" [MULTISPACE]
+/// ```
 pub fn get_from_brackets<'a, O, F>(func: F) -> impl Fn(Span<'a>) -> IResult<Span, O>
 where
     F: Fn(Span<'a>) -> IResult<Span, O>,
 {
     preceded(
-        delimited(multispace0, char('('), multispace0),
-        terminated(func, delimited(multispace0, char(')'), multispace0)),
+        delimited_space(char('(')),
+        terminated(func, delimited_space(char(')'))),
     )
 }
+
+pub fn get_with_brackets_option<'a, O, F>(func: F) -> impl Fn(Span<'a>) -> IResult<Span, O>
+    where
+        F: Copy + Fn(Span<'a>) -> IResult<Span, O>,
+{
+        let parser1 = delimited_space(func);
+        let parser2 = preceded(
+            delimited_space(char('(')),
+            terminated(func, delimited_space(char(')'))),
+        );
+        alt((parser1, parser2))
+}
+
 
 /// Parse Ident from brackets
 /// ## RULE:
@@ -125,11 +156,7 @@ pub fn parameter_value(data: Span) -> IResult<Span, ast::ParameterValue> {
 /// (ident | "(" ident ")")
 /// ```
 pub fn ident_value(data: Span) -> IResult<Span, ast::Ident> {
-    delimited(
-        multispace0,
-        alt((ident, get_ident_from_brackets)),
-        multispace0,
-    )(data)
+    delimited_space(alt((ident, get_ident_from_brackets)))(data)
 }
 
 /// Parse parameter type. It can contain type sequence
@@ -140,40 +167,21 @@ pub fn ident_value(data: Span) -> IResult<Span, ast::Ident> {
 pub fn parameter_type(data: Span) -> IResult<Span, ast::ParameterType> {
     let type_list = tuple((
         ident_value,
-        many0(preceded(
-            delimited(multispace0, tag("*"), multispace0),
-            ident_value,
-        )),
+        many0(preceded(delimited_space(tag("*")), ident_value)),
     ));
     let type_list_bracketes = get_from_brackets(tuple((
         ident_value,
-        many0(preceded(
-            delimited(multispace0, tag("*"), multispace0),
-            ident_value,
-        )),
+        many0(preceded(delimited_space(tag("*")), ident_value)),
     )));
 
-    let (i, (first, mut second)) = alt((type_list, type_list_bracketes))(data)?;
-    let mut res_list = vec![first];
-    res_list.append(&mut second);
-    Ok((i, ast::ParameterType(res_list)))
-    /*
-
-    let res_first_type = delimited(multispace0, parameter_value, multispace0)(data)?;
-
-    let res = tuple((
-        many1(terminated(
-            parameter_value,
-            delimited(multispace0, tag("*"), multispace0),
-        )),
-        parameter_value,
-    ))(data);
-    if res.is_err() {
-        return Ok((res_first_type.0, ast::ParameterType(vec![res_first_type.1])));
-    }
-    let (i, (mut param1, param2)) = res.unwrap();
-    param1.append(&mut vec![param2]);
-    Ok((i, ast::ParameterType(param1)))*/
+    map(
+        alt((type_list, type_list_bracketes)),
+        |(first, mut second)| {
+            let mut res_list = vec![first];
+            res_list.append(&mut second);
+            ast::ParameterType(res_list)
+        },
+    )(data)
 }
 
 /// ## RULES:
@@ -181,164 +189,7 @@ pub fn parameter_type(data: Span) -> IResult<Span, ast::ParameterType> {
 /// (parameter-value ":" parameter-type | "(" parameter-value ":" parameter-type ")")
 /// ```
 pub fn parameter_value_type(data: Span) -> IResult<Span, ast::ParameterValue> {
+    let x = tuple((parameter_value, preceded(delimited_space(tag(":")), parameter_type)));
     let (i, o) = alt((ident, get_ident_from_brackets))(data)?;
     Ok((i, ast::ParameterValue(o)))
-}
-
-#[cfg(test)]
-mod test {
-    use crate::ast::*;
-    use crate::tokens::*;
-
-    #[test]
-    fn test_name() {
-        assert!(ident(Span::new("test")).is_ok());
-        assert!(ident(Span::new("123test")).is_err());
-        assert!(ident(Span::new("test123")).is_ok());
-        assert!(ident(Span::new("test123test")).is_ok());
-
-        let n = ident(Span::new("test123 test"));
-        assert!(n.is_ok());
-        let n = n.unwrap();
-        assert_eq!(n.1, Ident(Span::new("test123")));
-        assert_eq!(n.0.fragment(), &" test");
-
-        let n = ident(Span::new("test_123a(test)"));
-        assert!(n.is_ok());
-        let n = n.unwrap();
-        assert_eq!(n.1.clone(), Ident(Span::new("test_123a")));
-        assert_eq!(*n.0.fragment(), "(test)");
-    }
-
-    #[test]
-    fn test_expression_operations() {
-        assert_eq!(
-            expression_operations(Span::new("+x")).unwrap().1,
-            ExpressionOperation::Plus
-        );
-        assert_eq!(
-            expression_operations(Span::new("-x")).unwrap().1,
-            ExpressionOperation::Minus
-        );
-
-        assert_eq!(
-            expression_operations(Span::new("*x")).unwrap().1,
-            ExpressionOperation::Multiply
-        );
-        assert_eq!(
-            expression_operations(Span::new("/x")).unwrap().1,
-            ExpressionOperation::Divide
-        );
-
-        assert_eq!(
-            expression_operations(Span::new("<<<x")).unwrap().1,
-            ExpressionOperation::ShiftLeft
-        );
-        assert_eq!(
-            expression_operations(Span::new(">>>x")).unwrap().1,
-            ExpressionOperation::ShiftRight
-        );
-    }
-
-    #[test]
-    fn test_parameter_value() {
-        assert_eq!(
-            parameter_value(Span::new("test")).unwrap().1,
-            ParameterValue(Ident(Span::new("test")))
-        );
-
-        let n = parameter_value(Span::new("asd123 test")).unwrap();
-        let fragment = ((n.1).0).0.fragment();
-        assert_eq!(fragment, &"asd123");
-
-        let n = parameter_value(Span::new("(asd123) test")).unwrap();
-        let fragment = ((n.1).0).0.fragment();
-        assert_eq!(fragment, &"asd123");
-
-        let n = parameter_value(Span::new(" ( asd123 ) test")).unwrap();
-        let fragment = ((n.1).0).0.fragment();
-        assert_eq!(fragment, &"asd123");
-
-        assert!(parameter_value(Span::new("123test")).is_err());
-    }
-
-    #[test]
-    fn test_get_ident_from_brackets() {
-        let res = get_ident_from_brackets(Span::new("test123 test"));
-        assert!(res.is_err());
-
-        let n = get_ident_from_brackets(Span::new("(test123) test"));
-        assert!(n.is_ok());
-        let n = n.unwrap();
-        assert_eq!((n.1).0.fragment(), &"test123");
-        // Spaces removed
-        assert_eq!(n.0.fragment(), &"test");
-
-        let n = get_ident_from_brackets(Span::new(" ( test123 ) test"));
-        assert!(n.is_ok());
-        let n = n.unwrap();
-        assert_eq!((n.1).0.fragment(), &"test123");
-        assert_eq!(n.0.fragment(), &"test");
-    }
-    
-    #[test]
-    fn test_parameter_type() {
-        let n = parameter_type(Span::new("asd1 test"));
-        assert!(n.is_ok());
-        let (i, o) = n.unwrap();
-        assert_eq!(o.0[0].0.fragment(), &"asd1");
-        assert_eq!(i.fragment(), &"test");
-        assert_eq!(o.0.len(), 1);
-
-        let n = parameter_type(Span::new(" ( asd1 ) test"));
-        assert!(n.is_ok());
-        let (i, o) = n.unwrap();
-        assert_eq!(o.0[0].0.fragment(), &"asd1");
-        assert_eq!(i.fragment(), &"test");
-        assert_eq!(o.0.len(), 1);
-
-        let n = parameter_type(Span::new("* asd1 * asd2 * "));
-        assert!(n.is_err());
-
-        let n = parameter_type(Span::new(" ( asd1 ) * asd2 * "));
-        assert!(n.is_ok());
-        let (i, o) = n.unwrap();
-        assert_eq!(o.0[0].0.fragment(), &"asd1");
-        assert_eq!(o.0[1].0.fragment(), &"asd2");
-        assert_eq!(i.fragment(), &"* ");
-        assert_eq!(o.0.len(), 2);
-
-        let n = parameter_type(Span::new(" asd1 * asd2 "));
-        assert!(n.is_ok());
-        let (i, o) = n.unwrap();
-        assert_eq!(o.0[0].0.fragment(), &"asd1");
-        assert_eq!(o.0[1].0.fragment(), &"asd2");
-        assert_eq!(o.0.len(), 2);
-
-        let n = parameter_type(Span::new(" ( asd1 ) * ( asd2 ) "));
-        assert!(n.is_ok());
-        let (i, o) = n.unwrap();
-        assert_eq!(o.0[0].0.fragment(), &"asd1");
-        assert_eq!(o.0[1].0.fragment(), &"asd2");
-        assert_eq!(o.0.len(), 2);
-
-        let n = parameter_type(Span::new("asd1 * ( asd2 ) * asd3"));
-        assert!(n.is_ok());
-        let (i, o) = n.unwrap();
-        assert_eq!(o.0[0].0.fragment(), &"asd1");
-        assert_eq!(o.0[1].0.fragment(), &"asd2");
-        assert_eq!(o.0[2].0.fragment(), &"asd3");
-        assert_eq!(o.0.len(), 3);
-
-        let n = parameter_type(Span::new("* asd1 * ( asd2 ) * asd3"));
-        assert!(n.is_err());
-
-        let n = parameter_type(Span::new("(asd1 * ( asd2 ) * asd3)"));
-        assert!(n.is_ok());
-        let (i, o) = n.unwrap();
-        assert_eq!(o.0[0].0.fragment(), &"asd1");
-        assert_eq!(o.0[1].0.fragment(), &"asd2");
-        assert_eq!(o.0[2].0.fragment(), &"asd3");
-        assert_eq!(o.0.len(), 3);
-    }
 }
