@@ -175,7 +175,7 @@ pub fn parameter_type(data: Span) -> IResult<Span, ast::ParameterType> {
 /// ```js
 /// (parameter-value ":" parameter-type | "(" parameter-value ":" parameter-type ")")
 /// ```
-pub fn parameter_value_type(data: Span) -> IResult<Span, ()> {
+pub fn parameter_value_type(data: Span) -> IResult<Span, ast::ParameterValueType> {
     let value_type = tuple((
         parameter_value,
         preceded(delimited_space(tag(":")), parameter_type),
@@ -186,6 +186,5 @@ pub fn parameter_value_type(data: Span) -> IResult<Span, ()> {
     )));
 
     let (i, o) = alt((value_type, value_type_bracketes))(data)?;
-    println!("{:#?}", o);
-    Ok((i, ()))
+    Ok((i, ast::ParameterValueType(o.clone().0, o.clone().1)))
 }

@@ -36,7 +36,7 @@ pub type ReturnType<'a> = ParameterType<'a>;
 
 /// Parameter value type - contain Values and its type
 #[derive(Debug, Clone, PartialEq)]
-pub struct ParameterValueType<'a>(pub (ParameterValue<'a>,));
+pub struct ParameterValueType<'a>(pub ParameterValue<'a>, pub ParameterType<'a>);
 
 /// Parameters value list for brackets case
 #[derive(Debug, Clone, PartialEq)]

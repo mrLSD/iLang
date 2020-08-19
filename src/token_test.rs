@@ -158,4 +158,27 @@ fn test_parameter_value_type() {
     let n = parameter_value_type(Span::new("val1: type1"));
     assert!(n.is_ok());
     let (_, o) = n.unwrap();
+    assert_eq!(((o.0).0).0.fragment(), &"val1");
+    assert_eq!(((o.1).0[0]).0.fragment(), &"type1");
+
+    let n = parameter_value_type(Span::new(" ( val1 ) : ( type1 ) "));
+    assert!(n.is_ok());
+    let (_, o) = n.unwrap();
+    assert_eq!(((o.0).0).0.fragment(), &"val1");
+    assert_eq!(((o.1).0[0]).0.fragment(), &"type1");
+
+    let n = parameter_value_type(Span::new(" ( ( val1 ) : ( type1 ) ) "));
+    assert!(n.is_ok());
+    let (_, o) = n.unwrap();
+    assert_eq!(((o.0).0).0.fragment(), &"val1");
+    assert_eq!(((o.1).0[0]).0.fragment(), &"type1");
+
+    let n = parameter_value_type(Span::new("val1: type1 * type2"));
+    assert!(n.is_ok());
+    let (_, o) = n.unwrap();
+    assert_eq!(((o.0).0).0.fragment(), &"val1");
+    assert_eq!(((o.1).0[0]).0.fragment(), &"type1");
+    assert_eq!(((o.1).0[1]).0.fragment(), &"type2");
+
+    //println!("{:#?}", ((o.0).0).0.fragment());
 }
