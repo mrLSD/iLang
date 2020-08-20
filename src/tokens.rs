@@ -171,6 +171,7 @@ pub fn parameter_type(data: Span) -> IResult<Span, ast::ParameterType> {
     )(data)
 }
 
+/// Value-Type parameters parser
 /// ## RULES:
 /// ```js
 /// (parameter-value ":" parameter-type | "(" parameter-value ":" parameter-type ")")
@@ -187,4 +188,18 @@ pub fn parameter_value_type(data: Span) -> IResult<Span, ast::ParameterValueType
 
     let (i, o) = alt((value_type, value_type_bracketes))(data)?;
     Ok((i, ast::ParameterValueType(o.clone().0, o.clone().1)))
+}
+
+/// Parameters list with brackets parser
+/// ## RULES:
+/// parameter-list-brackets = "(" [(
+///     parameter-value |
+///     parameter-value-type
+/// ) [","]]* ")"
+/// ```
+fn parameter_list_brackets(data: Span) -> IResult<Span, ()> {
+    let (i, o) = alt((
+        parameter_value,
+        parameter_value_type))(data)?;
+    Ok((i, ()))
 }
