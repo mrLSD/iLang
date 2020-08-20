@@ -192,14 +192,22 @@ pub fn parameter_value_type(data: Span) -> IResult<Span, ast::ParameterValueType
 
 /// Parameters list with brackets parser
 /// ## RULES:
+/// ```js
 /// parameter-list-brackets = "(" [(
 ///     parameter-value |
 ///     parameter-value-type
 /// ) [","]]* ")"
 /// ```
 fn parameter_list_brackets(data: Span) -> IResult<Span, ()> {
-    let (i, o) = alt((
-        parameter_value,
-        parameter_value_type))(data)?;
-    Ok((i, ()))
+    let x = get_from_brackets(tuple((
+        alt((parameter_value, parameter_value_type)),
+        many0(preceded(
+            delimited_space(tag(",")),
+            alt((parameter_value, parameter_value_type)),
+        )),
+    )));
+    // let (i, o) = alt((
+    //     parameter_value,
+    //     parameter_value_type))(data)?;
+    Ok((data, ()))
 }
