@@ -36,7 +36,11 @@ pub type ReturnType<'a> = ParameterType<'a>;
 
 /// Parameter value type - contain Values and its type
 #[derive(Debug, Clone, PartialEq)]
-pub struct ParameterValueType<'a>(pub ParameterValue<'a>, pub ParameterType<'a>);
+pub enum ParameterValueType<'a> {
+    Value(ParameterValue<'a>),
+    Type(ParameterType<'a>),
+    ValueType(ParameterValue<'a>, ParameterType<'a>),
+}
 
 /// Parameters value list for brackets case
 #[derive(Debug, Clone, PartialEq)]

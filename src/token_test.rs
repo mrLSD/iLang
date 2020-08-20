@@ -203,3 +203,9 @@ fn test_parameter_value_type() {
     let n = parameter_value_type(Span::new("val1: (type1 * type2"));
     assert!(n.is_err());
 }
+
+#[test]
+fn test_parameter_list_brackets() {
+    let n = parameter_list_brackets(Span::new("val1: type1"));
+    assert!(n.is_ok());
+}

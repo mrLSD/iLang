@@ -10,6 +10,7 @@ use nom::{
         char,
         multispace0,
     },
+    combinator::map,
     error::ParseError,
     multi::many0,
     sequence::tuple,
@@ -27,7 +28,6 @@ use crate::{
     ast,
     char::AsChar,
 };
-use nom::combinator::map;
 
 /// Span is basic lexical component
 pub(crate) type Span<'a> = LocatedSpan<&'a str>;
@@ -132,9 +132,9 @@ pub fn expression_operations(data: Span) -> IResult<Span, ast::ExpressionOperati
 /// ```js
 /// ident-value
 /// ```
-pub fn parameter_value(data: Span) -> IResult<Span, ast::ParameterValue> {
+pub fn parameter_value(data: Span) -> IResult<Span, ast::ParameterValueType> {
     let (i, o) = ident_value(data)?;
-    Ok((i, ast::ParameterValue(o)))
+    Ok((i, ast::ParameterValueType::Value(ast::ParameterValue(o))))
 }
 
 /// Parse ident value with space and brackets
@@ -151,7 +151,7 @@ pub fn ident_value(data: Span) -> IResult<Span, ast::Ident> {
 /// ```js
 /// (ident-value ["*" ident-value] | "(" ident-value ["*" ident-value] ")")+
 /// ```
-pub fn parameter_type(data: Span) -> IResult<Span, ast::ParameterType> {
+pub fn parameter_type(data: Span) -> IResult<Span, ast::ParameterValueType> {
     let type_list = tuple((
         ident_value,
         many0(preceded(delimited_space(tag("*")), ident_value)),
@@ -166,7 +166,7 @@ pub fn parameter_type(data: Span) -> IResult<Span, ast::ParameterType> {
         |(first, mut second)| {
             let mut res_list = vec![first];
             res_list.append(&mut second);
-            ast::ParameterType(res_list)
+            ast::ParameterValueType::Type(ast::ParameterType(res_list))
         },
     )(data)
 }
@@ -187,7 +187,17 @@ pub fn parameter_value_type(data: Span) -> IResult<Span, ast::ParameterValueType
     )));
 
     let (i, o) = alt((value_type, value_type_bracketes))(data)?;
-    Ok((i, ast::ParameterValueType(o.clone().0, o.clone().1)))
+    let val = if let ast::ParameterValueType::Value(v) = o.0 {
+        v
+    } else {
+        unimplemented!()
+    };
+    let val_type = if let ast::ParameterValueType::Type(t) = o.1 {
+        t
+    } else {
+        unimplemented!()
+    };
+    Ok((i, ast::ParameterValueType::ValueType(val, val_type)))
 }
 
 /// Parameters list with brackets parser
@@ -198,16 +208,13 @@ pub fn parameter_value_type(data: Span) -> IResult<Span, ast::ParameterValueType
 ///     parameter-value-type
 /// ) [","]]* ")"
 /// ```
-fn parameter_list_brackets(data: Span) -> IResult<Span, ()> {
-    let x = get_from_brackets(tuple((
+pub fn parameter_list_brackets(data: Span) -> IResult<Span, ()> {
+    let _x = get_from_brackets(tuple((
         alt((parameter_value, parameter_value_type)),
         many0(preceded(
             delimited_space(tag(",")),
             alt((parameter_value, parameter_value_type)),
         )),
     )));
-    // let (i, o) = alt((
-    //     parameter_value,
-    //     parameter_value_type))(data)?;
     Ok((data, ()))
 }
