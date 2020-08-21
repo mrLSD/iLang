@@ -330,3 +330,64 @@ fn test_parameter_list_brackets() {
         _ => unimplemented!(),
     }
 }
+
+#[test]
+fn test_parameter_value_list() {
+    match parameter_value_list(Span::new("val1")).unwrap() {
+        (_, ParameterValueList::ParameterValue(x)) => match &x {
+            ParameterValue(v) => {
+                assert_eq!((v.0).fragment(), &"val1");
+            }
+        },
+        _ => unimplemented!(),
+    }
+
+    match parameter_value_list(Span::new("(val1, val2)")).unwrap() {
+        (_, ParameterValueList::ParameterList(x)) => {
+            assert_eq!(x.len(), 2);
+            match &x[0] {
+                ParameterValueType::Value(v) => assert_eq!((v.0).0.fragment(), &"val1"),
+                _ => unimplemented!(),
+            }
+            match &x[1] {
+                ParameterValueType::Value(v) => assert_eq!((v.0).0.fragment(), &"val2"),
+                _ => unimplemented!(),
+            }
+        }
+        _ => unimplemented!(),
+    }
+
+    match parameter_list_brackets(Span::new("(val1, val2: type2, val3, (val4: type4))")).unwrap() {
+        (_, ParameterValueList::ParameterList(x)) => {
+            assert_eq!(x.len(), 4);
+            match &x[0] {
+                ParameterValueType::Value(v) => {
+                    assert_eq!((v.0).0.fragment(), &"val1");
+                }
+                _ => unimplemented!(),
+            }
+            match &x[1] {
+                ParameterValueType::ValueType(v, t) => {
+                    assert_eq!((v.0).0.fragment(), &"val2");
+                    assert_eq!((t.0)[0].0.fragment(), &"type2");
+                }
+                _ => unimplemented!(),
+            }
+            match &x[2] {
+                ParameterValueType::Value(v) => {
+                    assert_eq!((v.0).0.fragment(), &"val3");
+                }
+                _ => unimplemented!(),
+            }
+            match &x[3] {
+                ParameterValueType::ValueType(v, t) => {
+                    assert_eq!((v.0).0.fragment(), &"val4");
+                    assert_eq!((t.0)[0].0.fragment(), &"type4");
+                }
+                _ => unimplemented!(),
+            }
+        }
+        _ => unimplemented!(),
+    }
+    //println!("{:#?}", x);
+}

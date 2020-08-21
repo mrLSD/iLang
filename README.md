@@ -1,4 +1,5 @@
 # iLang
+[![Build Status](https://travis-ci.org/mrLSD/iLang.svg?branch=master)](https://travis-ci.org/mrLSD/iLang)
 
 iLang is a functional language from scratch. In the current stage, it's a dialect from F#. But But it doesn't relate to .NET or .NET Core platform.
 Grammar based on EBNF, and described [here](grammar.md).
