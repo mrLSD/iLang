@@ -132,9 +132,9 @@ pub fn expression_operations(data: Span) -> IResult<Span, ast::ExpressionOperati
 /// ```js
 /// ident-value
 /// ```
-pub fn parameter_value(data: Span) -> IResult<Span, ast::ParameterValueType> {
+pub fn parameter_value(data: Span) -> IResult<Span, ast::ParameterValue> {
     let (i, o) = ident_value(data)?;
-    Ok((i, ast::ParameterValueType::Value(ast::ParameterValue(o))))
+    Ok((i, ast::ParameterValue(o)))
 }
 
 /// Parse ident value with space and brackets
@@ -151,7 +151,7 @@ pub fn ident_value(data: Span) -> IResult<Span, ast::Ident> {
 /// ```js
 /// (ident-value ["*" ident-value] | "(" ident-value ["*" ident-value] ")")+
 /// ```
-pub fn parameter_type(data: Span) -> IResult<Span, ast::ParameterValueType> {
+pub fn parameter_type(data: Span) -> IResult<Span, ast::ParameterType> {
     let type_list = tuple((
         ident_value,
         many0(preceded(delimited_space(tag("*")), ident_value)),
@@ -166,9 +166,19 @@ pub fn parameter_type(data: Span) -> IResult<Span, ast::ParameterValueType> {
         |(first, mut second)| {
             let mut res_list = vec![first];
             res_list.append(&mut second);
-            ast::ParameterValueType::Type(ast::ParameterType(res_list))
+            ast::ParameterType(res_list)
         },
     )(data)
+}
+
+fn wrapper_parameter_type(data: Span) -> IResult<Span, ast::ParameterValueType> {
+    let (i, o) = parameter_type(data)?;
+    Ok((i, ast::ParameterValueType::Type(o)))
+}
+
+pub fn wrapper_parameter_value(data: Span) -> IResult<Span, ast::ParameterValueType> {
+    let (i, o) = parameter_value(data)?;
+    Ok((i, ast::ParameterValueType::Value(o)))
 }
 
 /// Value-Type parameters parser
@@ -178,26 +188,18 @@ pub fn parameter_type(data: Span) -> IResult<Span, ast::ParameterValueType> {
 /// ```
 pub fn parameter_value_type(data: Span) -> IResult<Span, ast::ParameterValueType> {
     let value_type = tuple((
-        parameter_value,
-        preceded(delimited_space(tag(":")), parameter_type),
+        wrapper_parameter_value,
+        preceded(delimited_space(tag(":")), wrapper_parameter_type),
     ));
     let value_type_bracketes = get_from_brackets(tuple((
-        parameter_value,
-        preceded(delimited_space(tag(":")), parameter_type),
+        wrapper_parameter_value,
+        preceded(delimited_space(tag(":")), wrapper_parameter_type),
     )));
 
     let (i, o) = alt((value_type, value_type_bracketes))(data)?;
-    let val = if let ast::ParameterValueType::Value(v) = o.0 {
-        v
-    } else {
-        unimplemented!()
-    };
-    let val_type = if let ast::ParameterValueType::Type(t) = o.1 {
-        t
-    } else {
-        unimplemented!()
-    };
-    Ok((i, ast::ParameterValueType::ValueType(val, val_type)))
+    //let val = o.0;
+    //let val_type = 0.1;
+    Ok((i, ast::ParameterValueType::ValueType(o.0, o.1)))
 }
 
 /// Parameters list with brackets parser
