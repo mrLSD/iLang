@@ -24,6 +24,7 @@ use nom::{
 };
 use nom_locate::LocatedSpan;
 
+use crate::ast::ParameterValueList;
 use crate::{
     ast,
     char::AsChar,
@@ -87,7 +88,7 @@ where
 /// First always should be Alpha char.
 /// ## RULES:
 /// ```js
-/// (alpha+)(alpha | number | '_')*
+/// ident = (alpha+)(alpha | number | '_')*
 /// ```
 pub fn ident(data: Span) -> IResult<Span, ast::Ident> {
     let _ = alpha1(data)?;
@@ -130,7 +131,7 @@ pub fn expression_operations(data: Span) -> IResult<Span, ast::ExpressionOperati
 /// Parse parameter value
 /// ## RULES:
 /// ```js
-/// ident-value
+/// parameter-value = ident-value
 /// ```
 pub fn parameter_value(data: Span) -> IResult<Span, ast::ParameterValue> {
     let (i, o) = ident_value(data)?;
@@ -140,7 +141,7 @@ pub fn parameter_value(data: Span) -> IResult<Span, ast::ParameterValue> {
 /// Parse ident value with space and brackets
 /// ## RULES:
 /// ```js
-/// (ident | "(" ident ")")
+/// ident-value = (ident | "(" ident ")")
 /// ```
 pub fn ident_value(data: Span) -> IResult<Span, ast::Ident> {
     delimited_space(alt((ident, get_ident_from_brackets)))(data)
@@ -149,7 +150,7 @@ pub fn ident_value(data: Span) -> IResult<Span, ast::Ident> {
 /// Parse parameter type. It can contain type sequence
 /// ## RULES:
 /// ```js
-/// (ident-value ["*" ident-value] | "(" ident-value ["*" ident-value] ")")+
+/// parameter-type = (ident-value ["*" ident-value] | "(" ident-value ["*" ident-value] ")")+
 /// ```
 pub fn parameter_type(data: Span) -> IResult<Span, ast::ParameterType> {
     let type_list = tuple((
@@ -174,7 +175,7 @@ pub fn parameter_type(data: Span) -> IResult<Span, ast::ParameterType> {
 /// Value-Type parameters parser
 /// ## RULES:
 /// ```js
-/// (parameter-value ":" parameter-type | "(" parameter-value ":" parameter-type ")")
+/// parameter-value-type = (parameter-value ":" parameter-type | "(" parameter-value ":" parameter-type ")")
 /// ```
 pub fn parameter_value_type(data: Span) -> IResult<Span, ast::ParameterValueType> {
     let value_type = tuple((
@@ -198,7 +199,7 @@ pub fn parameter_value_type(data: Span) -> IResult<Span, ast::ParameterValueType
 ///     parameter-value-type
 /// ) [","]]* ")"
 /// ```
-pub fn parameter_list_brackets(data: Span) -> IResult<Span, Vec<ast::ParameterValueType>> {
+pub fn parameter_list_brackets(data: Span) -> IResult<Span, ast::ParameterValueList> {
     let wrapper_parameter_value = &map(parameter_value, ast::ParameterValueType::Value);
     let (i, (param1, mut param2)) = get_from_brackets(tuple((
         alt((wrapper_parameter_value, parameter_value_type)),
@@ -209,5 +210,16 @@ pub fn parameter_list_brackets(data: Span) -> IResult<Span, Vec<ast::ParameterVa
     )))(data)?;
     let mut res = vec![param1];
     res.append(&mut param2);
-    Ok((i, res))
+    Ok((i, ParameterValueList::ParameterList(res)))
+}
+
+/// Parameters value list
+/// ## RULES:
+/// ```js
+/// parameter-value-list = (parameter-value | parameter-list-brackets)
+/// ```
+pub fn parameter_value_list(data: Span) -> IResult<Span, ast::ParameterValueList> {
+    let wrapper_parameter_value = &map(parameter_value, ast::ParameterValueList::ParameterValue);
+    let res = alt((wrapper_parameter_value, parameter_list_brackets))(data)?;
+    Ok(res)
 }
