@@ -48,3 +48,10 @@ pub enum ParameterValueList<'a> {
     ParameterValue(ParameterValue<'a>),
     ParameterList(Vec<ParameterValueType<'a>>),
 }
+
+/// List of parameters
+#[derive(Debug, Clone, PartialEq)]
+pub enum ParameterList<'a> {
+    ParameterList(ParameterValueList<'a>),
+    ParameterValueList(Vec<ParameterValueList<'a>>),
+}

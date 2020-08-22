@@ -12,7 +12,7 @@ use nom::{
     },
     combinator::map,
     error::ParseError,
-    multi::many0,
+    multi::{many0, many1},
     sequence::tuple,
     sequence::{
         delimited,
@@ -24,7 +24,6 @@ use nom::{
 };
 use nom_locate::LocatedSpan;
 
-use crate::ast::ParameterValueList;
 use crate::{
     ast,
     char::AsChar,
@@ -210,7 +209,7 @@ pub fn parameter_list_brackets(data: Span) -> IResult<Span, ast::ParameterValueL
     )))(data)?;
     let mut res = vec![param1];
     res.append(&mut param2);
-    Ok((i, ParameterValueList::ParameterList(res)))
+    Ok((i, ast::ParameterValueList::ParameterList(res)))
 }
 
 /// Parameters value list
@@ -222,4 +221,17 @@ pub fn parameter_value_list(data: Span) -> IResult<Span, ast::ParameterValueList
     let wrapper_parameter_value = &map(parameter_value, ast::ParameterValueList::ParameterValue);
     let res = alt((wrapper_parameter_value, parameter_list_brackets))(data)?;
     Ok(res)
+}
+
+/// Parameters list
+/// ## RULES:
+/// ```js
+/// parameter-list = (parameter-value-list+ | parameter-list-brackets)
+/// ```
+pub fn parameter_list(data: Span) -> IResult<Span, ast::ParameterList> {
+    let (i, o) = alt((
+        many1(parameter_value_list), 
+        parameter_list_brackets
+    ))(data)?;
+    Ok((i, ast::ParameterList::ParameterValueList(o)))
 }
