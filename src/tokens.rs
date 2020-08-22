@@ -171,11 +171,6 @@ pub fn parameter_type(data: Span) -> IResult<Span, ast::ParameterType> {
     )(data)
 }
 
-fn wrapper_parameter_type(data: Span) -> IResult<Span, ast::ParameterValueType> {
-    let (i, o) = parameter_type(data)?;
-    Ok((i, ast::ParameterValueType::Type(o)))
-}
-
 pub fn wrapper_parameter_value(data: Span) -> IResult<Span, ast::ParameterValueType> {
     let (i, o) = parameter_value(data)?;
     Ok((i, ast::ParameterValueType::Value(o)))
@@ -188,17 +183,15 @@ pub fn wrapper_parameter_value(data: Span) -> IResult<Span, ast::ParameterValueT
 /// ```
 pub fn parameter_value_type(data: Span) -> IResult<Span, ast::ParameterValueType> {
     let value_type = tuple((
-        wrapper_parameter_value,
-        preceded(delimited_space(tag(":")), wrapper_parameter_type),
+        parameter_value,
+        preceded(delimited_space(tag(":")), parameter_type),
     ));
     let value_type_bracketes = get_from_brackets(tuple((
-        wrapper_parameter_value,
-        preceded(delimited_space(tag(":")), wrapper_parameter_type),
+        parameter_value,
+        preceded(delimited_space(tag(":")), parameter_type),
     )));
 
     let (i, o) = alt((value_type, value_type_bracketes))(data)?;
-    //let val = o.0;
-    //let val_type = 0.1;
     Ok((i, ast::ParameterValueType::ValueType(o.0, o.1)))
 }
 
@@ -212,10 +205,10 @@ pub fn parameter_value_type(data: Span) -> IResult<Span, ast::ParameterValueType
 /// ```
 pub fn parameter_list_brackets(data: Span) -> IResult<Span, ()> {
     let _x = get_from_brackets(tuple((
-        alt((parameter_value, parameter_value_type)),
+        alt((wrapper_parameter_value, parameter_value_type)),
         many0(preceded(
             delimited_space(tag(",")),
-            alt((parameter_value, parameter_value_type)),
+            alt((wrapper_parameter_value, parameter_value_type)),
         )),
     )));
     Ok((data, ()))
