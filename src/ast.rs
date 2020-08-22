@@ -42,16 +42,9 @@ pub enum ParameterValueType<'a> {
     ValueType(ParameterValue<'a>, ParameterType<'a>),
 }
 
-/// Parameters value list for brackets case
-#[derive(Debug, Clone, PartialEq)]
-pub enum ParameterListBrackets<'a> {
-    ParameterValue(ParameterValue<'a>),
-    ParameterValueType(ParameterValueType<'a>),
-}
-
 /// List of parameters values
 #[derive(Debug, Clone, PartialEq)]
 pub enum ParameterValueList<'a> {
     ParameterValue(ParameterValue<'a>),
-    ParameterListBrackets(ParameterListBrackets<'a>),
+    ParameterList(Vec<ParameterValueType<'a>>),
 }

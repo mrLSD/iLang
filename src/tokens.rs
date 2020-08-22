@@ -171,11 +171,6 @@ pub fn parameter_type(data: Span) -> IResult<Span, ast::ParameterType> {
     )(data)
 }
 
-pub fn wrapper_parameter_value(data: Span) -> IResult<Span, ast::ParameterValueType> {
-    let (i, o) = parameter_value(data)?;
-    Ok((i, ast::ParameterValueType::Value(o)))
-}
-
 /// Value-Type parameters parser
 /// ## RULES:
 /// ```js
@@ -203,13 +198,16 @@ pub fn parameter_value_type(data: Span) -> IResult<Span, ast::ParameterValueType
 ///     parameter-value-type
 /// ) [","]]* ")"
 /// ```
-pub fn parameter_list_brackets(data: Span) -> IResult<Span, ()> {
-    let _x = get_from_brackets(tuple((
+pub fn parameter_list_brackets(data: Span) -> IResult<Span, Vec<ast::ParameterValueType>> {
+    let wrapper_parameter_value = &map(parameter_value, ast::ParameterValueType::Value);
+    let (i, (param1, mut param2)) = get_from_brackets(tuple((
         alt((wrapper_parameter_value, parameter_value_type)),
         many0(preceded(
             delimited_space(tag(",")),
             alt((wrapper_parameter_value, parameter_value_type)),
         )),
-    )));
-    Ok((data, ()))
+    )))(data)?;
+    let mut res = vec![param1];
+    res.append(&mut param2);
+    Ok((i, res))
 }
