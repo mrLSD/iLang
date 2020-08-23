@@ -202,10 +202,10 @@ pub fn parameter_value_type(data: Span) -> ParseResult<ast::ParameterValueType> 
 pub fn parameter_list_brackets(data: Span) -> ParseResult<ast::ParameterValueList> {
     let wrapper_parameter_value = &map(parameter_value, ast::ParameterValueType::Value);
     let (i, (param1, mut param2)) = get_from_brackets(tuple((
-        alt((wrapper_parameter_value, parameter_value_type)),
+        alt((parameter_value_type, wrapper_parameter_value)),
         many0(preceded(
             delimited_space(tag(",")),
-            alt((wrapper_parameter_value, parameter_value_type)),
+            alt((parameter_value_type, wrapper_parameter_value)),
         )),
     )))(data)?;
     let mut res = vec![param1];
