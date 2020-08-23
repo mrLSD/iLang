@@ -35,14 +35,16 @@ use crate::{
 /// Span is basic lexical component
 pub(crate) type Span<'a> = LocatedSpan<&'a str>;
 
+pub(crate) type ParseResult<'a, T> = IResult<Span<'a>, T>;
+
 /// Apply parser func for delimited space
 /// ## RULE:
 /// ```js
 /// [MULTISPACE] parser-func [MULTISPACE]
 /// ```
-pub fn delimited_space<'a, O, F>(func: F) -> impl Fn(Span<'a>) -> IResult<Span, O>
+pub fn delimited_space<'a, O, F>(func: F) -> impl Fn(Span<'a>) -> ParseResult<O>
 where
-    F: Fn(Span<'a>) -> IResult<Span, O>,
+    F: Fn(Span<'a>) -> ParseResult<O>,
 {
     delimited(multispace0, func, multispace0)
 }
@@ -52,9 +54,9 @@ where
 /// ```js
 /// [MULTISPACE] "(" [MULTISPACE] parser-func [MULTISPACE] ")" [MULTISPACE]
 /// ```
-pub fn get_from_brackets<'a, O, F>(func: F) -> impl Fn(Span<'a>) -> IResult<Span, O>
+pub fn get_from_brackets<'a, O, F>(func: F) -> impl Fn(Span<'a>) -> ParseResult<O>
 where
-    F: Fn(Span<'a>) -> IResult<Span, O>,
+    F: Fn(Span<'a>) -> ParseResult<O>,
 {
     preceded(
         delimited_space(char('(')),
@@ -67,7 +69,7 @@ where
 /// ```js
 /// [MULTISPACE] "(" [MULTISPACE] ident [MULTISPACE] ")" [MULTISPACE]
 /// ```
-pub fn get_ident_from_brackets(data: Span) -> IResult<Span, ast::Ident> {
+pub fn get_ident_from_brackets(data: Span) -> ParseResult<ast::Ident> {
     get_from_brackets(ident)(data)
 }
 
@@ -92,7 +94,7 @@ where
 /// ```js
 /// ident = (alpha+)(alpha | number | '_')*
 /// ```
-pub fn ident(data: Span) -> IResult<Span, ast::Ident> {
+pub fn ident(data: Span) -> ParseResult<ast::Ident> {
     let _ = alpha1(data)?;
     map(alphanum_and_underscore0, ast::Ident)(data)
 }
@@ -106,7 +108,7 @@ pub fn ident(data: Span) -> IResult<Span, ast::Ident> {
 ///     "<<<" | ">>>"
 /// )
 /// ```
-pub fn expression_operations(data: Span) -> IResult<Span, ast::ExpressionOperation> {
+pub fn expression_operations(data: Span) -> ParseResult<ast::ExpressionOperation> {
     map(
         alt((
             tag("+"),
@@ -133,7 +135,7 @@ pub fn expression_operations(data: Span) -> IResult<Span, ast::ExpressionOperati
 /// ```js
 /// parameter-value = ident-value
 /// ```
-pub fn parameter_value(data: Span) -> IResult<Span, ast::ParameterValue> {
+pub fn parameter_value(data: Span) -> ParseResult<ast::ParameterValue> {
     map(ident_value, ast::ParameterValue)(data)
 }
 
@@ -142,7 +144,7 @@ pub fn parameter_value(data: Span) -> IResult<Span, ast::ParameterValue> {
 /// ```js
 /// ident-value = (ident | "(" ident ")")
 /// ```
-pub fn ident_value(data: Span) -> IResult<Span, ast::Ident> {
+pub fn ident_value(data: Span) -> ParseResult<ast::Ident> {
     delimited_space(alt((ident, get_ident_from_brackets)))(data)
 }
 
@@ -151,7 +153,7 @@ pub fn ident_value(data: Span) -> IResult<Span, ast::Ident> {
 /// ```js
 /// parameter-type = (ident-value ["*" ident-value] | "(" ident-value ["*" ident-value] ")")+
 /// ```
-pub fn parameter_type(data: Span) -> IResult<Span, ast::ParameterType> {
+pub fn parameter_type(data: Span) -> ParseResult<ast::ParameterType> {
     let type_list = tuple((
         ident_value,
         many0(preceded(delimited_space(tag("*")), ident_value)),
@@ -176,7 +178,7 @@ pub fn parameter_type(data: Span) -> IResult<Span, ast::ParameterType> {
 /// ```js
 /// parameter-value-type = (parameter-value ":" parameter-type | "(" parameter-value ":" parameter-type ")")
 /// ```
-pub fn parameter_value_type(data: Span) -> IResult<Span, ast::ParameterValueType> {
+pub fn parameter_value_type(data: Span) -> ParseResult<ast::ParameterValueType> {
     let value_type = tuple((
         parameter_value,
         preceded(delimited_space(tag(":")), parameter_type),
@@ -199,7 +201,7 @@ pub fn parameter_value_type(data: Span) -> IResult<Span, ast::ParameterValueType
 ///     parameter-value-type
 /// ) [","]]* ")"
 /// ```
-pub fn parameter_list_brackets(data: Span) -> IResult<Span, ast::ParameterValueList> {
+pub fn parameter_list_brackets(data: Span) -> ParseResult<ast::ParameterValueList> {
     let wrapper_parameter_value = &map(parameter_value, ast::ParameterValueType::Value);
     let (i, (param1, mut param2)) = get_from_brackets(tuple((
         alt((wrapper_parameter_value, parameter_value_type)),
@@ -218,7 +220,7 @@ pub fn parameter_list_brackets(data: Span) -> IResult<Span, ast::ParameterValueL
 /// ```js
 /// parameter-value-list = (parameter-value | parameter-list-brackets)
 /// ```
-pub fn parameter_value_list(data: Span) -> IResult<Span, ast::ParameterValueList> {
+pub fn parameter_value_list(data: Span) -> ParseResult<ast::ParameterValueList> {
     alt((
         map(parameter_value, ast::ParameterValueList::ParameterValue),
         parameter_list_brackets,
@@ -230,7 +232,7 @@ pub fn parameter_value_list(data: Span) -> IResult<Span, ast::ParameterValueList
 /// ```js
 /// parameter-list = (parameter-value-list+ | parameter-list-brackets)
 /// ```
-pub fn parameter_list(data: Span) -> IResult<Span, ast::ParameterList> {
+pub fn parameter_list(data: Span) -> ParseResult<ast::ParameterList> {
     alt((
         map(
             many1(parameter_value_list),
