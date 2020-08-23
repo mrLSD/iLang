@@ -25,17 +25,15 @@ use nom::{
     IResult,
     InputTakeAtPosition,
 };
-use nom_locate::LocatedSpan;
 
 use crate::{
     ast,
+    ast::{
+        ParseResult,
+        Span,
+    },
     char::AsChar,
 };
-
-/// Span is basic lexical component
-pub(crate) type Span<'a> = LocatedSpan<&'a str>;
-
-pub(crate) type ParseResult<'a, T> = IResult<Span<'a>, T>;
 
 /// Apply parser func for delimited space
 /// ## RULE:

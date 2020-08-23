@@ -2,9 +2,13 @@
 name = "i-lang"
 version = "0.1.0"
 authors = ["Evgeny Ukhanov <mrlsd@ya.ru>"]
+description = "Functional programming language"
+license = "MIT"
+repository = "https://github.com/mrLSD/iLang"
+readme = "README.md"
 edition = "2018"
 
 [dependencies]
 nom = "5.1"
 nom_locate = "2.0"
-unicode-xid = "0.2"
+

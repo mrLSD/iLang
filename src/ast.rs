@@ -1,8 +1,13 @@
 //! Full AST representation
 //!
 //! Based on *EBNF* grammar
+use nom::IResult;
+use nom_locate::LocatedSpan;
 
-use crate::tokens::Span;
+/// Span is basic lexical component
+pub(crate) type Span<'a> = LocatedSpan<&'a str>;
+
+pub(crate) type ParseResult<'a, T> = IResult<Span<'a>, T>;
 
 /// Ident (identifier) token
 /// It's basic component for many tokens and rules
