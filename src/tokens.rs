@@ -12,7 +12,10 @@ use nom::{
     },
     combinator::map,
     error::ParseError,
-    multi::{many0, many1},
+    multi::{
+        many0,
+        many1,
+    },
     sequence::tuple,
     sequence::{
         delimited,
@@ -91,8 +94,7 @@ where
 /// ```
 pub fn ident(data: Span) -> IResult<Span, ast::Ident> {
     let _ = alpha1(data)?;
-    let (i, o) = alphanum_and_underscore0(data)?;
-    Ok((i, ast::Ident(o)))
+    map(alphanum_and_underscore0, ast::Ident)(data)
 }
 
 /// Parse expression operations
@@ -105,17 +107,16 @@ pub fn ident(data: Span) -> IResult<Span, ast::Ident> {
 /// )
 /// ```
 pub fn expression_operations(data: Span) -> IResult<Span, ast::ExpressionOperation> {
-    let (i, o) = alt((
-        tag("+"),
-        tag("-"),
-        tag("*"),
-        tag("/"),
-        tag("<<<"),
-        tag(">>>"),
-    ))(data)?;
-    Ok((
-        i,
-        match *o.fragment() {
+    map(
+        alt((
+            tag("+"),
+            tag("-"),
+            tag("*"),
+            tag("/"),
+            tag("<<<"),
+            tag(">>>"),
+        )),
+        |o: Span| match *o.fragment() {
             "+" => ast::ExpressionOperation::Plus,
             "-" => ast::ExpressionOperation::Minus,
             "*" => ast::ExpressionOperation::Multiply,
@@ -124,7 +125,7 @@ pub fn expression_operations(data: Span) -> IResult<Span, ast::ExpressionOperati
             ">>>" => ast::ExpressionOperation::ShiftRight,
             _ => unreachable!(),
         },
-    ))
+    )(data)
 }
 
 /// Parse parameter value
@@ -133,8 +134,7 @@ pub fn expression_operations(data: Span) -> IResult<Span, ast::ExpressionOperati
 /// parameter-value = ident-value
 /// ```
 pub fn parameter_value(data: Span) -> IResult<Span, ast::ParameterValue> {
-    let (i, o) = ident_value(data)?;
-    Ok((i, ast::ParameterValue(o)))
+    map(ident_value, ast::ParameterValue)(data)
 }
 
 /// Parse ident value with space and brackets
@@ -186,8 +186,9 @@ pub fn parameter_value_type(data: Span) -> IResult<Span, ast::ParameterValueType
         preceded(delimited_space(tag(":")), parameter_type),
     )));
 
-    let (i, o) = alt((value_type, value_type_bracketes))(data)?;
-    Ok((i, ast::ParameterValueType::ValueType(o.0, o.1)))
+    map(alt((value_type, value_type_bracketes)), |o| {
+        ast::ParameterValueType::ValueType(o.0, o.1)
+    })(data)
 }
 
 /// Parameters list with brackets parser
@@ -218,9 +219,10 @@ pub fn parameter_list_brackets(data: Span) -> IResult<Span, ast::ParameterValueL
 /// parameter-value-list = (parameter-value | parameter-list-brackets)
 /// ```
 pub fn parameter_value_list(data: Span) -> IResult<Span, ast::ParameterValueList> {
-    let wrapper_parameter_value = &map(parameter_value, ast::ParameterValueList::ParameterValue);
-    let res = alt((wrapper_parameter_value, parameter_list_brackets))(data)?;
-    Ok(res)
+    alt((
+        map(parameter_value, ast::ParameterValueList::ParameterValue),
+        parameter_list_brackets,
+    ))(data)
 }
 
 /// Parameters list
@@ -229,9 +231,11 @@ pub fn parameter_value_list(data: Span) -> IResult<Span, ast::ParameterValueList
 /// parameter-list = (parameter-value-list+ | parameter-list-brackets)
 /// ```
 pub fn parameter_list(data: Span) -> IResult<Span, ast::ParameterList> {
-    let (i, o) = alt((
-        many1(parameter_value_list), 
-        parameter_list_brackets
-    ))(data)?;
-    Ok((i, ast::ParameterList::ParameterValueList(o)))
+    alt((
+        map(
+            many1(parameter_value_list),
+            ast::ParameterList::ParameterValueList,
+        ),
+        map(parameter_list_brackets, ast::ParameterList::ParameterList),
+    ))(data)
 }
