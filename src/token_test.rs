@@ -409,40 +409,69 @@ fn test_parameter_list() {
     }
 
     match parameter_list(Span::new("val1 (val2: type2) val3 (val4: type4)")).unwrap() {
-        (_, ParameterList::ParameterList(x)) => {
-            println!("{:#?}", x);
-            // ParameterValue(v) => {
-            //     assert_eq!((v.0).fragment(), &"val1");
-            // }
-        },
         (_, ParameterList::ParameterValueList(x)) => {
             //println!("ParameterValueList: {:#?}", x);
-            assert_eq!(x.len(), 2);
+            assert_eq!(x.len(), 4);
             match &x[0] {
                 ParameterValueList::ParameterValue(v) => assert_eq!((v.0).0.fragment(), &"val1"),
                 _ => unimplemented!(),
             }
             match &x[1] {
-                ParameterValueList::ParameterValue(v) => assert_eq!((v.0).0.fragment(), &"val2"),
+                ParameterValueList::ParameterList(v) => {
+                    match &v[0] {
+                        ParameterValueType::ValueType(v, t) => {
+                            assert_eq!((v.0).0.fragment(), &"val2");
+                            assert_eq!((t.0)[0].0.fragment(), &"type2");
+                        },
+                        _ => unimplemented!(),
+                    }
+                },
+                _ => unimplemented!(),
+            }
+            match &x[2] {
+                ParameterValueList::ParameterValue(v) => assert_eq!((v.0).0.fragment(), &"val3"),
+                _ => unimplemented!(),
+            }
+            match &x[3] {
+                ParameterValueList::ParameterList(v) => {
+                    match &v[0] {
+                        ParameterValueType::ValueType(v, t) => {
+                            assert_eq!((v.0).0.fragment(), &"val4");
+                            assert_eq!((t.0)[0].0.fragment(), &"type4");
+                        },
+                        _ => unimplemented!(),
+                    }
+                },
                 _ => unimplemented!(),
             }
         },
+        _ => unimplemented!(),
     }
-/*
-    match parameter_value_list(Span::new("(val1, val2)")).unwrap() {
-        (_, ParameterList::ParameterList(x)) => {
+
+    //match parameter_list(Span::new("(val1, val2: type2, val3, (val4: type4))")).unwrap() {
+    match parameter_list(Span::new("(val1, val2, (val3: type3 * type4)) val4")).unwrap() {
+        (_, ParameterList::ParameterValueList(x)) => {
             assert_eq!(x.len(), 2);
             match &x[0] {
-                ParameterValueType::Value(v) => assert_eq!((v.0).0.fragment(), &"val1"),
+                ParameterValueList::ParameterList(v) => {
+                    println!("ParameterValueList: {:#?}", v);
+                    // match &v[0] {
+                    //     ParameterValueType::ValueType(v, t) => {
+                    //         assert_eq!((v.0).0.fragment(), &"val2");
+                    //         assert_eq!((t.0)[0].0.fragment(), &"type2");
+                    //     },
+                    //     _ => unimplemented!(),
+                    // }
+                },
                 _ => unimplemented!(),
             }
             match &x[1] {
-                ParameterValueType::Value(v) => assert_eq!((v.0).0.fragment(), &"val2"),
+                ParameterValueList::ParameterValue(v) => assert_eq!((v.0).0.fragment(), &"val4"),
                 _ => unimplemented!(),
-            }
-        }
-        _ => unimplemented!(),
-    }*/
+            }            
+        },
+        _ => unimplemented!(),    
+    }
     
     //println!("{:#?}", x);
 }
