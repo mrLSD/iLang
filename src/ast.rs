@@ -43,7 +43,6 @@ pub type ReturnType<'a> = ParameterType<'a>;
 #[derive(Debug, Clone, PartialEq)]
 pub enum ParameterValueType<'a> {
     Value(ParameterValue<'a>),
-    Type(ParameterType<'a>),
     ValueType(ParameterValue<'a>, ParameterType<'a>),
 }
 

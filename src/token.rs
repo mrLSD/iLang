@@ -122,8 +122,7 @@ pub fn expression_operations(data: Span) -> ParseResult<ast::ExpressionOperation
             "*" => ast::ExpressionOperation::Multiply,
             "/" => ast::ExpressionOperation::Divide,
             "<<<" => ast::ExpressionOperation::ShiftLeft,
-            ">>>" => ast::ExpressionOperation::ShiftRight,
-            _ => unreachable!(),
+            _ => ast::ExpressionOperation::ShiftRight,
         },
     )(data)
 }
