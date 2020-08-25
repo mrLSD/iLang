@@ -35,7 +35,7 @@ jobs:
       - name: Tests
         run: cargo test --verbose
       - name: Clippy
-        run: cargo clippy -- -D warning
+        run: cargo clippy -- -D warnings
         
   cover:
     name: Test cover
@@ -49,7 +49,7 @@ jobs:
       - uses: actions-rs/toolchain@v1
         with:
           profile: minimal
-          toolchain: stable
+          toolchain: nightly
           override: true
 
       - name: Run grcov
