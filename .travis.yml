@@ -1,26 +1,13 @@
 language: rust
-# sudo is required to enable kcov to use the personality syscall
-sudo: required
-cache: cargo
 
 rust:
-  - nightly
-  - beta
   - stable
+  - beta
+  - nightly
 
 matrix:
-  include:
+  allow_failures:
     - rust: nightly
-      env: FEATURES=''
-      before_script:
-        - export PATH=$HOME/.cargo/bin:$PATH
-        - cargo install cargo-update   || echo "cargo-update already installed"
-        - cargo install cargo-travis   || echo "cargo-travis already installed"
-        - cargo install coveralls   || echo "coveralls already installed"
-        - cargo install-update -a
-        - mkdir -p target/kcov-master
-      script:
-        cargo coveralls --verbose --all-features
 
 addons:
   apt:
@@ -28,21 +15,16 @@ addons:
       - libcurl4-openssl-dev
       - libelf-dev
       - libdw-dev
-      - binutils-dev
       - cmake
-    sources:
-      - kalakris-cmake
+      - gcc
+      - binutils-dev
+      - libiberty-dev
 
-cache:
-  directories:
-    - /home/travis/.cargo
-
-before_cache:
-  - rm -rf /home/travis/.cargo/registry
+cache: cargo
 
 script:
-  - eval cargo build --verbose 
-  - eval cargo test --verbose 
+  - cargo build --all
+  - cargo test --all
 
-after_success: |
-  case "$TRAVIS_RUST_VERSION" in
+git:
+  depth: 1
