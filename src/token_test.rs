@@ -482,3 +482,10 @@ fn test_parameter_list() {
 
     //println!("{:#?}", x);
 }
+
+#[test]
+fn test_value_list() {
+    let x = value_list(Span::new("val1")).unwrap().1;
+    assert_eq!((x.0[0].0).0.fragment(), &"val1");
+    //println!("{:#?}", (x.0[0].0).0.fragment());
+}

@@ -51,8 +51,9 @@ jobs:
           profile: minimal
           toolchain: nightly
           override: true
-          components: grcov
 
+      - name: Install grcov
+        run: cargo install grcov
       - name: Run grcov
         env:
           RUSTFLAGS: "-Zprofile -Ccodegen-units=1 -Copt-level=0 -Clink-dead-code -Coverflow-checks=off -Zpanic_abort_tests -Cpanic=abort"
