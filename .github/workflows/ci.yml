@@ -51,6 +51,7 @@ jobs:
           profile: minimal
           toolchain: nightly
           override: true
+          components: grcov
 
       - name: Run grcov
         env:

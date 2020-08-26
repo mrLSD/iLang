@@ -59,3 +59,7 @@ pub enum ParameterList<'a> {
     ParameterList(ParameterValueList<'a>),
     ParameterValueList(Vec<ParameterValueList<'a>>),
 }
+
+/// List of Values
+#[derive(Debug, Clone, PartialEq)]
+pub struct ValueList<'a>(pub Vec<ParameterValue<'a>>);
