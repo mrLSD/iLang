@@ -1,10 +1,6 @@
 name: ci
 
-on:
-  push:
-    branches: [ master ]
-  pull_request:
-    branches: [ master ]
+on: [push, pull_request]
 
 env:
   CARGO_TERM_COLOR: always
@@ -62,7 +58,7 @@ jobs:
         run: |
           cargo build --verbose
           cargo test --verbose
-          grcov ./target/debug/ -s . -t lcov --llvm --ignore-not-existing -o lcov.info
+          grcov ./target/debug/ -s . -t lcov --llvm --ignore-not-existing --ignore *.cargo/* --ignore *core* --ignore *std* --ignore *alloc/* --ignore *rustup* -o lcov.info
 
       - name: Push grcov results to Coveralls via GitHub Action
         uses: coverallsapp/github-action@master
