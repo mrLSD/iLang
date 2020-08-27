@@ -486,25 +486,25 @@ fn test_parameter_list() {
 #[test]
 fn test_value_list() {
     let x = value_list(Span::new("val1")).unwrap().1;
-    assert_eq!((x.0[0].0).0.fragment(), &"val1");
+    assert_eq!((x[0].0).0.fragment(), &"val1");
 
     let x = value_list(Span::new("val1, val2")).unwrap();
-    assert_eq!(((x.1).0[0].0).0.fragment(), &"val1");
+    assert_eq!((x.1[0].0).0.fragment(), &"val1");
     assert_eq!(x.0.fragment(), &", val2");
 
     let x = value_list(Span::new("(val1)")).unwrap().1;
-    assert_eq!((x.0[0].0).0.fragment(), &"val1");
+    assert_eq!((x[0].0).0.fragment(), &"val1");
 
     let x = value_list(Span::new("(val1, val2)")).unwrap().1;
-    assert_eq!((x.0[0].0).0.fragment(), &"val1");
-    assert_eq!((x.0[1].0).0.fragment(), &"val2");
+    assert_eq!((x[0].0).0.fragment(), &"val1");
+    assert_eq!((x[1].0).0.fragment(), &"val2");
 
     let x = value_list(Span::new("(val1, (val2))")).unwrap().1;
-    assert_eq!((x.0[0].0).0.fragment(), &"val1");
-    assert_eq!((x.0[1].0).0.fragment(), &"val2");
+    assert_eq!((x[0].0).0.fragment(), &"val1");
+    assert_eq!((x[1].0).0.fragment(), &"val2");
 
     let x = value_list(Span::new("((val1), (val2))")).unwrap().1;
-    assert_eq!((x.0[0].0).0.fragment(), &"val1");
-    assert_eq!((x.0[1].0).0.fragment(), &"val2");
+    assert_eq!((x[0].0).0.fragment(), &"val1");
+    assert_eq!((x[1].0).0.fragment(), &"val2");
     //println!("test_value_list: {:#?}", x.0.fragment());
 }

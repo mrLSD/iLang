@@ -61,8 +61,7 @@ pub enum ParameterList<'a> {
 }
 
 /// List of Values
-#[derive(Debug, Clone, PartialEq)]
-pub struct ValueList<'a>(pub Vec<ParameterValue<'a>>);
+pub type ValueList<'a> = Vec<ParameterValue<'a>>;
 
 /// Name of functions
 pub type FunctionName<'a> = Ident<'a>;
