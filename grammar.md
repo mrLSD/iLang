@@ -1,4 +1,7 @@
 # iLang Grammar
+
+Formal grammar based on EBNF.
+
 ```
 main = (
         namespace |
@@ -11,8 +14,7 @@ main = (
 ident = alpha+ (alphanum | "_")* 
 
 // Namespaces declaration
-namespace = "namespace" ["rec"] (parent-namespaces ".")* namespace-name
-parent-namespaces = ident
+namespace = "namespace" ["rec"] (namespace-name ".")* namespace-name
 namespace-name = ident
 
 // Module declaration
@@ -36,7 +38,7 @@ ident-value = (ident | "(" ident ")")
 parameter-type = (ident-value ["*" ident-value] | "(" ident-value ["*" ident-value] ")")+
 return-type = parameter-type 
 function-body = [(let-binding | function-call)*] return-statement
-return-statement = func-value
+return-statement = function-value
 
 // Let binding
 let-binding = "let" let-value-list "=" function-body
@@ -44,14 +46,13 @@ let-value-list = (parameter-value-list [","])+
 value-list = (parameter-value | "(" (parameter-value [","])* ")")
 
 // Function call statements
-function-call = function-call-name (func-value+ | "(" func-value-comma* ")")
+function-call = function-call-name (function-value+ | "(" [function-value [","] ]* ")")
 function-call-name = (function-name ".")* function-name
-func-value = (value-list | "(" expression ")")
-func-value-comma = func-value [","]
+function-value = (value-list | "(" expression ")")
 
 // Expression declarations
 expression = (
-            func-value | 
+            function-value | 
             function-call | 
             "(" function-call ")"
         ) [expression-operations expression]

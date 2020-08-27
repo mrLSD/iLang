@@ -258,3 +258,12 @@ pub fn value_list(data: Span) -> ParseResult<ast::ValueList> {
     );
     alt((map(parameter_value, |v| ast::ValueList(vec![v])), val_list))(data)
 }
+
+/*
+/// Value list from parameter values
+/// ## RULES:
+/// ```js
+/// value-list = (parameter-value | "(" (parameter-value [","])* ")")
+/// ```
+pub fn value_list(data: Span) -> ParseResult<ast::ValueList> {}
+*/

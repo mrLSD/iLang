@@ -63,3 +63,18 @@ pub enum ParameterList<'a> {
 /// List of Values
 #[derive(Debug, Clone, PartialEq)]
 pub struct ValueList<'a>(pub Vec<ParameterValue<'a>>);
+
+/// Name of functions
+pub type FunctionName<'a> = Ident<'a>;
+
+/// Name of modules
+pub type ModuleName<'a> = Ident<'a>;
+
+/// Qualified namespace definitions
+pub type QualifiedNamespace<'a> = Ident<'a>;
+
+/// Name of namespace
+pub type NamespaceName<'a> = Ident<'a>;
+
+/// Function call names
+pub type FunctionCallName<'a> = Vec<FunctionName<'a>>;
