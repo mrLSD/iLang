@@ -165,7 +165,7 @@ pub fn parameter_type(data: Span) -> ParseResult<ast::ParameterType> {
         |(first, mut second)| {
             let mut res_list = vec![first];
             res_list.append(&mut second);
-            ast::ParameterType(res_list)
+            res_list
         },
     )(data)
 }
