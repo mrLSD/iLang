@@ -53,10 +53,8 @@ fn test_expression_operations() {
 
 #[test]
 fn test_parameter_value() {
-    assert_eq!(
-        parameter_value(Span::new("test")).unwrap().1,
-        ParameterValue(Ident(Span::new("test")))
-    );
+    let res = parameter_value(Span::new("val1")).unwrap().1;
+    assert_eq!(res.0.fragment(), &"val1");
 
     let n = parameter_value(Span::new("asd123 test")).unwrap();
     let fragment = ((n.1).0).0.fragment();
@@ -67,7 +65,7 @@ fn test_parameter_value() {
     assert_eq!(fragment, &"asd123");
 
     let n = parameter_value(Span::new(" ( asd123 ) test")).unwrap();
-    let fragment = ((n.1).0).0.fragment();
+    let fragment = ((n.1).0).fragment();
     assert_eq!(fragment, &"asd123");
 
     assert!(parameter_value(Span::new("123test")).is_err());
@@ -85,19 +83,19 @@ fn test_get_ident_from_brackets() {
 
     let n = get_ident_from_brackets(Span::new(" ( test123 ) test")).unwrap();
     assert_eq!((n.1).0.fragment(), &"test123");
-    assert_eq!(n.0.fragment(), &"test");
+    assert_eq!(n.fragment(), &"test");
 }
 
 #[test]
 fn test_parameter_type() {
     let (i, o) = parameter_type(Span::new("asd1 test")).unwrap();
-    assert_eq!(o[0].0.fragment(), &"asd1");
-    assert_eq!(i.fragment(), &"test");
+    assert_eq!(o[0].0.fragment(), &"val1");
+    assert_eq!(i.fragment(), &"val2");
     assert_eq!(o.len(), 1);
 
-    let (i, o) = parameter_type(Span::new(" ( asd1 ) test")).unwrap();
-    assert_eq!(o[0].0.fragment(), &"asd1");
-    assert_eq!(i.fragment(), &"test");
+    let (i, o) = parameter_type(Span::new(" ( val2 ) val2")).unwrap();
+    assert_eq!(o.fragment(), &"val1");
+    assert_eq!(i.fragment(), &"val2");
     assert_eq!(o.len(), 1);
 
     let n = parameter_type(Span::new("* asd1 * asd2 * "));
@@ -473,7 +471,7 @@ fn test_parameter_list() {
                 _ => unimplemented!(),
             }
             match &x[1] {
-                ParameterValueList::ParameterValue(v) => assert_eq!((v.0).0.fragment(), &"val4"),
+                ParameterValueList::ParameterValue(v) => assert_eq!((v.0).fragment(), &"val4"),
                 _ => unimplemented!(),
             }
         }
@@ -486,25 +484,25 @@ fn test_parameter_list() {
 #[test]
 fn test_value_list() {
     let x = value_list(Span::new("val1")).unwrap().1;
-    assert_eq!((x[0].0).0.fragment(), &"val1");
+    assert_eq!((x[0].0).fragment(), &"val1");
 
     let x = value_list(Span::new("val1, val2")).unwrap();
-    assert_eq!((x.1[0].0).0.fragment(), &"val1");
+    assert_eq!(x.1[0].fragment(), &"val1");
     assert_eq!(x.0.fragment(), &", val2");
 
     let x = value_list(Span::new("(val1)")).unwrap().1;
-    assert_eq!((x[0].0).0.fragment(), &"val1");
+    assert_eq!(x[0].fragment(), &"val1");
 
     let x = value_list(Span::new("(val1, val2)")).unwrap().1;
-    assert_eq!((x[0].0).0.fragment(), &"val1");
-    assert_eq!((x[1].0).0.fragment(), &"val2");
+    assert_eq!(x[0].fragment(), &"val1");
+    assert_eq!(x[1].fragment(), &"val2");
 
     let x = value_list(Span::new("(val1, (val2))")).unwrap().1;
-    assert_eq!((x[0].0).0.fragment(), &"val1");
-    assert_eq!((x[1].0).0.fragment(), &"val2");
+    assert_eq!(x[0].fragment(), &"val1");
+    assert_eq!(x[1].fragment(), &"val2");
 
     let x = value_list(Span::new("((val1), (val2))")).unwrap().1;
-    assert_eq!((x[0].0).0.fragment(), &"val1");
-    assert_eq!((x[1].0).0.fragment(), &"val2");
+    assert_eq!(x[0].fragment(), &"val1");
+    assert_eq!(x[1].fragment(), &"val2");
     //println!("test_value_list: {:#?}", x.0.fragment());
 }

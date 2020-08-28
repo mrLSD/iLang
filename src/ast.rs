@@ -11,8 +11,7 @@ pub(crate) type ParseResult<'a, T> = IResult<Span<'a>, T>;
 
 /// Ident (identifier) token
 /// It's basic component for many tokens and rules
-#[derive(Debug, Clone, PartialEq)]
-pub struct Ident<'a>(pub Span<'a>);
+pub type Ident<'a> = Span<'a>;
 
 /// Expression Operations
 /// Describe type of operations for expressions
@@ -28,8 +27,7 @@ pub enum ExpressionOperation {
 
 /// Parameter value used for broad cases
 /// used for represent values
-#[derive(Debug, Clone, PartialEq)]
-pub struct ParameterValue<'a>(pub Ident<'a>);
+pub type ParameterValue<'a> = Ident<'a>;
 
 /// Parameter type used for broad cases type representation
 /// especial for ParameterValue

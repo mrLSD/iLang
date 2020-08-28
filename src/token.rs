@@ -94,7 +94,7 @@ where
 /// ```
 pub fn ident(data: Span) -> ParseResult<ast::Ident> {
     let _ = alpha1(data)?;
-    map(alphanum_and_underscore0, ast::Ident)(data)
+    alphanum_and_underscore0(data)
 }
 
 /// Parse expression operations
@@ -133,7 +133,7 @@ pub fn expression_operations(data: Span) -> ParseResult<ast::ExpressionOperation
 /// parameter-value = ident-value
 /// ```
 pub fn parameter_value(data: Span) -> ParseResult<ast::ParameterValue> {
-    map(ident_value, ast::ParameterValue)(data)
+    ident_value(data)
 }
 
 /// Parse ident value with space and brackets
