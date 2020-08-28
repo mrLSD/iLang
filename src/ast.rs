@@ -74,3 +74,6 @@ pub type NamespaceName<'a> = Ident<'a>;
 
 /// Function call names
 pub type FunctionCallName<'a> = Vec<FunctionName<'a>>;
+
+/// Let-binding value list
+pub type LetValueList<'a> = Vec<ParameterValueList<'a>>;

@@ -57,16 +57,16 @@ jobs:
         run: |
           cargo build --verbose
           cargo test --verbose
-          grcov >
-            ./target/debug/ -s . -t lcov --llvm 
-            --ignore-not-existing 
-            --ignore *.cargo/* 
-            --ignore *core* 
-            --ignore *std* 
-            --ignore *alloc/* 
-            --ignore *rustup* 
-            --ignore *_test*
-            --ignore *src/ast.rs*
+          grcov \
+            ./target/debug/ -s . -t lcov --llvm \ 
+            --ignore-not-existing \ 
+            --ignore *.cargo/* \ 
+            --ignore *core* \ 
+            --ignore *std* \ 
+            --ignore *alloc/* \ 
+            --ignore *rustup* \ 
+            --ignore *_test* \
+            --ignore *src/ast.rs* \
             -o lcov.info
           
       - name: Push grcov results to Coveralls via GitHub Action

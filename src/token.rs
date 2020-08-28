@@ -258,3 +258,22 @@ pub fn value_list(data: Span) -> ParseResult<ast::ValueList> {
     );
     alt((map(parameter_value, |v| vec![v]), val_list))(data)
 }
+
+/// Let binding Value list from parameter values list
+/// ## RULES:
+/// ```js
+/// let-value-list = (parameter-value-list [","])+
+/// ```
+pub fn let_value_list(data: Span) -> ParseResult<ast::LetValueList> {
+    map(
+        tuple((
+            parameter_value_list,
+            many0(preceded(delimited_space(tag(",")), parameter_value_list)),
+        )),
+        |(first, mut second)| {
+            let mut res_list = vec![first];
+            res_list.append(&mut second);
+            res_list
+        },
+    )(data)
+}
