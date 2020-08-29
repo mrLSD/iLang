@@ -94,7 +94,7 @@ where
 /// ```
 pub fn ident(data: Span) -> ParseResult<ast::Ident> {
     let _ = alpha1(data)?;
-    map(alphanum_and_underscore0, ast::Ident)(data)
+    alphanum_and_underscore0(data)
 }
 
 /// Parse expression operations
@@ -133,7 +133,7 @@ pub fn expression_operations(data: Span) -> ParseResult<ast::ExpressionOperation
 /// parameter-value = ident-value
 /// ```
 pub fn parameter_value(data: Span) -> ParseResult<ast::ParameterValue> {
-    map(ident_value, ast::ParameterValue)(data)
+    ident_value(data)
 }
 
 /// Parse ident value with space and brackets
@@ -165,7 +165,7 @@ pub fn parameter_type(data: Span) -> ParseResult<ast::ParameterType> {
         |(first, mut second)| {
             let mut res_list = vec![first];
             res_list.append(&mut second);
-            ast::ParameterType(res_list)
+            res_list
         },
     )(data)
 }
@@ -245,8 +245,35 @@ pub fn parameter_list(data: Span) -> ParseResult<ast::ParameterList> {
 /// value-list = (parameter-value | "(" (parameter-value [","])* ")")
 /// ```
 pub fn value_list(data: Span) -> ParseResult<ast::ValueList> {
-    alt((
-        map(many0(parameter_value), ast::ValueList),
-        map(parameter_value, |v| ast::ValueList(vec![v])),
-    ))(data)
+    let val_list = map(
+        get_from_brackets(tuple((
+            parameter_value,
+            many0(preceded(delimited_space(tag(",")), parameter_value)),
+        ))),
+        |(first, mut second)| {
+            let mut res_list = vec![first];
+            res_list.append(&mut second);
+            res_list
+        },
+    );
+    alt((map(parameter_value, |v| vec![v]), val_list))(data)
+}
+
+/// Let binding Value list from parameter values list
+/// ## RULES:
+/// ```js
+/// let-value-list = (parameter-value-list [","])+
+/// ```
+pub fn let_value_list(data: Span) -> ParseResult<ast::LetValueList> {
+    map(
+        tuple((
+            parameter_value_list,
+            many0(preceded(delimited_space(tag(",")), parameter_value_list)),
+        )),
+        |(first, mut second)| {
+            let mut res_list = vec![first];
+            res_list.append(&mut second);
+            res_list
+        },
+    )(data)
 }
