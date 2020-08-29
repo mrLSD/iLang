@@ -497,3 +497,62 @@ fn test_value_list() {
     assert_eq!(x[0].fragment(), &"val1");
     assert_eq!(x[1].fragment(), &"val2");
 }
+
+#[test]
+fn test_let_value_list() {
+    match let_value_list(Span::new("val1")).unwrap().1[0] {
+        ParameterValueList::ParameterValue(v) => assert_eq!(v.fragment(), &"val1"),
+        _ => unimplemented!(),
+    }
+
+    match let_value_list(Span::new("(val1, val2)")).unwrap().1[0] {
+        ParameterValueList::ParameterList(ref x) => {
+            assert_eq!(x.len(), 2);
+            match &x[0] {
+                ParameterValueType::Value(v) => assert_eq!(v.fragment(), &"val1"),
+                _ => unimplemented!(),
+            }
+            match &x[1] {
+                ParameterValueType::Value(v) => assert_eq!(v.fragment(), &"val2"),
+                _ => unimplemented!(),
+            }
+        }
+        _ => unimplemented!(),
+    }
+
+    match let_value_list(Span::new("(val1, val2: type2, val3, (val4: type4))"))
+        .unwrap()
+        .1[0]
+    {
+        ParameterValueList::ParameterList(ref x) => {
+            assert_eq!(x.len(), 4);
+            match &x[0] {
+                ParameterValueType::Value(v) => {
+                    assert_eq!(v.fragment(), &"val1");
+                }
+                _ => unimplemented!(),
+            }
+            match &x[1] {
+                ParameterValueType::ValueType(v, t) => {
+                    assert_eq!(v.fragment(), &"val2");
+                    assert_eq!(t[0].fragment(), &"type2");
+                }
+                _ => unimplemented!(),
+            }
+            match &x[2] {
+                ParameterValueType::Value(v) => {
+                    assert_eq!(v.fragment(), &"val3");
+                }
+                _ => unimplemented!(),
+            }
+            match &x[3] {
+                ParameterValueType::ValueType(v, t) => {
+                    assert_eq!(v.fragment(), &"val4");
+                    assert_eq!(t[0].fragment(), &"type4");
+                }
+                _ => unimplemented!(),
+            }
+        }
+        _ => unimplemented!(),
+    }
+}

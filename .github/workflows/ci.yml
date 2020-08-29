@@ -55,19 +55,9 @@ jobs:
           RUSTDOCFLAGS: "-Cpanic=abort"
           CARGO_INCREMENTAL: 0
         run: |
-          cargo build --verbose
-          cargo test --verbose
-          grcov \
-            ./target/debug/ -s . -t lcov --llvm \ 
-            --ignore-not-existing \ 
-            --ignore *.cargo/* \ 
-            --ignore *core* \ 
-            --ignore *std* \ 
-            --ignore *alloc/* \ 
-            --ignore *rustup* \ 
-            --ignore *_test* \
-            --ignore *src/ast.rs* \
-            -o lcov.info
+          cargo build
+          cargo test
+          grcov ./target/debug/ -s . -t lcov --llvm --ignore-not-existing  --ignore *.cargo/*  --ignore *core*  --ignore *std*  --ignore *alloc/*  --ignore *rustup*  --ignore *_test*  --ignore *src/ast.rs*  -o lcov.info
           
       - name: Push grcov results to Coveralls via GitHub Action
         uses: coverallsapp/github-action@master
