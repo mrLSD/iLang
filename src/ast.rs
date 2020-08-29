@@ -72,6 +72,9 @@ pub type QualifiedNamespace<'a> = Ident<'a>;
 /// Name of namespace
 pub type NamespaceName<'a> = Ident<'a>;
 
+/// Namespace definition
+pub type Namespace<'a> = Vec<NamespaceName<'a>>;
+
 /// Function call names
 pub type FunctionCallName<'a> = Vec<FunctionName<'a>>;
 

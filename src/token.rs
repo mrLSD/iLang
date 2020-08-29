@@ -277,3 +277,23 @@ pub fn let_value_list(data: Span) -> ParseResult<ast::LetValueList> {
         },
     )(data)
 }
+
+/// Let binding Value list from parameter values list
+/// ## RULES:
+/// ```js
+/// namespace = "namespace" ["rec"] (namespace-name ".")* namespace-name
+/// namespace-name = ident
+/// ```
+pub fn namespace(data: Span) -> ParseResult<ast::Namespace> {
+    map(
+        tuple((
+            preceded(tag("namespace"), ident),
+            many0(preceded(delimited_space(tag(".")), ident)),
+        )),
+        |(first, mut second)| {
+            let mut res_list = vec![first];
+            res_list.append(&mut second);
+            res_list
+        },
+    )(data)
+}
