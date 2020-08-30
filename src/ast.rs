@@ -142,3 +142,25 @@ pub struct FunctionCall<'a> {
     pub function_call_name: FunctionCallName<'a>,
     pub function_value: FunctionValue<'a>,
 }
+
+/// Function statement
+#[derive(Debug, Clone, PartialEq)]
+pub struct Function<'a> {
+    pub modifier: Ident<'a>,
+    pub function_name: FunctionName<'a>,
+    pub parameter_list: ParameterList<'a>,
+    pub return_type: ReturnType<'a>,
+    pub function_body: FunctionBody<'a>,
+}
+
+/// Main statement
+#[derive(Debug, Clone, PartialEq)]
+pub enum MainStatement<'a> {
+    Namespace(Namespace<'a>),
+    Module(Module<'a>),
+    Function(Function<'a>),
+    LetBinding(LetBinding<'a>),
+}
+
+/// Main - entry point for all definitions
+pub type Main<'a> = Vec<MainStatement<'a>>;
