@@ -66,8 +66,18 @@ pub type FunctionName<'a> = Ident<'a>;
 /// Name of modules
 pub type ModuleName<'a> = Ident<'a>;
 
+/// Accessibility modifiers
+pub type AccessibilityModifier<'a> = Ident<'a>;
+
 /// Qualified namespace definitions
 pub type QualifiedNamespace<'a> = Ident<'a>;
+
+/// Module definition
+#[derive(Debug, Clone, PartialEq)]
+pub struct Module<'a> {
+    pub accessibility: Option<AccessibilityModifier<'a>>,
+    pub module_name: Vec<ModuleName<'a>>,
+}
 
 /// Name of namespace
 pub type NamespaceName<'a> = Ident<'a>;

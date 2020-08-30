@@ -14,7 +14,7 @@ main = (
 ident = alpha+ (alphanum | "_")* 
 
 // Namespaces declaration
-namespace = "namespace" ["rec"] (namespace-name ".")* namespace-name
+namespace = "namespace" (namespace-name ".")* namespace-name
 namespace-name = ident
 
 // Module declaration
