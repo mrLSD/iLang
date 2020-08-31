@@ -34,6 +34,7 @@ use crate::{
     },
     char::AsChar,
 };
+use nom::combinator::opt;
 
 /// Apply parser func for delimited space
 /// ## RULE:
@@ -317,14 +318,20 @@ pub fn accessibility_modifier(data: Span) -> ParseResult<ast::AccessibilityModif
 pub fn module(data: Span) -> ParseResult<ast::Module> {
     map(
         tuple((
-            preceded(tag("namespace"), ident),
-            many0(preceded(delimited_space(tag(".")), ident)),
+            preceded(
+                tag("module"),
+                tuple((opt(accessibility_modifier), delimited_space(ident))),
+            ),
+            //preceded(tag("module"), delimited_space(ident)),
+            many0(preceded(delimited_space(tag(".")), delimited_space(ident))),
         )),
         |(first, mut second)| {
-            let mut res_list = vec![first];
+            let accessibility = first.0;
+            let mut res_list = vec![first.1];
+            //let mut res_list = vec![first];
             res_list.append(&mut second);
             ast::Module {
-                accessibility: None,
+                accessibility: accessibility,
                 module_name: res_list,
             }
         },

@@ -613,3 +613,19 @@ fn test_let_value_list() {
         _ => unimplemented!(),
     }
 }
+
+#[test]
+fn test_module() {
+    let res = module(Span::new("test"));
+    assert!(res.is_err());
+
+    let res = module(Span::new("module test1")).unwrap().1;
+    assert_eq!(res.module_name.len(), 1);
+    assert_eq!(res.accessibility, None);
+    println!("{:#?}", res);
+
+    let res = module(Span::new("module test1.test2")).unwrap().1;
+    assert_eq!(res.module_name.len(), 2);
+    assert_eq!(res.accessibility, None);
+    //println!("{:#?}", res);
+}
