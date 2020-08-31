@@ -305,7 +305,7 @@ pub fn namespace(data: Span) -> ParseResult<ast::Namespace> {
 /// accessibility-modifier = ("public" | "internal" | "private")
 /// ```
 pub fn accessibility_modifier(data: Span) -> ParseResult<ast::AccessibilityModifier> {
-    alt((tag("public"), tag("internal"), tag("private")))(data)
+    delimited_space(alt((tag("public"), tag("internal"), tag("private"))))(data)
 }
 
 /// Module parser
@@ -331,7 +331,7 @@ pub fn module(data: Span) -> ParseResult<ast::Module> {
             //let mut res_list = vec![first];
             res_list.append(&mut second);
             ast::Module {
-                accessibility: accessibility,
+                accessibility,
                 module_name: res_list,
             }
         },

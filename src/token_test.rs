@@ -248,7 +248,6 @@ fn test_parameter_list_brackets() {
 
     match parameter_list_brackets(Span::new("(val1, val2: type2)")).unwrap() {
         (_, ParameterValueList::ParameterList(x)) => {
-            //println!("{:#?}", x);
             assert_eq!(x.len(), 2);
             match &x[0] {
                 ParameterValueType::Value(v) => {
@@ -402,7 +401,6 @@ fn test_parameter_list() {
 
     match parameter_list(Span::new("val1 (val2: type2) val3 (val4: type4)")).unwrap() {
         (_, ParameterList::ParameterValueList(x)) => {
-            //println!("ParameterValueList: {:#?}", x);
             assert_eq!(x.len(), 4);
             match &x[0] {
                 ParameterValueList::ParameterValue(v) => assert_eq!(v.fragment(), &"val1"),
@@ -622,10 +620,18 @@ fn test_module() {
     let res = module(Span::new("module test1")).unwrap().1;
     assert_eq!(res.module_name.len(), 1);
     assert_eq!(res.accessibility, None);
-    println!("{:#?}", res);
 
     let res = module(Span::new("module test1.test2")).unwrap().1;
     assert_eq!(res.module_name.len(), 2);
     assert_eq!(res.accessibility, None);
-    //println!("{:#?}", res);
+
+    let res = module(Span::new("module public test1.test2.test3"))
+        .unwrap()
+        .1;
+    assert_eq!(res.module_name.len(), 3);
+    assert_eq!(res.module_name[0].fragment(), &"test1");
+    assert_eq!(res.module_name[1].fragment(), &"test2");
+    assert_eq!(res.module_name[2].fragment(), &"test3");
+    assert_eq!(res.accessibility.unwrap().fragment(), &"public");
+    //println!("{:#?}", res.accessibility.unwrap().fragment());
 }
