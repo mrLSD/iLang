@@ -288,8 +288,8 @@ pub fn let_value_list(data: Span) -> ParseResult<ast::LetValueList> {
 pub fn namespace(data: Span) -> ParseResult<ast::Namespace> {
     map(
         tuple((
-            preceded(tag("namespace"), ident),
-            many0(preceded(delimited_space(tag(".")), ident)),
+            preceded(terminated(tag("namespace"), multispace0), ident),
+            many0(preceded(tag("."), ident)),
         )),
         |(first, mut second)| {
             let mut res_list = vec![first];
@@ -319,16 +319,14 @@ pub fn module(data: Span) -> ParseResult<ast::Module> {
     map(
         tuple((
             preceded(
-                tag("module"),
-                tuple((opt(accessibility_modifier), delimited_space(ident))),
+                terminated(tag("module"), multispace0),
+                tuple((opt(accessibility_modifier), ident)),
             ),
-            //preceded(tag("module"), delimited_space(ident)),
-            many0(preceded(delimited_space(tag(".")), delimited_space(ident))),
+            many0(preceded(tag("."), ident)),
         )),
         |(first, mut second)| {
             let accessibility = first.0;
             let mut res_list = vec![first.1];
-            //let mut res_list = vec![first];
             res_list.append(&mut second);
             ast::Module {
                 accessibility,

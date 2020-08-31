@@ -18,4 +18,5 @@ cover:
 		&& cargo +nightly build --all \
 		&& cargo +nightly test --all \
 		&& grcov ./target/debug/ -s . -t html --llvm --branch --ignore-not-existing -o ./target/debug/coverage/ \
-		&& firefox ./target/debug/coverage/index.html
+		&& firefox ./target/debug/coverage/index.html \
+		&& export RUSTFLAGS=""  && cargo clippy && cargo test 

@@ -10,13 +10,13 @@ jobs:
       matrix:
         os: 
           - ubuntu-16.04
-#          - ubuntu-18.04
-#          - ubuntu-20.04
-#          - windows-latest
-#          - macos-latest
+          - ubuntu-18.04
+          - ubuntu-20.04
+          - windows-latest
+          - macos-latest
         rust:
           - stable
-#          - beta
+          - beta
           - nightly
 
     steps:
@@ -79,7 +79,9 @@ jobs:
         run: >
           cargo build;
           cargo test;
-          grcov ./target/debug/ -s . -t lcov --llvm --ignore-not-existing  --ignore *.cargo/*  --ignore *core*  --ignore *std*  --ignore *alloc/*  --ignore *rustup*  --ignore *_test*  --ignore *src/ast.rs*  -o lcov.info
+          grcov ./target/debug/ -s . -t lcov --llvm \
+            --ignore-not-existing  \
+            --ignore *.cargo/*  --ignore *core*  --ignore *std*  --ignore *alloc/*  --ignore *rustup*  --ignore *_test*  --ignore *src/ast.rs*  -o lcov.info
          
       - uses: actions/upload-artifact@v2
         with:
