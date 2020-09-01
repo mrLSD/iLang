@@ -38,7 +38,7 @@ ident-value = (ident | "(" ident ")")
 parameter-type = (ident-value ["*" ident-value] | "(" ident-value ["*" ident-value] ")")+
 return-type = parameter-type 
 function-body = [function-body-statement]* return-statement
-function-body-statement = (let-binding | function-call)
+function-body-statement = (let-binding | function-call | expression)
 return-statement = function-value
 
 // Let binding

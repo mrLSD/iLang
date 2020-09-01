@@ -9,8 +9,12 @@ use nom::{
         alpha1,
         char,
         multispace0,
+        multispace1,
     },
-    combinator::map,
+    combinator::{
+        map,
+        opt,
+    },
     error::ParseError,
     multi::{
         many0,
@@ -34,7 +38,6 @@ use crate::{
     },
     char::AsChar,
 };
-use nom::combinator::opt;
 
 /// Apply parser func for delimited space
 /// ## RULE:
@@ -288,7 +291,7 @@ pub fn let_value_list(data: Span) -> ParseResult<ast::LetValueList> {
 pub fn namespace(data: Span) -> ParseResult<ast::Namespace> {
     map(
         tuple((
-            preceded(terminated(tag("namespace"), multispace0), ident),
+            preceded(terminated(tag("namespace"), multispace1), ident),
             many0(preceded(tag("."), ident)),
         )),
         |(first, mut second)| {
@@ -319,7 +322,7 @@ pub fn module(data: Span) -> ParseResult<ast::Module> {
     map(
         tuple((
             preceded(
-                terminated(tag("module"), multispace0),
+                terminated(tag("module"), multispace1),
                 tuple((opt(accessibility_modifier), ident)),
             ),
             many0(preceded(tag("."), ident)),
@@ -394,4 +397,37 @@ pub fn function_call(data: Span) -> ParseResult<ast::FunctionCall> {
             function_value: v.1,
         }
     })(data)
+}
+
+/// Function body parser
+/// ## RULES:
+/// ```js
+/// function-body = [function-body-statement]* return-statement
+/// ```
+pub fn function_body(data: Span) -> ParseResult<ast::FunctionBody> {
+    let x = function_value(data)?;
+    // TODO: extend  Function Body statement
+    let res = ast::FunctionBody {
+        statement: vec![],
+        return_statement: x.1,
+    };
+    Ok((x.0, res))
+}
+
+/// Let binding statement
+/// ## RULES:
+/// ```js
+/// let-binding = "let" let-value-list "=" function-body
+/// ```
+pub fn let_binding(data: Span) -> ParseResult<ast::LetBinding> {
+    map(
+        tuple((
+            preceded(terminated(tag("let"), multispace1), let_value_list),
+            function_body,
+        )),
+        |v| ast::LetBinding {
+            value_list: v.0,
+            function_body: v.1,
+        },
+    )(data)
 }

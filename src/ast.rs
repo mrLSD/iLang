@@ -94,7 +94,7 @@ pub type LetValueList<'a> = Vec<ParameterValueList<'a>>;
 /// Let binding
 #[derive(Debug, Clone, PartialEq)]
 pub struct LetBinding<'a> {
-    pub list_value: LetValueList<'a>,
+    pub value_list: LetValueList<'a>,
     pub function_body: FunctionBody<'a>,
 }
 
@@ -109,6 +109,7 @@ pub struct FunctionBody<'a> {
 pub enum FunctionBodyStatement<'a> {
     LetBinding(LetBinding<'a>),
     FunctionCall(FunctionCall<'a>),
+    Expression(Box<Expression<'a>>),
 }
 
 /// Expression basic statement
