@@ -34,6 +34,7 @@ use crate::{
     },
     char::AsChar,
 };
+use nom::combinator::opt;
 
 /// Apply parser func for delimited space
 /// ## RULE:
@@ -274,6 +275,63 @@ pub fn let_value_list(data: Span) -> ParseResult<ast::LetValueList> {
             let mut res_list = vec![first];
             res_list.append(&mut second);
             res_list
+        },
+    )(data)
+}
+
+/// Let binding Value list from parameter values list
+/// ## RULES:
+/// ```js
+/// namespace = "namespace" (namespace-name ".")* namespace-name
+/// namespace-name = ident
+/// ```
+pub fn namespace(data: Span) -> ParseResult<ast::Namespace> {
+    map(
+        tuple((
+            preceded(terminated(tag("namespace"), multispace0), ident),
+            many0(preceded(tag("."), ident)),
+        )),
+        |(first, mut second)| {
+            let mut res_list = vec![first];
+            res_list.append(&mut second);
+            res_list
+        },
+    )(data)
+}
+
+/// Accessibility modifiers parser
+/// ## RULES:
+/// ```js
+/// accessibility-modifier = ("public" | "internal" | "private")
+/// ```
+pub fn accessibility_modifier(data: Span) -> ParseResult<ast::AccessibilityModifier> {
+    delimited_space(alt((tag("public"), tag("internal"), tag("private"))))(data)
+}
+
+/// Module parser
+/// ## RULES:
+/// ```js
+/// module = "module" [accessibility-modifier] (qualified-namespace "." )* module-name
+/// qualified-namespace = indent
+/// module-name = ident
+/// ```
+pub fn module(data: Span) -> ParseResult<ast::Module> {
+    map(
+        tuple((
+            preceded(
+                terminated(tag("module"), multispace0),
+                tuple((opt(accessibility_modifier), ident)),
+            ),
+            many0(preceded(tag("."), ident)),
+        )),
+        |(first, mut second)| {
+            let accessibility = first.0;
+            let mut res_list = vec![first.1];
+            res_list.append(&mut second);
+            ast::Module {
+                accessibility,
+                module_name: res_list,
+            }
         },
     )(data)
 }

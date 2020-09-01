@@ -248,7 +248,6 @@ fn test_parameter_list_brackets() {
 
     match parameter_list_brackets(Span::new("(val1, val2: type2)")).unwrap() {
         (_, ParameterValueList::ParameterList(x)) => {
-            //println!("{:#?}", x);
             assert_eq!(x.len(), 2);
             match &x[0] {
                 ParameterValueType::Value(v) => {
@@ -402,7 +401,6 @@ fn test_parameter_list() {
 
     match parameter_list(Span::new("val1 (val2: type2) val3 (val4: type4)")).unwrap() {
         (_, ParameterList::ParameterValueList(x)) => {
-            //println!("ParameterValueList: {:#?}", x);
             assert_eq!(x.len(), 4);
             match &x[0] {
                 ParameterValueList::ParameterValue(v) => assert_eq!(v.fragment(), &"val1"),
@@ -612,4 +610,84 @@ fn test_let_value_list() {
         }
         _ => unimplemented!(),
     }
+}
+
+#[test]
+fn test_module() {
+    let res = module(Span::new("test"));
+    assert!(res.is_err());
+
+    let res = module(Span::new("module test1")).unwrap().1;
+    assert_eq!(res.module_name.len(), 1);
+    assert_eq!(res.module_name[0].fragment(), &"test1");
+    assert_eq!(res.accessibility, None);
+
+    let res = module(Span::new("module test1.test2")).unwrap().1;
+    assert_eq!(res.module_name.len(), 2);
+    assert_eq!(res.module_name[0].fragment(), &"test1");
+    assert_eq!(res.module_name[1].fragment(), &"test2");
+    assert_eq!(res.accessibility, None);
+
+    let res = module(Span::new("module public test1.test2.test3"))
+        .unwrap()
+        .1;
+    assert_eq!(res.module_name.len(), 3);
+    assert_eq!(res.module_name[0].fragment(), &"test1");
+    assert_eq!(res.module_name[1].fragment(), &"test2");
+    assert_eq!(res.module_name[2].fragment(), &"test3");
+    assert_eq!(res.accessibility.unwrap().fragment(), &"public");
+
+    let res = module(Span::new("module test1 .test2")).unwrap();
+    assert_eq!(res.1.module_name.len(), 1);
+    assert_eq!(res.0.fragment(), &" .test2");
+
+    let res = module(Span::new("module test1. test2")).unwrap();
+    assert_eq!(res.1.module_name.len(), 1);
+    assert_eq!(res.0.fragment(), &". test2");
+
+    // Space delimiter before module
+    let res = module(Span::new(" module test1"));
+    assert!(res.is_err());
+
+    let res = module(Span::new("module"));
+    assert!(res.is_err());
+}
+
+#[test]
+fn test_namespace() {
+    let res = module(Span::new("test"));
+    assert!(res.is_err());
+
+    let res = namespace(Span::new("namespace test1")).unwrap().1;
+    assert_eq!(res.len(), 1);
+    assert_eq!(res[0].fragment(), &"test1");
+
+    let res = namespace(Span::new("namespace test1.test2")).unwrap().1;
+    assert_eq!(res.len(), 2);
+    assert_eq!(res[0].fragment(), &"test1");
+    assert_eq!(res[1].fragment(), &"test2");
+
+    let res = namespace(Span::new("namespace test1.test2.test3"))
+        .unwrap()
+        .1;
+    assert_eq!(res.len(), 3);
+    assert_eq!(res[0].fragment(), &"test1");
+    assert_eq!(res[1].fragment(), &"test2");
+    assert_eq!(res[2].fragment(), &"test3");
+
+    let res = namespace(Span::new("namespace test1 .test2")).unwrap();
+    assert_eq!(res.1.len(), 1);
+    assert_eq!(res.0.fragment(), &" .test2");
+
+    let res = namespace(Span::new("namespace test1. test2")).unwrap();
+    assert_eq!(res.1.len(), 1);
+    assert_eq!(res.0.fragment(), &". test2");
+
+    // Space delimiter before module
+    let res = namespace(Span::new(" namespace test1"));
+    assert!(res.is_err());
+
+    let res = namespace(Span::new("namespace"));
+    assert!(res.is_err());
+    //println!("{:#?}", res);
 }
