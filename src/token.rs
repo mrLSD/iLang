@@ -335,3 +335,29 @@ pub fn module(data: Span) -> ParseResult<ast::Module> {
         },
     )(data)
 }
+
+/// Function value
+/// ## RULES:
+/// ```js
+/// function-value = (value-list | "(" expression ")")
+/// ```
+pub fn function_value(data: Span) -> ParseResult<ast::FunctionValue> {
+    let (i, o) = value_list(data)?;
+    Ok((i, ast::FunctionValue::ValueList(o)))
+}
+
+/// Function value
+/// ## RULES:
+/// ```js
+/// function-value = (value-list | "(" expression ")")
+/// ```
+pub fn function_call_name(data: Span) -> ParseResult<ast::FunctionCallName> {
+    map(
+        tuple((ident, many0(preceded(tag("."), ident)))),
+        |(first, mut second)| {
+            let mut res_list = vec![first];
+            res_list.append(&mut second);
+            res_list
+        },
+    )(data)
+}
