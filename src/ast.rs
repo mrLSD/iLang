@@ -140,7 +140,7 @@ pub type ReturnStatement<'a> = FunctionValue<'a>;
 #[derive(Debug, Clone, PartialEq)]
 pub struct FunctionCall<'a> {
     pub function_call_name: FunctionCallName<'a>,
-    pub function_value: FunctionValue<'a>,
+    pub function_value: Vec<FunctionValue<'a>>,
 }
 
 /// Function statement

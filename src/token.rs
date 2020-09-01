@@ -342,6 +342,7 @@ pub fn module(data: Span) -> ParseResult<ast::Module> {
 /// function-value = (value-list | "(" expression ")")
 /// ```
 pub fn function_value(data: Span) -> ParseResult<ast::FunctionValue> {
+    // TODO: extend with expression
     let (i, o) = value_list(data)?;
     Ok((i, ast::FunctionValue::ValueList(o)))
 }
@@ -349,7 +350,8 @@ pub fn function_value(data: Span) -> ParseResult<ast::FunctionValue> {
 /// Function value
 /// ## RULES:
 /// ```js
-/// function-value = (value-list | "(" expression ")")
+/// function-call-name = (function-name ".")* function-name
+/// function-name = ident
 /// ```
 pub fn function_call_name(data: Span) -> ParseResult<ast::FunctionCallName> {
     map(
@@ -360,4 +362,36 @@ pub fn function_call_name(data: Span) -> ParseResult<ast::FunctionCallName> {
             res_list
         },
     )(data)
+}
+
+/// Function value
+/// ## RULES:
+/// ```js
+/// function-call = function-call-name (function-value+ | "(" [function-value [","] ]* ")")
+/// ```
+pub fn function_call(data: Span) -> ParseResult<ast::FunctionCall> {
+    let func_val = alt((
+        many1(function_value),
+        map(
+            get_from_brackets(opt(tuple((
+                function_value,
+                many0(preceded(delimited_space(tag(",")), function_value)),
+            )))),
+            |v| {
+                if v.is_none() {
+                    return vec![];
+                }
+                let mut x = v.unwrap();
+                let mut res = vec![x.0];
+                res.append(&mut x.1);
+                res
+            },
+        ),
+    ));
+    map(tuple((function_call_name, func_val)), |v| {
+        ast::FunctionCall {
+            function_call_name: v.0,
+            function_value: v.1,
+        }
+    })(data)
 }
