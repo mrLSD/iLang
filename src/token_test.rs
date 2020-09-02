@@ -691,3 +691,21 @@ fn test_namespace() {
     assert!(res.is_err());
     //println!("{:#?}", res);
 }
+
+#[test]
+fn test_function_value() {}
+
+#[test]
+fn test_function_call_name() {}
+
+#[test]
+fn test_function_call() {}
+
+#[test]
+fn test_function_body() {}
+
+#[test]
+fn test_let_binding() {}
+
+#[test]
+fn test_expression() {}

@@ -345,9 +345,12 @@ pub fn module(data: Span) -> ParseResult<ast::Module> {
 /// function-value = (value-list | "(" expression ")")
 /// ```
 pub fn function_value(data: Span) -> ParseResult<ast::FunctionValue> {
-    // TODO: extend with expression
-    let (i, o) = value_list(data)?;
-    Ok((i, ast::FunctionValue::ValueList(o)))
+    alt((
+        map(value_list, ast::FunctionValue::ValueList),
+        map(get_from_brackets(expression), |v| {
+            ast::FunctionValue::Expression(Box::new(v))
+        }),
+    ))(data)
 }
 
 /// Function value
