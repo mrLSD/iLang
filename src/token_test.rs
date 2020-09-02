@@ -709,3 +709,6 @@ fn test_let_binding() {}
 
 #[test]
 fn test_expression() {}
+
+#[test]
+fn test_function_body_statement() {}

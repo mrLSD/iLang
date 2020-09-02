@@ -3,7 +3,7 @@
 Formal grammar based on EBNF.
 
 ```
-main = (
+[x] main = (
         namespace |
         module    |
         function  |
@@ -24,7 +24,7 @@ qualified-namespace = indent
 module-name = ident
 
 // Function declarations
-function = "let" [ ("inline" | "rec") ] function-name parameter-list [ ":" return-type ] "=" function-body
+[x] function = "let" [ ("inline" | "rec") ] function-name parameter-list [ ":" return-type ] "=" function-body
 function-name = ident
 parameter-list = (parameter-value-list+ | parameter-list-brackets)
 parameter-list-brackets = "(" [(
@@ -37,7 +37,7 @@ parameter-value = ident-value
 ident-value = (ident | "(" ident ")") 
 parameter-type = (ident-value ["*" ident-value] | "(" ident-value ["*" ident-value] ")")+
 return-type = parameter-type 
-function-body = [function-body-statement]* return-statement
+[x] function-body = [function-body-statement]* return-statement
 function-body-statement = (let-binding | function-call | expression)
 return-statement = function-value
 

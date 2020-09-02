@@ -417,6 +417,21 @@ pub fn function_body(data: Span) -> ParseResult<ast::FunctionBody> {
     Ok((x.0, res))
 }
 
+/// Function body statement parser
+/// ## RULES:
+/// ```js
+/// function-body-statement = (let-binding | function-call | expression)
+/// ```
+pub fn function_body_statement(data: Span) -> ParseResult<ast::FunctionBodyStatement> {
+    alt((
+        map(let_binding, ast::FunctionBodyStatement::LetBinding),
+        map(function_call, ast::FunctionBodyStatement::FunctionCall),
+        map(expression, |v| {
+            ast::FunctionBodyStatement::Expression(Box::new(v))
+        }),
+    ))(data)
+}
+
 /// Let binding statement
 /// ## RULES:
 /// ```js
