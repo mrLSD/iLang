@@ -431,3 +431,41 @@ pub fn let_binding(data: Span) -> ParseResult<ast::LetBinding> {
         },
     )(data)
 }
+
+/// Expression parser
+/// ## RULES:
+/// ```js
+/// expression = (
+///     function-value |
+///     function-call |
+///     "(" function-call ")"
+/// ) [expression-operations expression]
+/// ```
+pub fn expression(data: Span) -> ParseResult<ast::Expression> {
+    let func = alt((
+        map(delimited_space(function_value), |v| {
+            ast::ExpressionFunctionValueCall::FunctionValue(v)
+        }),
+        map(delimited_space(function_call), |v| {
+            ast::ExpressionFunctionValueCall::FunctionCall(v)
+        }),
+        map(get_from_brackets(function_call), |v| {
+            ast::ExpressionFunctionValueCall::FunctionCall(v)
+        }),
+    ));
+    map(
+        tuple((func, opt(tuple((expression_operations, expression))))),
+        |v| {
+            let (operation_statement, expression) = if let Some(x) = v.1 {
+                (Some(x.0), Some(Box::new(x.1)))
+            } else {
+                (None, None)
+            };
+            ast::Expression {
+                function_statement: v.0,
+                operation_statement,
+                expression,
+            }
+        },
+    )(data)
+}

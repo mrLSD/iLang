@@ -123,8 +123,8 @@ pub enum ExpressionFunctionValueCall<'a> {
 #[derive(Debug, Clone, PartialEq)]
 pub struct Expression<'a> {
     pub function_statement: ExpressionFunctionValueCall<'a>,
-    pub operation_statement: ExpressionOperation,
-    pub expression: Box<Expression<'a>>,
+    pub operation_statement: Option<ExpressionOperation>,
+    pub expression: Option<Box<Expression<'a>>>,
 }
 
 /// Function value statement
