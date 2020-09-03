@@ -111,24 +111,14 @@ pub fn ident(data: Span) -> ParseResult<ast::Ident> {
 /// )
 /// ```
 pub fn expression_operations(data: Span) -> ParseResult<ast::ExpressionOperation> {
-    map(
-        alt((
-            tag("+"),
-            tag("-"),
-            tag("*"),
-            tag("/"),
-            tag("<<<"),
-            tag(">>>"),
-        )),
-        |o: Span| match *o.fragment() {
-            "+" => ast::ExpressionOperation::Plus,
-            "-" => ast::ExpressionOperation::Minus,
-            "*" => ast::ExpressionOperation::Multiply,
-            "/" => ast::ExpressionOperation::Divide,
-            "<<<" => ast::ExpressionOperation::ShiftLeft,
-            _ => ast::ExpressionOperation::ShiftRight,
-        },
-    )(data)
+    alt((
+        map(tag("+"), |_| ast::ExpressionOperation::Plus),
+        map(tag("-"), |_| ast::ExpressionOperation::Minus),
+        map(tag("*"), |_| ast::ExpressionOperation::Multiply),
+        map(tag("/"), |_| ast::ExpressionOperation::Divide),
+        map(tag("<<<"), |_| ast::ExpressionOperation::ShiftLeft),
+        map(tag(">>>"), |_| ast::ExpressionOperation::ShiftRight),
+    ))(data)
 }
 
 /// Parse parameter value

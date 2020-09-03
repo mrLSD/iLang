@@ -689,11 +689,29 @@ fn test_namespace() {
 
     let res = namespace(Span::new("namespace"));
     assert!(res.is_err());
-    //println!("{:#?}", res);
 }
 
 #[test]
-fn test_function_value() {}
+fn test_function_value() {
+    //---
+    match function_value(Span::new("(val1, (val2))")).unwrap().1 {
+        FunctionValue::ValueList(x) => {
+            assert_eq!(x[0].fragment(), &"val1");
+            assert_eq!(x[1].fragment(), &"val2");
+        }
+        _ => unimplemented!(),
+    }
+
+    match function_value(Span::new("(val1, (val2))")).unwrap().1 {
+        FunctionValue::ValueList(x) => {
+            println!("{:#?}", x);
+            assert_eq!(x[0].fragment(), &"val1");
+            assert_eq!(x[1].fragment(), &"val2");
+        }
+        _ => unimplemented!(),
+    }
+    //println!("{:#?}", x);
+}
 
 #[test]
 fn test_function_call_name() {}
