@@ -487,3 +487,44 @@ pub fn expression(data: Span) -> ParseResult<ast::Expression> {
         },
     )(data)
 }
+
+/// Function name parser
+/// ## RULES:
+/// ```js
+/// function-name = [MULTISPACE] ident [MULTISPACE]
+/// ```
+pub fn function_name(data: Span) -> ParseResult<ast::FunctionName> {
+    delimited_space(ident)(data)
+}
+
+/// Return type parser
+/// ## RULES:
+/// ```js
+/// return-type = [MULTISPACE] parameter-type [MULTISPACE]
+/// ```
+pub fn return_type(data: Span) -> ParseResult<ast::ReturnType> {
+    delimited_space(parameter_type)(data)
+}
+
+/// Function parser
+/// ## RULES:
+/// ```js
+/// function = "let" ["inline"] function-name parameter-list [ ":" return-type ] "=" function-body
+/// ```
+pub fn function(data: Span) -> ParseResult<ast::Function> {
+    map(tuple((
+        preceded(
+            terminated(tag("let"), multispace1),
+            tuple((opt(map(delimited_space(tag("inline")), ast::FunctionModifier::Inline)), function_name)),
+        ),
+        parameter_list,
+        opt(preceded(delimited_space(tag(":")), return_type)),
+        preceded(delimited_space(tag("=")), function_body)
+    )), |v| {
+        let func_name = v.0;
+        ast::Function {
+            modifier: func_name.0,
+            function_name: func_name.1, 
+        }
+    })(data)
+}
