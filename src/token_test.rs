@@ -693,7 +693,6 @@ fn test_namespace() {
 
 #[test]
 fn test_function_value() {
-    //---
     match function_value(Span::new("(val1, (val2))")).unwrap().1 {
         FunctionValue::ValueList(x) => {
             assert_eq!(x[0].fragment(), &"val1");
@@ -702,22 +701,55 @@ fn test_function_value() {
         _ => unimplemented!(),
     }
 
-    match function_value(Span::new("(val1, (val2))")).unwrap().1 {
-        FunctionValue::ValueList(x) => {
-            println!("{:#?}", x);
-            assert_eq!(x[0].fragment(), &"val1");
-            assert_eq!(x[1].fragment(), &"val2");
-        }
-        _ => unimplemented!(),
-    }
+    // TODO:
+    // match function_value(Span::new("(val1 val2)")).unwrap().1 {
+    //     FunctionValue::Expression(x) => {
+    //         println!("{:#?}", x);
+    //         // assert_eq!(x[0].fragment(), &"val1");
+    //         // assert_eq!(x[1].fragment(), &"val2");
+    //     }
+    //     FunctionValue::ValueList(x) => {
+    //         println!("{:#?}", x);
+    //     }
+    // }
     //println!("{:#?}", x);
 }
 
 #[test]
-fn test_function_call_name() {}
+fn test_function_call_name() {
+    let x = function_call_name(Span::new("func1")).unwrap().1;
+    assert_eq!(x.len(), 1);
+    assert_eq!(x[0].fragment(), &"func1");
+
+    let x = function_call_name(Span::new("func1.func2 val1")).unwrap().1;
+    assert_eq!(x.len(), 2);
+    assert_eq!(x[0].fragment(), &"func1");
+    assert_eq!(x[1].fragment(), &"func2");
+    
+    let x = function_call_name(Span::new("func1.func2 val1")).unwrap();
+    assert_eq!(x.1.len(), 2);
+    assert_eq!(x.1[0].fragment(), &"func1");
+    assert_eq!(x.1[1].fragment(), &"func2");
+    assert_eq!(x.0.fragment(), &" val1");
+    
+    let x = function_call_name(Span::new("func1.func2.func3")).unwrap().1;
+    assert_eq!(x.len(), 3);
+    assert_eq!(x[0].fragment(), &"func1");
+    assert_eq!(x[1].fragment(), &"func2");
+    assert_eq!(x[2].fragment(), &"func3");
+}
 
 #[test]
-fn test_function_call() {}
+fn test_function_call() {
+    let x = function_call(Span::new("func1 val1")).unwrap().1;
+    assert_eq!(x.function_call_name.len(), 1);
+    assert_eq!(x.function_call_name[0].fragment(), &"func1");
+
+    // let x = function_call(Span::new("func1 val1")).unwrap().1;
+    // assert_eq!(x.function_call_name.len(), 1);
+    // assert_eq!(x.function_call_name[0].fragment(), &"func1");
+    // println!("{:#?}", x);
+}
 
 #[test]
 fn test_function_body() {}
