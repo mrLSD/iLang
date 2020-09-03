@@ -408,13 +408,13 @@ pub fn function_call(data: Span) -> ParseResult<ast::FunctionCall> {
 /// function-body = [function-body-statement]* return-statement
 /// ```
 pub fn function_body(data: Span) -> ParseResult<ast::FunctionBody> {
-    let x = function_value(data)?;
-    // TODO: extend  Function Body statement
-    let res = ast::FunctionBody {
-        statement: vec![],
-        return_statement: x.1,
-    };
-    Ok((x.0, res))
+    map(
+        tuple((many0(function_body_statement), function_value)),
+        |v| ast::FunctionBody {
+            statement: v.0,
+            return_statement: v.1,
+        },
+    )(data)
 }
 
 /// Function body statement parser
