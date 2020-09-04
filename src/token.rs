@@ -512,19 +512,30 @@ pub fn return_type(data: Span) -> ParseResult<ast::ReturnType> {
 /// function = "let" ["inline"] function-name parameter-list [ ":" return-type ] "=" function-body
 /// ```
 pub fn function(data: Span) -> ParseResult<ast::Function> {
-    map(tuple((
-        preceded(
-            terminated(tag("let"), multispace1),
-            tuple((opt(map(delimited_space(tag("inline")), ast::FunctionModifier::Inline)), function_name)),
-        ),
-        parameter_list,
-        opt(preceded(delimited_space(tag(":")), return_type)),
-        preceded(delimited_space(tag("=")), function_body)
-    )), |v| {
-        let func_name = v.0;
-        ast::Function {
-            modifier: func_name.0,
-            function_name: func_name.1, 
-        }
-    })(data)
+    map(
+        tuple((
+            preceded(
+                terminated(tag("let"), multispace1),
+                tuple((
+                    opt(map(delimited_space(tag("inline")), |_| {
+                        ast::FunctionModifier::Inline
+                    })),
+                    function_name,
+                )),
+            ),
+            parameter_list,
+            opt(preceded(delimited_space(tag(":")), return_type)),
+            preceded(delimited_space(tag("=")), function_body),
+        )),
+        |v| {
+            let func_name = v.0;
+            ast::Function {
+                modifier: func_name.0,
+                function_name: func_name.1,
+                parameter_list: v.1,
+                return_type: v.2,
+                function_body: v.3,
+            }
+        },
+    )(data)
 }

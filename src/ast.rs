@@ -156,7 +156,7 @@ pub struct Function<'a> {
     pub modifier: Option<FunctionModifier>,
     pub function_name: FunctionName<'a>,
     pub parameter_list: ParameterList<'a>,
-    pub return_type: ReturnType<'a>,
+    pub return_type: Option<ReturnType<'a>>,
     pub function_body: FunctionBody<'a>,
 }
 
