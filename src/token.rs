@@ -539,3 +539,22 @@ pub fn function(data: Span) -> ParseResult<ast::Function> {
         },
     )(data)
 }
+
+/// Main statement parser
+/// ## RULES:
+/// ```js
+/// main = (
+///     namespace |
+///     module    |
+///     function  |
+///     let-binding
+/// )+
+/// ```
+pub fn main(data: Span) -> ParseResult<ast::Main> {
+    many1(alt((
+        map(delimited_space(namespace), ast::MainStatement::Namespace),
+        map(delimited_space(module), ast::MainStatement::Module),
+        map(delimited_space(function), ast::MainStatement::Function),
+        map(delimited_space(let_binding), ast::MainStatement::LetBinding),
+    )))(data)
+}

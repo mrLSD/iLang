@@ -3,12 +3,12 @@
 Formal grammar based on EBNF.
 
 ```
-[x] main = (
+main = (
         namespace |
         module    |
         function  |
         let-binding 
-    )*
+    )+
 
 // Basic rules
 ident = alpha+ (alphanum | "_")* 

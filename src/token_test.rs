@@ -712,3 +712,9 @@ fn test_expression() {}
 
 #[test]
 fn test_function_body_statement() {}
+
+#[test]
+fn test_function() {}
+
+#[test]
+fn test_main() {}
