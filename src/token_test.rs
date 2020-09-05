@@ -818,10 +818,6 @@ fn test_function_call() {
     assert_eq!(x.1.function_value.len(), 1);
     assert_eq!(x.0.fragment(), &", val2");
 
-    let x = function_call(Span::new("func1 (val1 val2)"));
-    println!("{:#?}", x);
-    // assert!(x.is_err());
-
     let x = function_call(Span::new("func1.func2 ((val1), (val2))"))
         .unwrap()
         .1;
@@ -842,6 +838,27 @@ fn test_function_call() {
     assert_eq!(x.function_call_name.len(), 1);
     assert_eq!(x.function_value.len(), 0);
     assert_eq!(x.function_call_name[0].fragment(), &"func1");
+
+    let x = function_call(Span::new("func1 (func2 val2)")).unwrap().1;
+    assert_eq!(x.function_call_name.len(), 1);
+    assert_eq!(x.function_value.len(), 1);
+    assert_eq!(x.function_call_name[0].fragment(), &"func1");
+    match &x.function_value[0] {
+        FunctionValue::Expression(v) => match &v.function_statement {
+            ExpressionFunctionValueCall::FunctionCall(v) => {
+                assert_eq!(v.function_call_name[0].fragment(), &"func2");
+                match &v.function_value[0] {
+                    FunctionValue::ValueList(v) => {
+                        assert_eq!(v.len(), 1);
+                        assert_eq!(v[0].fragment(), &"val2");
+                    }
+                    _ => unimplemented!(),
+                }
+            }
+            _ => unimplemented!(),
+        },
+        _ => unimplemented!(),
+    }
 }
 
 #[test]
