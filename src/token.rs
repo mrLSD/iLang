@@ -368,21 +368,8 @@ pub fn function_call_name(data: Span) -> ParseResult<ast::FunctionCallName> {
 pub fn function_call(data: Span) -> ParseResult<ast::FunctionCall> {
     let func_val = alt((
         many1(function_value),
-        map(
-            get_from_brackets(opt(tuple((
-                function_value,
-                many0(preceded(delimited_space(tag(",")), function_value)),
-            )))),
-            |v| {
-                if v.is_none() {
-                    return vec![];
-                }
-                let mut x = v.unwrap();
-                let mut res = vec![x.0];
-                res.append(&mut x.1);
-                res
-            },
-        ),
+        // Detect only empty brackets. Other cases covered via `function_value` parser
+        map(get_from_brackets(multispace0), |_| vec![]),
     ));
     map(tuple((function_call_name, func_val)), |v| {
         ast::FunctionCall {
