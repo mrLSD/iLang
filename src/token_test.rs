@@ -890,7 +890,6 @@ fn test_expression() {
                     assert_eq!(v.len(), 2);
                     assert_eq!(v[0].fragment(), &"val1");
                     assert_eq!(v[1].fragment(), &"val2");
-                    //println!("{:#?}", v);
                 }
                 _ => unimplemented!(),
             }
@@ -1011,6 +1010,68 @@ fn test_expression() {
         },
         _ => unimplemented!(),
     }
+
+    let x = expression(Span::new("(func1 val1) + val2")).unwrap().1;
+    match x.function_statement {
+        ExpressionFunctionValueCall::FunctionCall(x) => {
+            assert_eq!(x.function_call_name[0].fragment(), &"func1");
+            assert_eq!(x.function_value.len(), 1);
+            match &x.function_value[0] {
+                FunctionValue::ValueList(v) => {
+                    assert_eq!(v[0].fragment(), &"val1");
+                }
+                _ => unimplemented!(),
+            }
+        }
+        _ => unimplemented!(),
+    }
+    assert_eq!(&x.operation_statement.unwrap(), &ExpressionOperation::Plus);
+    match &x.expression.unwrap().function_statement {
+        ExpressionFunctionValueCall::FunctionValue(v) => match v {
+            FunctionValue::ValueList(v) => {
+                assert_eq!(v[0].fragment(), &"val2");
+            }
+            _ => unimplemented!(),
+        },
+        _ => unimplemented!(),
+    }
+
+    let x = expression(Span::new("(func1 val1) + (func2 val2)"))
+        .unwrap()
+        .1;
+    match x.function_statement {
+        ExpressionFunctionValueCall::FunctionCall(x) => {
+            assert_eq!(x.function_call_name[0].fragment(), &"func1");
+            assert_eq!(x.function_value.len(), 1);
+            match &x.function_value[0] {
+                FunctionValue::ValueList(v) => {
+                    assert_eq!(v[0].fragment(), &"val1");
+                }
+                _ => unimplemented!(),
+            }
+        }
+        _ => unimplemented!(),
+    }
+    assert_eq!(&x.operation_statement.unwrap(), &ExpressionOperation::Plus);
+    match &x.expression.unwrap().function_statement {
+        ExpressionFunctionValueCall::FunctionCall(v) => {
+            assert_eq!(v.function_call_name[0].fragment(), &"func2");
+            assert_eq!(v.function_value.len(), 1);
+            match &v.function_value[0] {
+                FunctionValue::ValueList(v) => {
+                    assert_eq!(v[0].fragment(), &"val2");
+                }
+                _ => unimplemented!(),
+            }
+        }
+        _ => unimplemented!(),
+    }
+    //let x = expression(Span::new("((func1 val1) + (func1 val1))")).unwrap().1;
+    //println!("{:#?}", x);
+    //let x = expression(Span::new("val1 + (func1 val2) + val3")).unwrap().1;
+    //let x = expression(Span::new("val1 + (func1 val2) val3")).unwrap().0;
+    //    ^---- Not completed
+    //let x = expression(Span::new("(func1 val1) + ((func2 (val2, val3)) + val4 + func5 val5 val6 + func6 ())")).unwrap();
     //println!("{:#?}", x);
 }
 
