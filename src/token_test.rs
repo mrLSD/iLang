@@ -1193,52 +1193,74 @@ fn test_expression() {
     }
     assert_eq!(x.operation_statement.unwrap(), ExpressionOperation::Plus);
     match x.expression.unwrap().function_statement {
-        ExpressionFunctionValueCall::FunctionValue(ref x) => {
-            match &x {
-                FunctionValue::Expression(x) => {
-                    match x.function_statement {
-                        ExpressionFunctionValueCall::FunctionCall(ref x) => {
-                            assert_eq!(x.function_call_name[0].fragment(), &"func2");
-                            assert_eq!(x.function_value.len(), 1);
-                            match &x.function_value[0] {
-                                FunctionValue::ValueList(v) => {
-                                    assert_eq!(v.len(), 2);
-                                    assert_eq!(v[0].fragment(), &"val2");
-                                    assert_eq!(v[1].fragment(), &"val3");
-                                }
-                                _ => unimplemented!(),
-                            }
-                        }
-                        _ => unimplemented!(),
-                    }
-                    let v = x.operation_statement.as_ref();
-                    assert_eq!(v.unwrap(), &ExpressionOperation::Plus);
-                    
-                    let e = x.expression.as_ref().unwrap();
-                    match e.function_statement {
-                        ExpressionFunctionValueCall::FunctionValue(ref x) => match x {
+        ExpressionFunctionValueCall::FunctionValue(ref x) => match &x {
+            FunctionValue::Expression(x) => {
+                match x.function_statement {
+                    ExpressionFunctionValueCall::FunctionCall(ref x) => {
+                        assert_eq!(x.function_call_name[0].fragment(), &"func2");
+                        assert_eq!(x.function_value.len(), 1);
+                        match &x.function_value[0] {
                             FunctionValue::ValueList(v) => {
-                                
-                                assert_eq!(v.len(), 1);
-                                assert_eq!(v[0].fragment(), &"val4");
+                                assert_eq!(v.len(), 2);
+                                assert_eq!(v[0].fragment(), &"val2");
+                                assert_eq!(v[1].fragment(), &"val3");
                             }
                             _ => unimplemented!(),
-                        },
-                        _ => unimplemented!(),
-                    }
-                    let v = &e.operation_statement.as_ref();
-                    assert_eq!(v.unwrap(), &ExpressionOperation::Plus);
-                    
-                    match e.expression {
-                        FunctionValue::Expression(x) => {
-                            println!("{:#?}", x);
                         }
-                        _ => unimplemented!()
                     }
+                    _ => unimplemented!(),
                 }
-                _ => unimplemented!(),
+                let v = x.operation_statement.as_ref();
+                assert_eq!(v.unwrap(), &ExpressionOperation::Plus);
+
+                let e = x.expression.as_ref().unwrap();
+                match e.function_statement {
+                    ExpressionFunctionValueCall::FunctionValue(ref x) => match x {
+                        FunctionValue::ValueList(v) => {
+                            assert_eq!(v.len(), 1);
+                            assert_eq!(v[0].fragment(), &"val4");
+                        }
+                        _ => unimplemented!(),
+                    },
+                    _ => unimplemented!(),
+                }
+                assert_eq!(v.unwrap(), &ExpressionOperation::Plus);
+
+                let x = e.expression.as_ref().unwrap();
+                match x.function_statement {
+                    ExpressionFunctionValueCall::FunctionCall(ref x) => {
+                        assert_eq!(x.function_call_name[0].fragment(), &"func5");
+                        assert_eq!(x.function_value.len(), 2);
+                        match &x.function_value[0] {
+                            FunctionValue::ValueList(v) => {
+                                assert_eq!(v.len(), 1);
+                                assert_eq!(v[0].fragment(), &"val5");
+                            }
+                            _ => unimplemented!(),
+                        }
+                        match &x.function_value[1] {
+                            FunctionValue::ValueList(v) => {
+                                assert_eq!(v.len(), 1);
+                                assert_eq!(v[0].fragment(), &"val6");
+                            }
+                            _ => unimplemented!(),
+                        }
+                    }
+                    _ => unimplemented!(),
+                }
+                let v = &e.operation_statement.as_ref();
+                assert_eq!(v.unwrap(), &ExpressionOperation::Plus);
+                let x = x.expression.as_ref().unwrap();
+                match x.function_statement {
+                    ExpressionFunctionValueCall::FunctionCall(ref x) => {
+                        assert_eq!(x.function_call_name[0].fragment(), &"func6");
+                        assert_eq!(x.function_value.len(), 0);
+                    }
+                    _ => unimplemented!(),
+                }
             }
-        }
+            _ => unimplemented!(),
+        },
         _ => unimplemented!(),
     }
 }
