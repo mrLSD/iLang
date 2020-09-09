@@ -1355,7 +1355,10 @@ fn test_function_body_statement() {
 }
 
 #[test]
-fn test_function_body() {}
+fn test_function_body() {
+    let x = function_body(Span::new(""));
+    println!("{:#?}", x);
+}
 
 #[test]
 fn test_let_binding() {
