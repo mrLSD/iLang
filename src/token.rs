@@ -417,8 +417,9 @@ pub fn function_body_statement(data: Span) -> ParseResult<ast::FunctionBodyState
 pub fn let_binding(data: Span) -> ParseResult<ast::LetBinding> {
     map(
         tuple((
-            preceded(terminated(tag("let"), multispace1), let_value_list),
-            function_body,
+            preceded(delimited_space(tag("let")), let_value_list),
+            // TODO: preceded(delimited_space(tag("=")), function_body),
+            preceded(delimited_space(tag("=")), let_value_list),
         )),
         |v| ast::LetBinding {
             value_list: v.0,

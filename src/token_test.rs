@@ -1347,13 +1347,36 @@ fn test_function_body_statement() {
         },
         _ => unimplemented!(),
     }
+
+    // TODO:
+    //let x = function_body_statement(Span::new("let val1 val2")).unwrap();
+    //println!("{:#?}", x);
+    //assert_eq!(x.0.fragment(), &"");
 }
 
 #[test]
 fn test_function_body() {}
 
 #[test]
-fn test_let_binding() {}
+fn test_let_binding() {
+    let x = let_binding(Span::new("let x = y")).unwrap();
+    assert_eq!(x.0.fragment(), &"");
+    let x = x.1;
+    assert_eq!(x.value_list.len(), 1);
+    match x.value_list[0] {
+        ParameterValueList::ParameterValue(v) => {
+            assert_eq!(v.fragment(), &"x");
+        }
+        _ => unimplemented!(),
+    }
+
+    match x.function_body[0] {
+        ParameterValueList::ParameterValue(v) => {
+            assert_eq!(v.fragment(), &"y");
+        }
+        _ => unimplemented!(),
+    }
+}
 
 #[test]
 fn test_function() {}
