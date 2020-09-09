@@ -1155,7 +1155,10 @@ fn test_expression_func_params_in_brackets() {
         }
         _ => unimplemented!(),
     }
+}
 
+#[test]
+fn test_expression_values_plus() {
     let x = expression(Span::new("val1 + val2")).unwrap().1;
     match x.function_statement {
         ExpressionFunctionValueCall::FunctionValue(x) => match x {
@@ -1177,7 +1180,10 @@ fn test_expression_func_params_in_brackets() {
         },
         _ => unimplemented!(),
     }
+}
 
+#[test]
+fn test_expression_func_params_plus_value() {
     let x = expression(Span::new("(func1 val1) + val2")).unwrap().1;
     match x.function_statement {
         ExpressionFunctionValueCall::FunctionCall(x) => {
@@ -1202,7 +1208,10 @@ fn test_expression_func_params_in_brackets() {
         },
         _ => unimplemented!(),
     }
+}
 
+#[test]
+fn test_expression_func_params_plus_func_params() {
     let x = expression(Span::new("(func1 val1) + (func2 val2)"))
         .unwrap()
         .1;
@@ -1439,7 +1448,7 @@ fn test_expression_func_params_in_brackets() {
 }
 
 #[test]
-fn test_function_body_statement() {
+fn test_function_body_statement_func_values() {
     let x = function_body_statement(Span::new("func1 val1 val2")).unwrap();
     assert_eq!(x.0.fragment(), &"");
     match x.1 {
@@ -1461,7 +1470,10 @@ fn test_function_body_statement() {
         }
         _ => unimplemented!(),
     }
+}
 
+#[test]
+fn test_function_body_values_sum() {
     let x = function_body_statement(Span::new("(val1 + val2)")).unwrap();
     assert_eq!(x.0.fragment(), &"");
     match x.1 {
@@ -1497,7 +1509,10 @@ fn test_function_body_statement() {
         },
         _ => unimplemented!(),
     }
+}
 
+#[test]
+fn test_function_body_let_binding_simple() {
     let x = function_body_statement(Span::new("let val1 = val2")).unwrap();
     assert_eq!(x.0.fragment(), &"");
     match x.1 {
@@ -1551,7 +1566,7 @@ fn test_function_body() {
         },
         _ => unimplemented!(),
     }
-
+    
     match &x[1] {
         FunctionBodyStatement::Expression(e) => match &e.function_statement {
             ExpressionFunctionValueCall::FunctionValue(v) => match v {
@@ -1569,7 +1584,7 @@ fn test_function_body() {
 }
 
 #[test]
-fn test_let_binding() {
+fn test_let_binding_simple() {
     let x = let_binding(Span::new("let x = y")).unwrap();
     assert_eq!(x.0.fragment(), &"");
     let x = x.1;
@@ -1594,7 +1609,10 @@ fn test_let_binding() {
         },
         _ => unimplemented!(),
     }
+}
 
+#[test]
+fn test_let_binding_value_plus_value() {
     let x = let_binding(Span::new("let val1 = val2 + val3")).unwrap();
     assert_eq!(x.0.fragment(), &"");
     let x = x.1;
