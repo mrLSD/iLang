@@ -701,18 +701,41 @@ fn test_function_value() {
         _ => unimplemented!(),
     }
 
-    // TODO:
-    // match function_value(Span::new("(val1 val2)")).unwrap().1 {
-    //     FunctionValue::Expression(x) => {
-    //         println!("{:#?}", x);
-    //         // assert_eq!(x[0].fragment(), &"val1");
-    //         // assert_eq!(x[1].fragment(), &"val2");
-    //     }
-    //     FunctionValue::ValueList(x) => {
-    //         println!("{:#?}", x);
-    //     }
-    // }
-    //println!("{:#?}", x);
+    let x = function_value(Span::new("((val1, (val2)) + func1 val3)")).unwrap();
+    assert_eq!(x.0.fragment(), &"");
+    let x = x.1;
+    match x {
+        FunctionValue::Expression(v) => {
+            match v.function_statement {
+                ExpressionFunctionValueCall::FunctionValue(ref x) => match x {
+                    FunctionValue::ValueList(v) => {
+                        assert_eq!(v.len(), 2);
+                        assert_eq!(v[0].fragment(), &"val1");
+                        assert_eq!(v[1].fragment(), &"val2");
+                    }
+                    _ => unimplemented!(),
+                },
+                _ => unimplemented!(),
+            }
+            let x = v.operation_statement.as_ref();
+            assert_eq!(x.unwrap(), &ExpressionOperation::Plus);
+            match v.expression.unwrap().function_statement {
+                ExpressionFunctionValueCall::FunctionCall(x) => {
+                    assert_eq!(x.function_call_name[0].fragment(), &"func1");
+                    assert_eq!(x.function_value.len(), 1);
+                    match &x.function_value[0] {
+                        FunctionValue::ValueList(v) => {
+                            assert_eq!(v.len(), 1);
+                            assert_eq!(v[0].fragment(), &"val3");
+                        }
+                        _ => unimplemented!(),
+                    }
+                }
+                _ => unimplemented!(),
+            }
+        }
+        _ => unimplemented!(),
+    }
 }
 
 #[test]
