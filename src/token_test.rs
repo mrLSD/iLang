@@ -1289,13 +1289,71 @@ fn test_expression() {
 }
 
 #[test]
+fn test_function_body_statement() {
+    let x = function_body_statement(Span::new("func1 val1 val2")).unwrap();
+    assert_eq!(x.0.fragment(), &"");
+    match x.1 {
+        FunctionBodyStatement::FunctionCall(v) => {
+            assert_eq!(v.function_call_name[0].fragment(), &"func1");
+            assert_eq!(v.function_value.len(), 2);
+            match &v.function_value[0] {
+                FunctionValue::ValueList(v) => {
+                    assert_eq!(v[0].fragment(), &"val1");
+                }
+                _ => unimplemented!(),
+            }
+            match &v.function_value[1] {
+                FunctionValue::ValueList(v) => {
+                    assert_eq!(v[0].fragment(), &"val2");
+                }
+                _ => unimplemented!(),
+            }
+        }
+        _ => unimplemented!(),
+    }
+
+    let x = function_body_statement(Span::new("(val1 + val2)")).unwrap();
+    assert_eq!(x.0.fragment(), &"");
+    match x.1 {
+        FunctionBodyStatement::Expression(e) => match e.function_statement {
+            ExpressionFunctionValueCall::FunctionValue(v) => match v {
+                FunctionValue::Expression(x) => {
+                    match x.function_statement {
+                        ExpressionFunctionValueCall::FunctionValue(v) => match v {
+                            FunctionValue::ValueList(ref v) => {
+                                assert_eq!(v[0].fragment(), &"val1");
+                            }
+                            _ => unimplemented!(),
+                        },
+                        _ => unimplemented!(),
+                    }
+                    assert_eq!(
+                        x.operation_statement.as_ref().unwrap(),
+                        &ExpressionOperation::Plus
+                    );
+                    match x.expression.unwrap().function_statement {
+                        ExpressionFunctionValueCall::FunctionValue(ref v) => match v {
+                            FunctionValue::ValueList(ref v) => {
+                                assert_eq!(v[0].fragment(), &"val2");
+                            }
+                            _ => unimplemented!(),
+                        },
+                        _ => unimplemented!(),
+                    }
+                }
+                _ => unimplemented!(),
+            },
+            _ => unimplemented!(),
+        },
+        _ => unimplemented!(),
+    }
+}
+
+#[test]
 fn test_function_body() {}
 
 #[test]
 fn test_let_binding() {}
-
-#[test]
-fn test_function_body_statement() {}
 
 #[test]
 fn test_function() {}
