@@ -85,45 +85,63 @@ fn test_get_ident_from_brackets() {
 }
 
 #[test]
-fn test_parameter_type() {
+fn test_parameter_type_simple() {
     let (i, o) = parameter_type(Span::new("val1 val2")).unwrap();
     assert_eq!(o[0].fragment(), &"val1");
     assert_eq!(i.fragment(), &"val2");
     assert_eq!(o.len(), 1);
 
+    let (_, o) = parameter_type(Span::new(" asd1 * asd2 ")).unwrap();
+    assert_eq!(o[0].fragment(), &"asd1");
+    assert_eq!(o[1].fragment(), &"asd2");
+    assert_eq!(o.len(), 2);
+}
+
+#[test]
+fn test_parameter_type_first_bracket() {
     let (i, o) = parameter_type(Span::new(" ( val1 ) val2")).unwrap();
     assert_eq!(o[0].fragment(), &"val1");
     assert_eq!(i.fragment(), &"val2");
     assert_eq!(o.len(), 1);
+}
 
+#[test]
+fn test_parameter_type_failed() {
     let n = parameter_type(Span::new("* asd1 * asd2 * "));
     assert!(n.is_err());
 
+    let n = parameter_type(Span::new("* asd1 * ( asd2 ) * asd3"));
+    assert!(n.is_err());
+}
+
+#[test]
+fn test_parameter_type_partly() {
     let (i, o) = parameter_type(Span::new(" ( asd1 ) * asd2 * ")).unwrap();
     assert_eq!(o[0].fragment(), &"asd1");
     assert_eq!(o[1].fragment(), &"asd2");
     assert_eq!(i.fragment(), &"* ");
     assert_eq!(o.len(), 2);
+}
 
-    let (_, o) = parameter_type(Span::new(" asd1 * asd2 ")).unwrap();
-    assert_eq!(o[0].fragment(), &"asd1");
-    assert_eq!(o[1].fragment(), &"asd2");
-    assert_eq!(o.len(), 2);
-
+#[test]
+fn test_parameter_type_bracketts_compound() {
     let (_, o) = parameter_type(Span::new(" ( asd1 ) * ( asd2 ) ")).unwrap();
     assert_eq!(o[0].fragment(), &"asd1");
     assert_eq!(o[1].fragment(), &"asd2");
     assert_eq!(o.len(), 2);
+}
 
+#[test]
+fn test_parameter_type_sequence() {
     let (_, o) = parameter_type(Span::new("asd1 * ( asd2 ) * asd3")).unwrap();
     assert_eq!(o[0].fragment(), &"asd1");
     assert_eq!(o[1].fragment(), &"asd2");
     assert_eq!(o[2].fragment(), &"asd3");
     assert_eq!(o.len(), 3);
+}
 
-    let n = parameter_type(Span::new("* asd1 * ( asd2 ) * asd3"));
-    assert!(n.is_err());
-
+#[test]
+fn test_parameter_type_sequence_and_brackets() {
     let (_, o) = parameter_type(Span::new("(asd1 * ( asd2 ) * asd3)")).unwrap();
     assert_eq!(o[0].fragment(), &"asd1");
     assert_eq!(o[1].fragment(), &"asd2");
@@ -132,7 +150,7 @@ fn test_parameter_type() {
 }
 
 #[test]
-fn test_parameter_value_type() {
+fn test_parameter_value_type_simple() {
     match parameter_value_type(Span::new("val1: type1")).unwrap() {
         (_, ParameterValueType::ValueType(v, t)) => {
             assert_eq!(v.fragment(), &"val1");
@@ -140,7 +158,10 @@ fn test_parameter_value_type() {
         }
         _ => unimplemented!(),
     }
+}
 
+#[test]
+fn test_parameter_value_type_brackets() {
     match parameter_value_type(Span::new(" ( val1 ) : ( type1 ) ")).unwrap() {
         (_, ParameterValueType::ValueType(v, t)) => {
             assert_eq!(v.fragment(), &"val1");
@@ -148,7 +169,10 @@ fn test_parameter_value_type() {
         }
         _ => unimplemented!(),
     }
+}
 
+#[test]
+fn test_parameter_value_type_all_brackets() {
     match parameter_value_type(Span::new(" ( ( val1 ) : ( type1 ) ) ")).unwrap() {
         (_, ParameterValueType::ValueType(v, t)) => {
             assert_eq!(v.fragment(), &"val1");
@@ -156,7 +180,10 @@ fn test_parameter_value_type() {
         }
         _ => unimplemented!(),
     }
+}
 
+#[test]
+fn test_parameter_value_type_sequnce() {
     match parameter_value_type(Span::new("val1: type1 * type2")).unwrap() {
         (_, ParameterValueType::ValueType(v, t)) => {
             assert_eq!(v.fragment(), &"val1");
@@ -165,7 +192,10 @@ fn test_parameter_value_type() {
         }
         _ => unimplemented!(),
     }
+}
 
+#[test]
+fn test_parameter_value_type_sequnce_compound_brackets() {
     match parameter_value_type(Span::new("val1: (type1 * (type2) * type3)")).unwrap() {
         (_, ParameterValueType::ValueType(v, t)) => {
             assert_eq!(v.fragment(), &"val1");
@@ -175,7 +205,10 @@ fn test_parameter_value_type() {
         }
         _ => unimplemented!(),
     }
+}
 
+#[test]
+fn test_parameter_value_type_sequnce_partial() {
     match parameter_value_type(Span::new("val1: (type1 * (type2) * type3) test")).unwrap() {
         (i, ParameterValueType::ValueType(v, t)) => {
             assert_eq!(v.fragment(), &"val1");
@@ -186,7 +219,10 @@ fn test_parameter_value_type() {
         }
         _ => unimplemented!(),
     }
+}
 
+#[test]
+fn test_parameter_value_type_failed() {
     let n = parameter_value_type(Span::new("val1: (type1 * (type2 * type3))"));
     assert!(n.is_err());
 
