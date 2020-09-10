@@ -246,7 +246,10 @@ fn test_parameter_list_brackets() {
         }
         _ => unimplemented!(),
     }
+}
 
+#[test]
+fn test_parameter_list_value_type() {
     match parameter_list_brackets(Span::new("(val1: type1)")).unwrap() {
         (_, ParameterValueList::ParameterList(x)) => {
             assert_eq!(x.len(), 1);
@@ -260,7 +263,10 @@ fn test_parameter_list_brackets() {
         }
         _ => unimplemented!(),
     }
+}
 
+#[test]
+fn test_parameter_list_multi_value_type() {
     match parameter_list_brackets(Span::new("(val1: type1, val2: type2)")).unwrap() {
         (_, ParameterValueList::ParameterList(x)) => {
             assert_eq!(x.len(), 2);
@@ -281,7 +287,10 @@ fn test_parameter_list_brackets() {
         }
         _ => unimplemented!(),
     }
+}
 
+#[test]
+fn test_parameter_list_multi_value_one_type() {
     match parameter_list_brackets(Span::new("(val1, val2: type2)")).unwrap() {
         (_, ParameterValueList::ParameterList(x)) => {
             assert_eq!(x.len(), 2);
@@ -301,7 +310,10 @@ fn test_parameter_list_brackets() {
         }
         _ => unimplemented!(),
     }
+}
 
+#[test]
+fn test_parameter_list_multi_value_one_type_and_brackets() {
     match parameter_list_brackets(Span::new("(val1, val2: type2, (val3: type3))")).unwrap() {
         (_, ParameterValueList::ParameterList(x)) => {
             assert_eq!(x.len(), 3);
@@ -328,7 +340,10 @@ fn test_parameter_list_brackets() {
         }
         _ => unimplemented!(),
     }
+}
 
+#[test]
+fn test_parameter_list_multi_value_one_type_and_sequence() {
     match parameter_list_brackets(Span::new("(val1, val2: type2, val3, val4)")).unwrap() {
         (_, ParameterValueList::ParameterList(x)) => {
             assert_eq!(x.len(), 4);
@@ -363,12 +378,15 @@ fn test_parameter_list_brackets() {
 }
 
 #[test]
-fn test_parameter_value_list() {
+fn test_parameter_value_list_one_value() {
     match parameter_value_list(Span::new("val1")).unwrap() {
         (_, ParameterValueList::ParameterValue(v)) => assert_eq!(v.fragment(), &"val1"),
         _ => unimplemented!(),
     }
+}
 
+#[test]
+fn test_parameter_value_list_sequence() {
     match parameter_value_list(Span::new("(val1, val2)")).unwrap() {
         (_, ParameterValueList::ParameterList(x)) => {
             assert_eq!(x.len(), 2);
@@ -383,7 +401,10 @@ fn test_parameter_value_list() {
         }
         _ => unimplemented!(),
     }
+}
 
+#[test]
+fn test_parameter_value_list_value_type_sequence() {
     match parameter_list_brackets(Span::new("(val1, val2: type2, val3, (val4: type4))")).unwrap() {
         (_, ParameterValueList::ParameterList(x)) => {
             assert_eq!(x.len(), 4);
@@ -419,7 +440,7 @@ fn test_parameter_value_list() {
 }
 
 #[test]
-fn test_parameter_list() {
+fn test_parameter_list_sequnce() {
     match parameter_list(Span::new("val1 val2")).unwrap() {
         (_, ParameterList::ParameterValueList(x)) => {
             assert_eq!(x.len(), 2);
@@ -434,7 +455,10 @@ fn test_parameter_list() {
         }
         _ => unimplemented!(),
     }
+}
 
+#[test]
+fn test_parameter_list_sequnce_and_types() {
     match parameter_list(Span::new("val1 (val2: type2) val3 (val4: type4)")).unwrap() {
         (_, ParameterList::ParameterValueList(x)) => {
             assert_eq!(x.len(), 4);
@@ -469,7 +493,10 @@ fn test_parameter_list() {
         }
         _ => unimplemented!(),
     }
+}
 
+#[test]
+fn test_parameter_list_sequnce_and_types_brackets() {
     match parameter_list(Span::new("(val1, val2, (val3: type3 * type4)) val4")).unwrap() {
         (_, ParameterList::ParameterValueList(x)) => {
             assert_eq!(x.len(), 2);
@@ -508,37 +535,55 @@ fn test_parameter_list() {
 }
 
 #[test]
-fn test_value_list() {
+fn test_value_list_one() {
     let x = value_list(Span::new("val1")).unwrap().1;
     assert_eq!(x[0].fragment(), &"val1");
+}
 
+#[test]
+fn test_value_list_sequence() {
     let x = value_list(Span::new("val1, val2")).unwrap();
     assert_eq!(x.1[0].fragment(), &"val1");
     assert_eq!(x.0.fragment(), &", val2");
+}
 
+#[test]
+fn test_value_list_brackets() {
     let x = value_list(Span::new("(val1)")).unwrap().1;
     assert_eq!(x[0].fragment(), &"val1");
+}
 
+#[test]
+fn test_value_list_brackets_sequence() {
     let x = value_list(Span::new("(val1, val2)")).unwrap().1;
     assert_eq!(x[0].fragment(), &"val1");
     assert_eq!(x[1].fragment(), &"val2");
+}
 
+#[test]
+fn test_value_list_multi_brackets() {
     let x = value_list(Span::new("(val1, (val2))")).unwrap().1;
     assert_eq!(x[0].fragment(), &"val1");
     assert_eq!(x[1].fragment(), &"val2");
+}
 
+#[test]
+fn test_value_list_multi_brackets_sequence() {
     let x = value_list(Span::new("((val1), (val2))")).unwrap().1;
     assert_eq!(x[0].fragment(), &"val1");
     assert_eq!(x[1].fragment(), &"val2");
 }
 
 #[test]
-fn test_let_value_list() {
+fn test_let_value_list_one() {
     match let_value_list(Span::new("val1")).unwrap().1[0] {
         ParameterValueList::ParameterValue(v) => assert_eq!(v.fragment(), &"val1"),
         _ => unimplemented!(),
     }
+}
 
+#[test]
+fn test_let_value_list_sequnce() {
     let res = let_value_list(Span::new("val1, val2")).unwrap().1;
     match res[0] {
         ParameterValueList::ParameterValue(v) => assert_eq!(v.fragment(), &"val1"),
@@ -548,7 +593,10 @@ fn test_let_value_list() {
         ParameterValueList::ParameterValue(v) => assert_eq!(v.fragment(), &"val2"),
         _ => unimplemented!(),
     }
+}
 
+#[test]
+fn test_let_value_list_sequnce_brackets() {
     match let_value_list(Span::new("(val1, val2)")).unwrap().1[0] {
         ParameterValueList::ParameterList(ref x) => {
             assert_eq!(x.len(), 2);
@@ -563,7 +611,10 @@ fn test_let_value_list() {
         }
         _ => unimplemented!(),
     }
+}
 
+#[test]
+fn test_let_value_list_sequnce_list() {
     let res = let_value_list(Span::new("(val1, val2), (val3, val4)"))
         .unwrap()
         .1;
@@ -595,7 +646,10 @@ fn test_let_value_list() {
         }
         _ => unimplemented!(),
     }
+}
 
+#[test]
+fn test_let_value_list_sequnce_list_abd_type() {
     let res = let_value_list(Span::new(
         "(val1, val2: type2, val3, (val4: type4)), (val5: type5)",
     ))
@@ -657,13 +711,19 @@ fn test_module() {
     assert_eq!(res.module_name.len(), 1);
     assert_eq!(res.module_name[0].fragment(), &"test1");
     assert_eq!(res.accessibility, None);
+}
 
+#[test]
+fn test_module_sequence_two() {
     let res = module(Span::new("module test1.test2")).unwrap().1;
     assert_eq!(res.module_name.len(), 2);
     assert_eq!(res.module_name[0].fragment(), &"test1");
     assert_eq!(res.module_name[1].fragment(), &"test2");
     assert_eq!(res.accessibility, None);
+}
 
+#[test]
+fn test_module_sequence_public() {
     let res = module(Span::new("module public test1.test2.test3"))
         .unwrap()
         .1;
@@ -672,7 +732,10 @@ fn test_module() {
     assert_eq!(res.module_name[1].fragment(), &"test2");
     assert_eq!(res.module_name[2].fragment(), &"test3");
     assert_eq!(res.accessibility.unwrap().fragment(), &"public");
+}
 
+#[test]
+fn test_module_sequence_fail() {
     let res = module(Span::new("module test1 .test2")).unwrap();
     assert_eq!(res.1.module_name.len(), 1);
     assert_eq!(res.0.fragment(), &" .test2");
@@ -691,18 +754,21 @@ fn test_module() {
 
 #[test]
 fn test_namespace() {
-    let res = module(Span::new("test"));
-    assert!(res.is_err());
-
     let res = namespace(Span::new("namespace test1")).unwrap().1;
     assert_eq!(res.len(), 1);
     assert_eq!(res[0].fragment(), &"test1");
+}
 
+#[test]
+fn test_namespace_sequence_two() {
     let res = namespace(Span::new("namespace test1.test2")).unwrap().1;
     assert_eq!(res.len(), 2);
     assert_eq!(res[0].fragment(), &"test1");
     assert_eq!(res[1].fragment(), &"test2");
+}
 
+#[test]
+fn test_namespace_sequence_three() {
     let res = namespace(Span::new("namespace test1.test2.test3"))
         .unwrap()
         .1;
@@ -710,6 +776,12 @@ fn test_namespace() {
     assert_eq!(res[0].fragment(), &"test1");
     assert_eq!(res[1].fragment(), &"test2");
     assert_eq!(res[2].fragment(), &"test3");
+}
+
+#[test]
+fn test_namespace_fail() {
+    let res = module(Span::new("test"));
+    assert!(res.is_err());
 
     let res = namespace(Span::new("namespace test1 .test2")).unwrap();
     assert_eq!(res.1.len(), 1);
@@ -728,7 +800,7 @@ fn test_namespace() {
 }
 
 #[test]
-fn test_function_value() {
+fn test_function_value_brackets() {
     match function_value(Span::new("(val1, (val2))")).unwrap().1 {
         FunctionValue::ValueList(x) => {
             assert_eq!(x[0].fragment(), &"val1");
@@ -736,7 +808,10 @@ fn test_function_value() {
         }
         _ => unimplemented!(),
     }
+}
 
+#[test]
+fn test_function_value_with_expressions() {
     let x = function_value(Span::new("((val1, (val2)) + func1 val3)")).unwrap();
     assert_eq!(x.0.fragment(), &"");
     let x = x.1;
@@ -779,7 +854,10 @@ fn test_function_call_name() {
     let x = function_call_name(Span::new("func1")).unwrap().1;
     assert_eq!(x.len(), 1);
     assert_eq!(x[0].fragment(), &"func1");
+}
 
+#[test]
+fn test_function_call_name_sequence_and_value() {
     let x = function_call_name(Span::new("func1.func2 val1")).unwrap().1;
     assert_eq!(x.len(), 2);
     assert_eq!(x[0].fragment(), &"func1");
