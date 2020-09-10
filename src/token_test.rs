@@ -1356,8 +1356,8 @@ fn test_function_body_statement() {
 
 #[test]
 fn test_function_body() {
-    let x = function_body(Span::new(""));
-    println!("{:#?}", x);
+    let _x = function_body(Span::new("(func1 val1) (val2, val3)"));
+    //println!("{:#?}", x);
 }
 
 #[test]

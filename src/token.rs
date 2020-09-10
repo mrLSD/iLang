@@ -391,16 +391,10 @@ pub fn return_statement(data: Span) -> ParseResult<ast::ReturnStatement> {
 /// Function body parser
 /// ## RULES:
 /// ```js
-/// function-body = [function-body-statement]* return-statement
+/// function-body = [function-body-statement]*
 /// ```
 pub fn function_body(data: Span) -> ParseResult<ast::FunctionBody> {
-    map(
-        tuple((many0(function_body_statement), return_statement)),
-        |v| ast::FunctionBody {
-            statement: v.0,
-            return_statement: v.1,
-        },
-    )(data)
+    many0(function_body_statement)(data)
 }
 
 /// Function body statement parser

@@ -100,11 +100,7 @@ pub struct LetBinding<'a> {
 }
 
 /// Function body
-#[derive(Debug, Clone, PartialEq)]
-pub struct FunctionBody<'a> {
-    pub statement: Vec<FunctionBodyStatement<'a>>,
-    pub return_statement: ReturnStatement<'a>,
-}
+pub type FunctionBody<'a> = Vec<FunctionBodyStatement<'a>>;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum FunctionBodyStatement<'a> {
