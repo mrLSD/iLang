@@ -48,6 +48,7 @@ value-list = (parameter-value | "(" (parameter-value [","])* ")")
 // Function call statements
 function-call = function-call-name (function-value+ | "(" [function-value [","] ]* ")")
 function-call-name = (function-name ".")* function-name
+// TODO: extend to: expression -> [expression ","]+
 function-value = (value-list | "(" expression ")")
 
 // Expression declarations

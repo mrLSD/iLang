@@ -379,15 +379,6 @@ pub fn function_call(data: Span) -> ParseResult<ast::FunctionCall> {
     })(data)
 }
 
-/// Return statement parser
-/// ## RULES:
-/// ```js
-/// return-statement = function-value
-/// ```
-pub fn return_statement(data: Span) -> ParseResult<ast::ReturnStatement> {
-    function_value(data)
-}
-
 /// Function body parser
 /// ## RULES:
 /// ```js
@@ -421,8 +412,7 @@ pub fn let_binding(data: Span) -> ParseResult<ast::LetBinding> {
     map(
         tuple((
             preceded(delimited_space(tag("let")), let_value_list),
-            // TODO: preceded(delimited_space(tag("=")), function_body),
-            preceded(delimited_space(tag("=")), let_value_list),
+            preceded(delimited_space(tag("=")), function_body),
         )),
         |v| ast::LetBinding {
             value_list: v.0,
@@ -440,52 +430,7 @@ pub fn let_binding(data: Span) -> ParseResult<ast::LetBinding> {
 ///     "(" function-call ")"
 /// ) [expression-operations expression]
 /// ```
-/*pub fn expression(data: Span) -> ParseResult<ast::Expression> {
-    let func = alt((
-        map(delimited_space(function_value), |v| {
-            ast::ExpressionFunctionValueCall::FunctionValue(v)
-        }),
-        map(delimited_space(function_call), |v| {
-            ast::ExpressionFunctionValueCall::FunctionCall(v)
-        }),
-        map(get_from_brackets(function_call), |v| {
-            ast::ExpressionFunctionValueCall::FunctionCall(v)
-        }),
-    ));
-    map(
-        tuple((func, opt(tuple((expression_operations, expression))))),
-        |v| {
-            let (operation_statement, expression) = if let Some(x) = v.1 {
-                (Some(x.0), Some(Box::new(x.1)))
-            } else {
-                (None, None)
-            };
-            ast::Expression {
-                function_statement: v.0,
-                operation_statement,
-                expression,
-            }
-        },
-    )(data)
-}*/
-
 pub fn expression(data: Span) -> ParseResult<ast::Expression> {
-    /*
-        let x = map(get_from_brackets(function_call), |v| {
-            ast::ExpressionFunctionValueCall::FunctionCall(v)
-        })(data);
-        println!("#1 {:#?}", x);
-
-        let x = map(delimited_space(function_call), |v| {
-            ast::ExpressionFunctionValueCall::FunctionCall(v)
-        })(data);
-        println!("#2 {:#?}", x);
-
-        let x = map(delimited_space(function_value), |v| {
-            ast::ExpressionFunctionValueCall::FunctionValue(v)
-        })(data);
-        println!("#3 {:#?}\n", x);
-    */
     let func = alt((
         map(get_from_brackets(function_call), |v| {
             ast::ExpressionFunctionValueCall::FunctionCall(v)

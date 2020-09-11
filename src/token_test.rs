@@ -1392,7 +1392,6 @@ fn test_function_body() {
         },
         _ => unimplemented!(),
     }
-    //println!("{:#?}", x[1]);
 }
 
 #[test]
@@ -1407,13 +1406,16 @@ fn test_let_binding() {
         }
         _ => unimplemented!(),
     }
-
-    match x.function_body[0] {
+    /*match x.function_body[0] {
         ParameterValueList::ParameterValue(v) => {
             assert_eq!(v.fragment(), &"y");
         }
         _ => unimplemented!(),
-    }
+    }*/
+    println!("{:#?}", x.function_body);
+
+    let x = let_binding(Span::new("let val1 = val2 + val3")).unwrap();
+    //println!("{:#?}", x);
 }
 
 #[test]
