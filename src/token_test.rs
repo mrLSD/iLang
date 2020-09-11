@@ -1356,8 +1356,43 @@ fn test_function_body_statement() {
 
 #[test]
 fn test_function_body() {
-    let _x = function_body(Span::new("(func1 val1) (val2, val3)"));
-    //println!("{:#?}", x);
+    let x = function_body(Span::new("(func1 val1) (val2, val3)")).unwrap();
+    assert_eq!(x.0.fragment(), &"");
+    let x = x.1;
+    assert_eq!(x.len(), 2);
+    match &x[0] {
+        FunctionBodyStatement::Expression(e) => match &e.function_statement {
+            ExpressionFunctionValueCall::FunctionCall(v) => {
+                assert_eq!(v.function_call_name[0].fragment(), &"func1");
+                assert_eq!(v.function_value.len(), 1);
+                match &v.function_value[0] {
+                    FunctionValue::ValueList(v) => {
+                        assert_eq!(v.len(), 1);
+                        assert_eq!(v[0].fragment(), &"val1");
+                    }
+                    _ => unimplemented!(),
+                }
+            }
+            _ => unimplemented!(),
+        },
+        _ => unimplemented!(),
+    }
+
+    match &x[1] {
+        FunctionBodyStatement::Expression(e) => match &e.function_statement {
+            ExpressionFunctionValueCall::FunctionValue(v) => match v {
+                FunctionValue::ValueList(x) => {
+                    assert_eq!(x.len(), 2);
+                    assert_eq!(x[0].fragment(), &"val2");
+                    assert_eq!(x[1].fragment(), &"val3");
+                }
+                _ => unimplemented!(),
+            },
+            _ => unimplemented!(),
+        },
+        _ => unimplemented!(),
+    }
+    //println!("{:#?}", x[1]);
 }
 
 #[test]
