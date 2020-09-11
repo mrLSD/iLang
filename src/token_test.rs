@@ -1348,10 +1348,34 @@ fn test_function_body_statement() {
         _ => unimplemented!(),
     }
 
-    // TODO:
-    //let x = function_body_statement(Span::new("let val1 val2")).unwrap();
-    //println!("{:#?}", x);
-    //assert_eq!(x.0.fragment(), &"");
+    let x = function_body_statement(Span::new("let val1 = val2")).unwrap();
+    assert_eq!(x.0.fragment(), &"");
+    match x.1 {
+        FunctionBodyStatement::LetBinding(x) => {
+            assert_eq!(x.value_list.len(), 1);
+            match x.value_list[0] {
+                ParameterValueList::ParameterValue(v) => {
+                    assert_eq!(v.fragment(), &"val1");
+                }
+                _ => unimplemented!(),
+            }
+            assert_eq!(x.function_body.len(), 1);
+            match &x.function_body[0] {
+                FunctionBodyStatement::Expression(e) => match &e.function_statement {
+                    ExpressionFunctionValueCall::FunctionValue(v) => match v {
+                        FunctionValue::ValueList(v) => {
+                            assert_eq!(v.len(), 1);
+                            assert_eq!(v[0].fragment(), &"val2");
+                        }
+                        _ => unimplemented!(),
+                    },
+                    _ => unimplemented!(),
+                },
+                _ => unimplemented!(),
+            }
+        }
+        _ => unimplemented!(),
+    }
 }
 
 #[test]
