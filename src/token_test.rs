@@ -1406,16 +1406,61 @@ fn test_let_binding() {
         }
         _ => unimplemented!(),
     }
-    /*match x.function_body[0] {
-        ParameterValueList::ParameterValue(v) => {
-            assert_eq!(v.fragment(), &"y");
-        }
+    assert_eq!(x.function_body.len(), 1);
+    match &x.function_body[0] {
+        FunctionBodyStatement::Expression(e) => match &e.function_statement {
+            ExpressionFunctionValueCall::FunctionValue(v) => match v {
+                FunctionValue::ValueList(v) => {
+                    assert_eq!(v.len(), 1);
+                    assert_eq!(v[0].fragment(), &"y");
+                }
+                _ => unimplemented!(),
+            },
+            _ => unimplemented!(),
+        },
         _ => unimplemented!(),
-    }*/
-    println!("{:#?}", x.function_body);
+    }
 
     let x = let_binding(Span::new("let val1 = val2 + val3")).unwrap();
-    //println!("{:#?}", x);
+    assert_eq!(x.0.fragment(), &"");
+    let x = x.1;
+    assert_eq!(x.value_list.len(), 1);
+    match x.value_list[0] {
+        ParameterValueList::ParameterValue(v) => {
+            assert_eq!(v.fragment(), &"val1");
+        }
+        _ => unimplemented!(),
+    }
+    assert_eq!(x.function_body.len(), 1);
+    match &x.function_body[0] {
+        FunctionBodyStatement::Expression(e) => {
+            match &e.function_statement {
+                ExpressionFunctionValueCall::FunctionValue(v) => match v {
+                    FunctionValue::ValueList(v) => {
+                        assert_eq!(v.len(), 1);
+                        assert_eq!(v[0].fragment(), &"val2");
+                    }
+                    _ => unimplemented!(),
+                },
+                _ => unimplemented!(),
+            }
+            assert_eq!(
+                e.operation_statement.as_ref().unwrap(),
+                &ExpressionOperation::Plus
+            );
+            match e.expression.as_ref().unwrap().function_statement {
+                ExpressionFunctionValueCall::FunctionValue(ref v) => match v {
+                    FunctionValue::ValueList(v) => {
+                        assert_eq!(v.len(), 1);
+                        assert_eq!(v[0].fragment(), &"val3");
+                    }
+                    _ => unimplemented!(),
+                },
+                _ => unimplemented!(),
+            }
+        }
+        _ => unimplemented!(),
+    }
 }
 
 #[test]
