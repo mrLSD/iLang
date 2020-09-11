@@ -879,7 +879,7 @@ fn test_function_call_name_sequence_and_value() {
 }
 
 #[test]
-fn test_function_call() {
+fn test_function_call_func_val() {
     let x = function_call(Span::new("func1 val1")).unwrap().1;
     assert_eq!(x.function_call_name.len(), 1);
     assert_eq!(x.function_value.len(), 1);
@@ -891,7 +891,10 @@ fn test_function_call() {
         }
         _ => unimplemented!(),
     }
+}
 
+#[test]
+fn test_function_call_func_val_sequence() {
     let x = function_call(Span::new("func1.func2 val1 val2")).unwrap().1;
     assert_eq!(x.function_call_name.len(), 2);
     assert_eq!(x.function_value.len(), 2);
@@ -911,7 +914,10 @@ fn test_function_call() {
         }
         _ => unimplemented!(),
     }
+}
 
+#[test]
+fn test_function_call_func_val_sequence_brackets() {
     let x = function_call(Span::new("func1.func2 (val1) (val2)"))
         .unwrap()
         .1;
@@ -933,7 +939,10 @@ fn test_function_call() {
         }
         _ => unimplemented!(),
     }
+}
 
+#[test]
+fn test_function_call_func_val_multi_sequence() {
     let x = function_call(Span::new("func1.func2 (val1, val2)"))
         .unwrap()
         .1;
@@ -949,12 +958,18 @@ fn test_function_call() {
         }
         _ => unimplemented!(),
     }
+}
 
+#[test]
+fn test_function_call_func_val_partial() {
     let x = function_call(Span::new("func1 val1, val2")).unwrap();
     assert_eq!(x.1.function_call_name.len(), 1);
     assert_eq!(x.1.function_value.len(), 1);
     assert_eq!(x.0.fragment(), &", val2");
+}
 
+#[test]
+fn test_function_call_func_val_multi_brackets() {
     let x = function_call(Span::new("func1.func2 ((val1), (val2))"))
         .unwrap()
         .1;
@@ -970,12 +985,18 @@ fn test_function_call() {
         }
         _ => unimplemented!(),
     }
+}
 
+#[test]
+fn test_function_call_empty_brackets() {
     let x = function_call(Span::new("func1 ()")).unwrap().1;
     assert_eq!(x.function_call_name.len(), 1);
     assert_eq!(x.function_value.len(), 0);
     assert_eq!(x.function_call_name[0].fragment(), &"func1");
+}
 
+#[test]
+fn test_function_call_func_val_in_func() {
     let x = function_call(Span::new("func1 (func2 val2)")).unwrap().1;
     assert_eq!(x.function_call_name.len(), 1);
     assert_eq!(x.function_value.len(), 1);
@@ -999,7 +1020,7 @@ fn test_function_call() {
 }
 
 #[test]
-fn test_expression() {
+fn test_expression_func_empty_param() {
     let x = expression(Span::new("func1 ()")).unwrap().1;
     match x.function_statement {
         ExpressionFunctionValueCall::FunctionCall(x) => {
@@ -1009,7 +1030,10 @@ fn test_expression() {
         }
         _ => unimplemented!(),
     }
+}
 
+#[test]
+fn test_expression_func_multi_val_params() {
     let x = expression(Span::new("func1 (val1, val2)")).unwrap().1;
     match x.function_statement {
         ExpressionFunctionValueCall::FunctionCall(x) => {
@@ -1027,7 +1051,10 @@ fn test_expression() {
         }
         _ => unimplemented!(),
     }
+}
 
+#[test]
+fn test_expression_multi_func_sequence_params() {
     let x = expression(Span::new("func1.func2 val1 val2")).unwrap().1;
     match x.function_statement {
         ExpressionFunctionValueCall::FunctionCall(x) => {
@@ -1052,7 +1079,10 @@ fn test_expression() {
         }
         _ => unimplemented!(),
     }
+}
 
+#[test]
+fn test_expression_multi_func_sequence_params_multi_params() {
     let x = expression(Span::new("func1 val1 (val2, val3)")).unwrap().1;
     match x.function_statement {
         ExpressionFunctionValueCall::FunctionCall(x) => {
@@ -1077,7 +1107,10 @@ fn test_expression() {
         }
         _ => unimplemented!(),
     }
+}
 
+#[test]
+fn test_expression_multi_func_sequence_params_brackets() {
     let x = expression(Span::new("(func1 (val1, val2))")).unwrap().1;
     match x.function_statement {
         ExpressionFunctionValueCall::FunctionCall(x) => {
@@ -1095,7 +1128,10 @@ fn test_expression() {
         }
         _ => unimplemented!(),
     }
+}
 
+#[test]
+fn test_expression_func_params_in_brackets() {
     let x = expression(Span::new("(func1 val1 val2)")).unwrap().1;
     match x.function_statement {
         ExpressionFunctionValueCall::FunctionCall(x) => {
