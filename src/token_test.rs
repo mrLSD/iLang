@@ -1242,7 +1242,10 @@ fn test_expression_func_params_plus_func_params() {
         }
         _ => unimplemented!(),
     }
+}
 
+#[test]
+fn test_expression_brackets_func_params_plus_func_params() {
     let x = expression(Span::new("((func1 val1) + (func2 val2))"))
         .unwrap()
         .1;
@@ -1284,7 +1287,10 @@ fn test_expression_func_params_plus_func_params() {
         },
         _ => unimplemented!(),
     }
+}
 
+#[test]
+fn test_expression_value_plus_func_params_plus_value() {
     let x = expression(Span::new("val1 + (func1 val2) + val3"))
         .unwrap()
         .1;
