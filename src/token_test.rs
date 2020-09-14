@@ -1330,7 +1330,10 @@ fn test_expression_value_plus_func_params_plus_value() {
         },
         _ => unimplemented!(),
     }
+}
 
+#[test]
+fn test_expression_value_plus_func_params_partly_parsed() {
     // Parsed partly
     let x = expression(Span::new("val1 + (func1 val2) val3")).unwrap();
     assert_eq!(x.0.fragment(), &"val3");
@@ -1346,6 +1349,7 @@ fn test_expression_value_plus_func_params_plus_value() {
         _ => unimplemented!(),
     }
     assert_eq!(x.operation_statement.unwrap(), ExpressionOperation::Plus);
+    let v = x.expression.unwrap();
     match &v.function_statement {
         ExpressionFunctionValueCall::FunctionCall(v) => {
             assert_eq!(v.function_call_name[0].fragment(), &"func1");
@@ -1359,7 +1363,10 @@ fn test_expression_value_plus_func_params_plus_value() {
         }
         _ => unimplemented!(),
     }
+}
 
+#[test]
+fn test_expression_complex_statement() {
     let x = expression(Span::new(
         "(func1 val1) + ((func2 (val2, val3)) + val4 + func5 val5 val6 + func6 ())",
     ))
@@ -1572,7 +1579,7 @@ fn test_function_body() {
         },
         _ => unimplemented!(),
     }
-    
+
     match &x[1] {
         FunctionBodyStatement::Expression(e) => match &e.function_statement {
             ExpressionFunctionValueCall::FunctionValue(v) => match v {
@@ -1662,7 +1669,43 @@ fn test_let_binding_value_plus_value() {
 }
 
 #[test]
-fn test_function() {}
+fn test_function_simple() {
+    let x = function(Span::new("let func1 val1 = val2")).unwrap();
+    assert_eq!(x.0.fragment(), &"");
+    let x = x.1;
+    assert_eq!(x.function_name.fragment(), &"func1");
+    match x.parameter_list {
+        ParameterList::ParameterValueList(ref v) => {
+            assert_eq!(v.len(), 1);
+            match v[0] {
+                ParameterValueList::ParameterValue(x) => {
+                    assert_eq!(x.fragment(), &"val1");
+                }
+                _ => unimplemented!()
+            }
+        }
+        _ => unimplemented!()
+    }
+    assert_eq!(x.function_body.len(), 1);
+    match &x.function_body[0] {
+        FunctionBodyStatement::Expression(x) => {
+            match &x.function_statement {
+                ExpressionFunctionValueCall::FunctionValue(v) => {
+                    match v {
+                        FunctionValue::ValueList(x) => {
+                            assert_eq!(x.len(), 1);
+                            assert_eq!(x[0].fragment(), &"val2");
+                        }
+                        _ => unimplemented!()
+                    }
+                }
+                _ => unimplemented!()
+            }
+        }
+        _ => unimplemented!()
+    } 
+    //println!("{:#?}", x.function_body);
+}
 
 #[test]
 fn test_main() {}
