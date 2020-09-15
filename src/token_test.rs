@@ -1775,8 +1775,85 @@ fn test_function_params_and_simple_expression() {
         }
         _ => unimplemented!(),
     }
-    //println!("{:#?}", &x);
 }
 
 #[test]
-fn test_main() {}
+fn test_main_func_call() {
+    let x = main(Span::new(
+        "let inline func1 val1 (val2: type1) : return_type = val3 + val4",
+    ))
+    .unwrap();
+    assert_eq!(x.0.fragment(), &"");
+    assert_eq!(x.1.len(), 1);
+    let x = if let MainStatement::Function(v) = &x.1[0] {
+        v.clone()
+    } else {
+        unimplemented!()
+    };
+    assert_eq!(&x.modifier.unwrap(), &FunctionModifier::Inline);
+    assert_eq!(x.function_name.fragment(), &"func1");
+
+    let v = x.return_type.as_ref().unwrap();
+    assert_eq!(v.len(), 1);
+    assert_eq!(v[0].fragment(), &"return_type");
+
+    let p = &x.parameter_list;
+    match p {
+        ParameterList::ParameterValueList(ref v) => {
+            assert_eq!(v.len(), 2);
+            match &v[0] {
+                ParameterValueList::ParameterValue(x) => {
+                    assert_eq!(x.fragment(), &"val1");
+                }
+                _ => unimplemented!(),
+            }
+            match &v[1] {
+                ParameterValueList::ParameterList(x) => {
+                    assert_eq!(x.len(), 1);
+                    match &x[0] {
+                        ParameterValueType::ValueType(v, t) => {
+                            assert_eq!(v.fragment(), &"val2");
+                            assert_eq!(t.len(), 1);
+                            assert_eq!(t[0].fragment(), &"type1");
+                        }
+                        _ => unimplemented!(),
+                    }
+                }
+                _ => unimplemented!(),
+            }
+        }
+        _ => unimplemented!(),
+    }
+    assert_eq!(x.function_body.len(), 1);
+    match &x.function_body[0] {
+        FunctionBodyStatement::Expression(e) => {
+            match &e.function_statement {
+                ExpressionFunctionValueCall::FunctionValue(x) => match x {
+                    FunctionValue::ValueList(v) => {
+                        assert_eq!(v.len(), 1);
+                        assert_eq!(v[0].fragment(), &"val3");
+                    }
+                    _ => unimplemented!(),
+                },
+                _ => unimplemented!(),
+            }
+            assert_eq!(
+                e.operation_statement.as_ref().unwrap(),
+                &ExpressionOperation::Plus
+            );
+            let x = e.expression.as_ref().unwrap();
+            match x.function_statement {
+                ExpressionFunctionValueCall::FunctionValue(ref x) => match x {
+                    FunctionValue::ValueList(v) => {
+                        assert_eq!(v.len(), 1);
+                        assert_eq!(v[0].fragment(), &"val4");
+                    }
+                    _ => unimplemented!(),
+                },
+                _ => unimplemented!(),
+            }
+        }
+        _ => unimplemented!(),
+    }
+    //println!("{:#?}", x);
+}
