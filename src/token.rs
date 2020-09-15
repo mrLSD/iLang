@@ -114,12 +114,8 @@ where
 /// ```
 pub fn ident(data: Span) -> ParseResult<ast::Ident> {
     let _ = alpha1(data)?;
-    //let _ = not(alt((tag("let"), tag("module"), tag("namespace"))))(data)?;
-    // let (i, res) = not(alt((tag("let"), tag("module"), tag("namespace"))))(data)?;
-    // eprintln!("{:#?}: {:#?}", i, res);
     let (i, o) = alphanum_and_underscore0(data)?;
     let _ = not(alt((tag("let"), tag("module"), tag("namespace"))))(o)?;
-    //eprintln!("{:#?}: {:#?}", i, res);
     Ok((i, o))
 }
 

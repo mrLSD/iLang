@@ -1861,7 +1861,6 @@ fn test_main_func_call() {
 fn test_main_func_complex() {
     let x = main(Span::new(
         "module name1.name2\nlet val1 = val2 + val3\nlet inline func1 val4 (val5: type1) : return_type = val6 + val7",
-    ))
-        .unwrap();
+    )).unwrap();
     println!("{:#?}", x);
 }
