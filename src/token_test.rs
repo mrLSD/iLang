@@ -1862,5 +1862,25 @@ fn test_main_func_complex() {
     let x = main(Span::new(
         "module name1.name2\nlet val1 = val2 + val3\nlet inline func1 val4 (val5: type1) : return_type = val6 + val7",
     )).unwrap();
-    println!("{:#?}", x);
+    assert_eq!(x.0.fragment(), &"");
+    assert_eq!(x.1.len(), 3);
+    let module_name = if let MainStatement::Module(v) = &x.1[0] {
+        v.clone()
+    } else {
+        unimplemented!()
+    };
+    //println!("{:#?}", &x.1[1]);
+    assert_eq!(module_name.module_name.len(), 2);
+    assert_eq!(module_name.module_name[0].fragment(), &"name1");
+    assert_eq!(module_name.module_name[1].fragment(), &"name2");
+
+    let let_binding = if let MainStatement::LetBinding(v) = &x.1[1] {
+        v.clone()
+    } else {
+        unimplemented!()
+    };
+    assert_eq!(let_binding.value_list.len(), 1);
+    assert_eq!(let_binding.function_body.len(), 1);
+    println!("{:#?}", let_binding.value_list[0]);
+    println!("{:#?}", let_binding.function_body[0]);
 }
