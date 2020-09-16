@@ -11,5 +11,6 @@ mod char;
 
 #[cfg(test)]
 mod char_test;
+mod tests;
 #[cfg(test)]
 mod token_test;
