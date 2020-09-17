@@ -1869,7 +1869,6 @@ fn test_main_func_complex() {
     } else {
         unimplemented!()
     };
-    //println!("{:#?}", &x.1);
     assert_eq!(module_name.module_name.len(), 2);
     assert_eq!(module_name.module_name[0].fragment(), &"name1");
     assert_eq!(module_name.module_name[1].fragment(), &"name2");
@@ -1879,7 +1878,7 @@ fn test_main_func_complex() {
     } else {
         unimplemented!()
     };
-    let _function = if let MainStatement::Function(v) = &x.1[2] {
+    let function = if let MainStatement::Function(v) = &x.1[2] {
         v.clone()
     } else {
         unimplemented!()
@@ -1924,5 +1923,69 @@ fn test_main_func_complex() {
         _ => unimplemented!(),
     }
 
-    //println!("{:#?}", let_binding.function_body[0]);
+    assert_eq!(&function.modifier.unwrap(), &FunctionModifier::Inline);
+    assert_eq!(function.function_name.fragment(), &"func1");
+
+    let v = function.return_type.as_ref().unwrap();
+    assert_eq!(v.len(), 1);
+    assert_eq!(v[0].fragment(), &"return_type");
+
+    let p = &function.parameter_list;
+    match p {
+        ParameterList::ParameterValueList(ref v) => {
+            assert_eq!(v.len(), 2);
+            match &v[0] {
+                ParameterValueList::ParameterValue(x) => {
+                    assert_eq!(x.fragment(), &"val4");
+                }
+                _ => unimplemented!(),
+            }
+            match &v[1] {
+                ParameterValueList::ParameterList(x) => {
+                    assert_eq!(x.len(), 1);
+                    match &x[0] {
+                        ParameterValueType::ValueType(v, t) => {
+                            assert_eq!(v.fragment(), &"val5");
+                            assert_eq!(t.len(), 1);
+                            assert_eq!(t[0].fragment(), &"type1");
+                        }
+                        _ => unimplemented!(),
+                    }
+                }
+                _ => unimplemented!(),
+            }
+        }
+        _ => unimplemented!(),
+    }
+    assert_eq!(function.function_body.len(), 1);
+    match &function.function_body[0] {
+        FunctionBodyStatement::Expression(e) => {
+            match &e.function_statement {
+                ExpressionFunctionValueCall::FunctionValue(x) => match x {
+                    FunctionValue::ValueList(v) => {
+                        assert_eq!(v.len(), 1);
+                        assert_eq!(v[0].fragment(), &"val6");
+                    }
+                    _ => unimplemented!(),
+                },
+                _ => unimplemented!(),
+            }
+            assert_eq!(
+                e.operation_statement.as_ref().unwrap(),
+                &ExpressionOperation::Plus
+            );
+            let x = e.expression.as_ref().unwrap();
+            match x.function_statement {
+                ExpressionFunctionValueCall::FunctionValue(ref x) => match x {
+                    FunctionValue::ValueList(v) => {
+                        assert_eq!(v.len(), 1);
+                        assert_eq!(v[0].fragment(), &"val7");
+                    }
+                    _ => unimplemented!(),
+                },
+                _ => unimplemented!(),
+            }
+        }
+        _ => unimplemented!(),
+    }
 }
