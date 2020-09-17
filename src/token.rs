@@ -38,6 +38,7 @@ use crate::{
     },
     char::AsChar,
 };
+use nom::combinator::not;
 
 /// Apply parser func for delimited space
 /// ## RULE:
@@ -89,6 +90,21 @@ where
     input.split_at_position_complete(|item| !item.is_a(f))
 }
 
+/// Exclude reserved keywords
+/// ## RULES:
+/// ```js
+/// reserved-keywords = !( "let" | "module" | "namespace" | "type" )
+/// ```
+pub fn reserved_keywords<'a, O, F>(func: F) -> impl Fn(Span<'a>) -> ParseResult<O>
+where
+    F: Fn(Span<'a>) -> ParseResult<O>,
+{
+    preceded(
+        alt((tag("let"), tag("module"), tag("namespace"), tag("type"))),
+        func,
+    )
+}
+
 /// Get ident token
 ///
 /// First always should be Alpha char.
@@ -98,7 +114,9 @@ where
 /// ```
 pub fn ident(data: Span) -> ParseResult<ast::Ident> {
     let _ = alpha1(data)?;
-    alphanum_and_underscore0(data)
+    let (i, o) = alphanum_and_underscore0(data)?;
+    let _ = not(alt((tag("let"), tag("module"), tag("namespace"))))(o)?;
+    Ok((i, o))
 }
 
 /// Parse expression operations
@@ -111,24 +129,14 @@ pub fn ident(data: Span) -> ParseResult<ast::Ident> {
 /// )
 /// ```
 pub fn expression_operations(data: Span) -> ParseResult<ast::ExpressionOperation> {
-    map(
-        alt((
-            tag("+"),
-            tag("-"),
-            tag("*"),
-            tag("/"),
-            tag("<<<"),
-            tag(">>>"),
-        )),
-        |o: Span| match *o.fragment() {
-            "+" => ast::ExpressionOperation::Plus,
-            "-" => ast::ExpressionOperation::Minus,
-            "*" => ast::ExpressionOperation::Multiply,
-            "/" => ast::ExpressionOperation::Divide,
-            "<<<" => ast::ExpressionOperation::ShiftLeft,
-            _ => ast::ExpressionOperation::ShiftRight,
-        },
-    )(data)
+    alt((
+        map(tag("+"), |_| ast::ExpressionOperation::Plus),
+        map(tag("-"), |_| ast::ExpressionOperation::Minus),
+        map(tag("*"), |_| ast::ExpressionOperation::Multiply),
+        map(tag("/"), |_| ast::ExpressionOperation::Divide),
+        map(tag("<<<"), |_| ast::ExpressionOperation::ShiftLeft),
+        map(tag(">>>"), |_| ast::ExpressionOperation::ShiftRight),
+    ))(data)
 }
 
 /// Parse parameter value
@@ -345,9 +353,12 @@ pub fn module(data: Span) -> ParseResult<ast::Module> {
 /// function-value = (value-list | "(" expression ")")
 /// ```
 pub fn function_value(data: Span) -> ParseResult<ast::FunctionValue> {
-    // TODO: extend with expression
-    let (i, o) = value_list(data)?;
-    Ok((i, ast::FunctionValue::ValueList(o)))
+    alt((
+        map(value_list, ast::FunctionValue::ValueList),
+        map(get_from_brackets(expression), |v| {
+            ast::FunctionValue::Expression(Box::new(v))
+        }),
+    ))(data)
 }
 
 /// Function value
@@ -375,21 +386,8 @@ pub fn function_call_name(data: Span) -> ParseResult<ast::FunctionCallName> {
 pub fn function_call(data: Span) -> ParseResult<ast::FunctionCall> {
     let func_val = alt((
         many1(function_value),
-        map(
-            get_from_brackets(opt(tuple((
-                function_value,
-                many0(preceded(delimited_space(tag(",")), function_value)),
-            )))),
-            |v| {
-                if v.is_none() {
-                    return vec![];
-                }
-                let mut x = v.unwrap();
-                let mut res = vec![x.0];
-                res.append(&mut x.1);
-                res
-            },
-        ),
+        // Detect only empty brackets. Other cases covered via `function_value` parser
+        map(get_from_brackets(multispace0), |_| vec![]),
     ));
     map(tuple((function_call_name, func_val)), |v| {
         ast::FunctionCall {
@@ -402,16 +400,25 @@ pub fn function_call(data: Span) -> ParseResult<ast::FunctionCall> {
 /// Function body parser
 /// ## RULES:
 /// ```js
-/// function-body = [function-body-statement]* return-statement
+/// function-body = [function-body-statement]*
 /// ```
 pub fn function_body(data: Span) -> ParseResult<ast::FunctionBody> {
-    let x = function_value(data)?;
-    // TODO: extend  Function Body statement
-    let res = ast::FunctionBody {
-        statement: vec![],
-        return_statement: x.1,
-    };
-    Ok((x.0, res))
+    many0(function_body_statement)(data)
+}
+
+/// Function body statement parser
+/// ## RULES:
+/// ```js
+/// function-body-statement = (let-binding | function-call | expression)
+/// ```
+pub fn function_body_statement(data: Span) -> ParseResult<ast::FunctionBodyStatement> {
+    alt((
+        map(let_binding, ast::FunctionBodyStatement::LetBinding),
+        map(function_call, ast::FunctionBodyStatement::FunctionCall),
+        map(expression, |v| {
+            ast::FunctionBodyStatement::Expression(Box::new(v))
+        }),
+    ))(data)
 }
 
 /// Let binding statement
@@ -422,8 +429,8 @@ pub fn function_body(data: Span) -> ParseResult<ast::FunctionBody> {
 pub fn let_binding(data: Span) -> ParseResult<ast::LetBinding> {
     map(
         tuple((
-            preceded(terminated(tag("let"), multispace1), let_value_list),
-            function_body,
+            preceded(delimited_space(tag("let")), let_value_list),
+            preceded(delimited_space(tag("=")), function_body),
         )),
         |v| ast::LetBinding {
             value_list: v.0,
@@ -443,14 +450,14 @@ pub fn let_binding(data: Span) -> ParseResult<ast::LetBinding> {
 /// ```
 pub fn expression(data: Span) -> ParseResult<ast::Expression> {
     let func = alt((
-        map(delimited_space(function_value), |v| {
-            ast::ExpressionFunctionValueCall::FunctionValue(v)
+        map(get_from_brackets(function_call), |v| {
+            ast::ExpressionFunctionValueCall::FunctionCall(v)
         }),
         map(delimited_space(function_call), |v| {
             ast::ExpressionFunctionValueCall::FunctionCall(v)
         }),
-        map(get_from_brackets(function_call), |v| {
-            ast::ExpressionFunctionValueCall::FunctionCall(v)
+        map(delimited_space(function_value), |v| {
+            ast::ExpressionFunctionValueCall::FunctionValue(v)
         }),
     ));
     map(
@@ -468,4 +475,75 @@ pub fn expression(data: Span) -> ParseResult<ast::Expression> {
             }
         },
     )(data)
+}
+
+/// Function name parser
+/// ## RULES:
+/// ```js
+/// function-name = [MULTISPACE] ident [MULTISPACE]
+/// ```
+pub fn function_name(data: Span) -> ParseResult<ast::FunctionName> {
+    delimited_space(ident)(data)
+}
+
+/// Return type parser
+/// ## RULES:
+/// ```js
+/// return-type = [MULTISPACE] parameter-type [MULTISPACE]
+/// ```
+pub fn return_type(data: Span) -> ParseResult<ast::ReturnType> {
+    delimited_space(parameter_type)(data)
+}
+
+/// Function parser
+/// ## RULES:
+/// ```js
+/// function = "let" ["inline"] function-name parameter-list [ ":" return-type ] "=" function-body
+/// ```
+pub fn function(data: Span) -> ParseResult<ast::Function> {
+    map(
+        tuple((
+            preceded(
+                terminated(tag("let"), multispace1),
+                tuple((
+                    opt(map(delimited_space(tag("inline")), |_| {
+                        ast::FunctionModifier::Inline
+                    })),
+                    function_name,
+                )),
+            ),
+            parameter_list,
+            opt(preceded(delimited_space(tag(":")), return_type)),
+            preceded(delimited_space(tag("=")), function_body),
+        )),
+        |v| {
+            let func_name = v.0;
+            ast::Function {
+                modifier: func_name.0,
+                function_name: func_name.1,
+                parameter_list: v.1,
+                return_type: v.2,
+                function_body: v.3,
+            }
+        },
+    )(data)
+}
+
+/// Main statement parser
+/// ## RULES:
+/// ```js
+/// main = (
+///     namespace |
+///     module    |
+///     function  |
+///     let-binding
+/// )+
+/// ```
+pub fn main(data: Span) -> ParseResult<ast::Main> {
+    many1(alt((
+        map(delimited_space(namespace), ast::MainStatement::Namespace),
+        map(delimited_space(module), ast::MainStatement::Module),
+        map(delimited_space(function), ast::MainStatement::Function),
+        map(delimited_space(let_binding), ast::MainStatement::LetBinding),
+    )))(data)
 }

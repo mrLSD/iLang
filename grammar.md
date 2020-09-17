@@ -8,7 +8,7 @@ main = (
         module    |
         function  |
         let-binding 
-    )*
+    )+
 
 // Basic rules
 ident = alpha+ (alphanum | "_")* 
@@ -24,7 +24,7 @@ qualified-namespace = indent
 module-name = ident
 
 // Function declarations
-function = "let" [ ("inline" | "rec") ] function-name parameter-list [ ":" return-type ] "=" function-body
+function = "let" ["inline"] function-name parameter-list [ ":" return-type ] "=" function-body
 function-name = ident
 parameter-list = (parameter-value-list+ | parameter-list-brackets)
 parameter-list-brackets = "(" [(
@@ -37,9 +37,8 @@ parameter-value = ident-value
 ident-value = (ident | "(" ident ")") 
 parameter-type = (ident-value ["*" ident-value] | "(" ident-value ["*" ident-value] ")")+
 return-type = parameter-type 
-function-body = [function-body-statement]* return-statement
+function-body = [function-body-statement]*
 function-body-statement = (let-binding | function-call | expression)
-return-statement = function-value
 
 // Let binding
 let-binding = "let" let-value-list "=" function-body
@@ -49,6 +48,7 @@ value-list = (parameter-value | "(" (parameter-value [","])* ")")
 // Function call statements
 function-call = function-call-name (function-value+ | "(" [function-value [","] ]* ")")
 function-call-name = (function-name ".")* function-name
+// TODO: extend to: expression -> [expression ","]+
 function-value = (value-list | "(" expression ")")
 
 // Expression declarations

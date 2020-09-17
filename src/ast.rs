@@ -99,11 +99,7 @@ pub struct LetBinding<'a> {
 }
 
 /// Function body
-#[derive(Debug, Clone, PartialEq)]
-pub struct FunctionBody<'a> {
-    pub statement: Vec<FunctionBodyStatement<'a>>,
-    pub return_statement: ReturnStatement<'a>,
-}
+pub type FunctionBody<'a> = Vec<FunctionBodyStatement<'a>>;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum FunctionBodyStatement<'a> {
@@ -144,13 +140,19 @@ pub struct FunctionCall<'a> {
     pub function_value: Vec<FunctionValue<'a>>,
 }
 
+/// Function modifiers
+#[derive(Debug, Clone, PartialEq)]
+pub enum FunctionModifier {
+    Inline,
+}
+
 /// Function statement
 #[derive(Debug, Clone, PartialEq)]
 pub struct Function<'a> {
-    pub modifier: Ident<'a>,
+    pub modifier: Option<FunctionModifier>,
     pub function_name: FunctionName<'a>,
     pub parameter_list: ParameterList<'a>,
-    pub return_type: ReturnType<'a>,
+    pub return_type: Option<ReturnType<'a>>,
     pub function_body: FunctionBody<'a>,
 }
 

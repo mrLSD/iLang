@@ -8,7 +8,7 @@ fmt:
 	@cargo +nightly fmt
 
 test:
-	@cargo test -- --nocapture
+	@cargo test --tests -- --nocapture
 
 cover:
 	@export RUSTFLAGS="-Zprofile -Ccodegen-units=1 -Copt-level=0 -Clink-dead-code -Coverflow-checks=off -Zpanic_abort_tests -Cpanic=abort" \
