@@ -1869,7 +1869,7 @@ fn test_main_func_complex() {
     } else {
         unimplemented!()
     };
-    //println!("{:#?}", &x.1[1]);
+    //println!("{:#?}", &x.1);
     assert_eq!(module_name.module_name.len(), 2);
     assert_eq!(module_name.module_name[0].fragment(), &"name1");
     assert_eq!(module_name.module_name[1].fragment(), &"name2");
@@ -1879,8 +1879,50 @@ fn test_main_func_complex() {
     } else {
         unimplemented!()
     };
+    let _function = if let MainStatement::Function(v) = &x.1[2] {
+        v.clone()
+    } else {
+        unimplemented!()
+    };
+
     assert_eq!(let_binding.value_list.len(), 1);
     assert_eq!(let_binding.function_body.len(), 1);
-    println!("{:#?}", let_binding.value_list[0]);
-    println!("{:#?}", let_binding.function_body[0]);
+    if let ParameterValueList::ParameterValue(v) = &let_binding.value_list[0] {
+        assert_eq!(v.fragment(), &"val1");
+    } else {
+        unimplemented!()
+    }
+
+    match &let_binding.function_body[0] {
+        FunctionBodyStatement::Expression(e) => {
+            match &e.function_statement {
+                ExpressionFunctionValueCall::FunctionValue(x) => match x {
+                    FunctionValue::ValueList(v) => {
+                        assert_eq!(v.len(), 1);
+                        assert_eq!(v[0].fragment(), &"val2");
+                    }
+                    _ => unimplemented!(),
+                },
+                _ => unimplemented!(),
+            }
+            assert_eq!(
+                e.operation_statement.as_ref().unwrap(),
+                &ExpressionOperation::Plus
+            );
+            let x = e.expression.as_ref().unwrap();
+            match x.function_statement {
+                ExpressionFunctionValueCall::FunctionValue(ref x) => match x {
+                    FunctionValue::ValueList(v) => {
+                        assert_eq!(v.len(), 1);
+                        assert_eq!(v[0].fragment(), &"val3");
+                    }
+                    _ => unimplemented!(),
+                },
+                _ => unimplemented!(),
+            }
+        }
+        _ => unimplemented!(),
+    }
+
+    //println!("{:#?}", let_binding.function_body[0]);
 }
