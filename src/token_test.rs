@@ -2146,7 +2146,7 @@ fn test_function_simple() {
         _ => unimplemented!(),
     }
 }
-/*
+
 #[test]
 fn test_function_params_and_simple_expression() {
     let x = function(Span::new(
@@ -2196,7 +2196,11 @@ fn test_function_params_and_simple_expression() {
                 ExpressionFunctionValueCall::FunctionValue(x) => match x {
                     FunctionValue::ValueList(v) => {
                         assert_eq!(v.len(), 1);
-                        assert_eq!(v[0].fragment(), &"val3");
+                        if let ValueExpression::ParameterValue(x) = &v[0] {
+                            assert_eq!(x.fragment(), &"val3");
+                        } else {
+                            unimplemented!()
+                        }
                     }
                     _ => unimplemented!(),
                 },
@@ -2211,7 +2215,11 @@ fn test_function_params_and_simple_expression() {
                 ExpressionFunctionValueCall::FunctionValue(ref x) => match x {
                     FunctionValue::ValueList(v) => {
                         assert_eq!(v.len(), 1);
-                        assert_eq!(v[0].fragment(), &"val4");
+                        if let ValueExpression::ParameterValue(x) = &v[0] {
+                            assert_eq!(x.fragment(), &"val4");
+                        } else {
+                            unimplemented!()
+                        }
                     }
                     _ => unimplemented!(),
                 },
@@ -2276,7 +2284,11 @@ fn test_main_func_call() {
                 ExpressionFunctionValueCall::FunctionValue(x) => match x {
                     FunctionValue::ValueList(v) => {
                         assert_eq!(v.len(), 1);
-                        assert_eq!(v[0].fragment(), &"val3");
+                        if let ValueExpression::ParameterValue(x) = &v[0] {
+                            assert_eq!(x.fragment(), &"val3");
+                        } else {
+                            unimplemented!()
+                        }
                     }
                     _ => unimplemented!(),
                 },
@@ -2291,7 +2303,11 @@ fn test_main_func_call() {
                 ExpressionFunctionValueCall::FunctionValue(ref x) => match x {
                     FunctionValue::ValueList(v) => {
                         assert_eq!(v.len(), 1);
-                        assert_eq!(v[0].fragment(), &"val4");
+                        if let ValueExpression::ParameterValue(x) = &v[0] {
+                            assert_eq!(x.fragment(), &"val4");
+                        } else {
+                            unimplemented!()
+                        }
                     }
                     _ => unimplemented!(),
                 },
@@ -2301,7 +2317,7 @@ fn test_main_func_call() {
         _ => unimplemented!(),
     }
 }
-
+/*
 #[test]
 fn test_main_func_complex() {
     let x = main(Span::new(
