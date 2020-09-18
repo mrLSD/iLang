@@ -5,6 +5,7 @@
 #![warn(clippy::all)]
 
 pub mod ast;
+pub mod string;
 pub mod token;
 
 mod char;

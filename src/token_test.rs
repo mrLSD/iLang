@@ -1992,6 +1992,6 @@ fn test_main_func_complex() {
 
 #[test]
 fn test_string_data() {
-    let _ = string(Span::new("\"test\" test"));
+    let _ = string(Span::new("\"test1\" test2"));
     //println!("{:#?}", res);
 }

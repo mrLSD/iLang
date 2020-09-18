@@ -7,7 +7,6 @@ use nom::{
     bytes::complete::tag,
     character::complete::{
         alpha1,
-        anychar,
         char,
         multispace0,
         multispace1,
@@ -40,9 +39,6 @@ use crate::{
     },
     char::AsChar,
 };
-use nom::bytes::complete::{take_while, take_until, take_while_m_n};
-use nom_locate::LocatedSpan;
-use nom::combinator::peek;
 
 /// Apply parser func for delimited space
 /// ## RULE:
@@ -125,19 +121,6 @@ pub fn ident(data: Span) -> ParseResult<ast::Ident> {
 
 /// Get string data
 pub fn string(data: Span) -> ParseResult<String> {
-    let (_, o) = map(preceded(tag("\""), many0(anychar)), |o| -> String {
-        o.into_iter().collect()
-    })(data)?;
-    let d:IResult<&str, &str> = peek( take_until("\"") )(o.as_str());
-    println!("{:#?}", d);
-    // let s = res.1.as_str();
-    // let x = Span::new(s);
-    // let r: ParseResult<Span> = take_until("\"")(x);
-    //println!("{:#?}", res.1);
-    
-    //preceded(tag("\""), terminated(many0(anychar), tag("\"")))(data);
-    //let (i, o) = res?;
-    //Ok((i, o.into_iter().collect()))
     Ok((data, "".to_string()))
 }
 
