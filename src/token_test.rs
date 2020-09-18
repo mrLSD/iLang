@@ -1989,3 +1989,9 @@ fn test_main_func_complex() {
         _ => unimplemented!(),
     }
 }
+
+#[test]
+fn test_string_data() {
+    let res = string(Span::new("\"test\""));
+    println!("{:#?}", res);
+}

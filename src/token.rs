@@ -13,6 +13,7 @@ use nom::{
     },
     combinator::{
         map,
+        not,
         opt,
     },
     error::ParseError,
@@ -38,7 +39,8 @@ use crate::{
     },
     char::AsChar,
 };
-use nom::combinator::not;
+use nom::character::complete::anychar;
+use nom::sequence::terminatedc;
 
 /// Apply parser func for delimited space
 /// ## RULE:
@@ -117,6 +119,16 @@ pub fn ident(data: Span) -> ParseResult<ast::Ident> {
     let (i, o) = alphanum_and_underscore0(data)?;
     let _ = not(alt((tag("let"), tag("module"), tag("namespace"))))(o)?;
     Ok((i, o))
+}
+
+/// Get string data
+pub fn string(data: Span) -> ParseResult<String> {
+    let res = preceded(tag("\""), many0(anychar))(data)?;
+    println!("{:#?}", res);
+        //preceded(tag("\""), terminated(many0(anychar), tag("\"")))(data);
+    //let (i, o) = res?;
+    //Ok((i, o.into_iter().collect()))
+    Ok((res.0, "".to_string()))
 }
 
 /// Parse expression operations
