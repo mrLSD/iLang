@@ -1989,3 +1989,46 @@ fn test_main_func_complex() {
         _ => unimplemented!(),
     }
 }
+
+#[test]
+fn test_expression_value_type() {
+    let x = expression_value_type(Span::new("true")).unwrap();
+    let x = if let BasicTypeExpression::Bool(v) = x.1 {
+        v
+    } else {
+        unimplemented!()
+    };
+    assert_eq!(x, true);
+
+    let x = expression_value_type(Span::new("false")).unwrap();
+    let x = if let BasicTypeExpression::Bool(v) = x.1 {
+        v
+    } else {
+        unimplemented!()
+    };
+    assert_eq!(x, false);
+
+    let x = expression_value_type(Span::new("\"string\"")).unwrap();
+    let x = if let BasicTypeExpression::String(v) = x.1 {
+        v
+    } else {
+        unimplemented!()
+    };
+    assert_eq!(x, String::from("string"));
+
+    let x = expression_value_type(Span::new("10")).unwrap();
+    let x = if let BasicTypeExpression::Number(v) = x.1 {
+        v
+    } else {
+        unimplemented!()
+    };
+    assert_eq!(x, 10_f64);
+
+    let x = expression_value_type(Span::new("10.1")).unwrap();
+    let x = if let BasicTypeExpression::Number(v) = x.1 {
+        v
+    } else {
+        unimplemented!()
+    };
+    assert_eq!(x, 10.1_f64);
+}

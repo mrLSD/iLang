@@ -42,6 +42,7 @@ use crate::{
     },
     char::AsChar,
 };
+use nom::combinator::value;
 
 /// Apply parser func for delimited space
 /// ## RULE:
@@ -551,11 +552,19 @@ pub fn main(data: Span) -> ParseResult<ast::Main> {
     )))(data)
 }
 
+/// Numbers parser
 pub fn number(data: Span) -> ParseResult<ast::BasicTypeExpression> {
+    let parse_true = value(true, tag("true"));
+    let parse_frue = value(false, tag("false"));
+    map(alt((parse_true, parse_frue)), BasicTypeExpression::Bool)(data)
+}
+
+/// Boolean parser
+pub fn boolean(data: Span) -> ParseResult<ast::BasicTypeExpression> {
     map(double, BasicTypeExpression::Number)(data)
 }
 
 /// Expression basic/common types values parser
 pub fn expression_value_type(data: Span) -> ParseResult<ast::BasicTypeExpression> {
-    alt((parse_string, number))(data)
+    alt((parse_string, number, boolean))(data)
 }
