@@ -2,8 +2,10 @@
 //!
 //! Based on nom parser basic example for String parser
 use crate::ast::{
+    BasicTypeExpression,
+    ParseResult,
+    Span,
     StringFragment,
-    StringIdent,
 };
 use nom::{
     branch::alt,
@@ -27,17 +29,12 @@ use nom::{
         delimited,
         preceded,
     },
-    IResult,
 };
-
-// parser combinators are constructed from the bottom up:
-// first we write parsers for the smallest elements (escaped characters),
-// then combine them into larger parsers.
 
 /// Parse a unicode sequence, of the form u{XXXX}, where XXXX is 1 to 6
 /// hexadecimal numerals. We will combine this later with parse_escaped_char
 /// to parse sequences like \u{00AC}.
-fn parse_unicode(input: &str) -> IResult<&str, char> {
+fn parse_unicode(input: Span) -> ParseResult<char> {
     // `take_while_m_n` parses between `m` and `n` bytes (inclusive) that match
     // a predicate. `parse_hex` here parses between 1 and 6 hexadecimal numerals.
     let parse_hex = take_while_m_n(1, 6, |c: char| c.is_ascii_hexdigit());
@@ -55,7 +52,9 @@ fn parse_unicode(input: &str) -> IResult<&str, char> {
     // `map_res` takes the result of a parser and applies a function that returns
     // a Result. In this case we take the hex bytes from parse_hex and attempt to
     // convert them to a u32.
-    let parse_u32 = map_res(parse_delimited_hex, move |hex| u32::from_str_radix(hex, 16));
+    let parse_u32 = map_res(parse_delimited_hex, move |hex: Span| {
+        u32::from_str_radix(hex.fragment(), 16)
+    });
 
     // map_opt is like map_res, but it takes an Option instead of a Result. If
     // the function returns None, map_opt returns an error. In this case, because
@@ -65,7 +64,7 @@ fn parse_unicode(input: &str) -> IResult<&str, char> {
 }
 
 /// Parse an escaped character: \n, \t, \r, \u{00AC}, etc.
-fn parse_escaped_char(input: &str) -> IResult<&str, char> {
+fn parse_escaped_char(input: Span) -> ParseResult<char> {
     preceded(
         char('\\'),
         // `alt` tries each parser in sequence, returning the result of
@@ -90,12 +89,12 @@ fn parse_escaped_char(input: &str) -> IResult<&str, char> {
 
 /// Parse a backslash, followed by any amount of whitespace. This is used later
 /// to discard any escaped whitespace.
-fn parse_escaped_whitespace(input: &str) -> IResult<&str, &str> {
+fn parse_escaped_whitespace(input: Span) -> ParseResult<Span> {
     preceded(char('\\'), multispace1)(input)
 }
 
 /// Parse a non-empty block of text that doesn't include \ or "
-fn parse_literal(input: &str) -> IResult<&str, &str> {
+fn parse_literal(input: Span) -> ParseResult<Span> {
     // `is_not` parses a string of 0 or more characters that aren't one of the
     // given characters.
     let not_quote_slash = is_not("\"\\");
@@ -109,7 +108,7 @@ fn parse_literal(input: &str) -> IResult<&str, &str> {
 
 /// Combine parse_literal, parse_escaped_whitespace, and parse_escaped_char
 /// into a StringFragment.
-fn parse_fragment(input: &str) -> IResult<&str, StringFragment> {
+fn parse_fragment(input: Span) -> ParseResult<StringFragment> {
     alt((
         // The `map` combinator runs a parser, then applies a function to the output
         // of that parser.
@@ -121,7 +120,7 @@ fn parse_fragment(input: &str) -> IResult<&str, StringFragment> {
 
 /// Parse a string. Use a loop of parse_fragment and push all of the fragments
 /// into an output string.
-pub fn parse_string(input: &str) -> IResult<&str, StringIdent> {
+pub fn parse_string(input: Span) -> ParseResult<BasicTypeExpression> {
     // fold_many0 is the equivalent of iterator::fold. It runs a parser in a loop,
     // and for each output value, calls a folding function on each output value.
     let build_string = fold_many0(
@@ -133,7 +132,7 @@ pub fn parse_string(input: &str) -> IResult<&str, StringIdent> {
         // string.
         |mut string, fragment| {
             match fragment {
-                StringFragment::Literal(s) => string.push_str(s),
+                StringFragment::Literal(s) => string.push_str(s.fragment()),
                 StringFragment::EscapedChar(c) => string.push(c),
                 StringFragment::EscapedWS => {}
             }
@@ -146,5 +145,5 @@ pub fn parse_string(input: &str) -> IResult<&str, StringIdent> {
     // `delimited` with a looping parser (like fold_many0), be sure that the
     // loop won't accidentally match your closing delimiter!
     let (i, o) = delimited(char('"'), build_string, char('"'))(input)?;
-    Ok((i, StringIdent(o)))
+    Ok((i, BasicTypeExpression::String(o)))
 }

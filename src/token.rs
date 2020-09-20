@@ -21,6 +21,7 @@ use nom::{
         many0,
         many1,
     },
+    number::complete::double,
     sequence::tuple,
     sequence::{
         delimited,
@@ -31,6 +32,8 @@ use nom::{
     InputTakeAtPosition,
 };
 
+use crate::ast::BasicTypeExpression;
+use crate::string::parse_string;
 use crate::{
     ast,
     ast::{
@@ -546,4 +549,13 @@ pub fn main(data: Span) -> ParseResult<ast::Main> {
         map(delimited_space(function), ast::MainStatement::Function),
         map(delimited_space(let_binding), ast::MainStatement::LetBinding),
     )))(data)
+}
+
+pub fn number(data: Span) -> ParseResult<ast::BasicTypeExpression> {
+    map(double, |v| BasicTypeExpression::Number(v))(data)
+}
+
+/// Expression basic/common types values parser
+pub fn expression_value_type(data: Span) -> ParseResult<ast::BasicTypeExpression> {
+    alt((parse_string, number))(data)
 }

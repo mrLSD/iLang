@@ -173,7 +173,7 @@ pub type Main<'a> = Vec<MainStatement<'a>>;
 /// parsed escaped character, or a block of escaped whitespace.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum StringFragment<'a> {
-    Literal(&'a str),
+    Literal(Span<'a>),
     EscapedChar(char),
     EscapedWS,
 }
@@ -181,3 +181,11 @@ pub enum StringFragment<'a> {
 /// String identifier
 /// Basic component for string parser
 pub struct StringIdent(pub String);
+
+/// Basic and most common types for expressions ident
+#[derive(Debug, Clone, PartialEq)]
+pub enum BasicTypeExpression {
+    String(String),
+    Number(f64),
+    Bool(bool),
+}
