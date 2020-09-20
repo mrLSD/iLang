@@ -1,26 +1,35 @@
-use nom::branch::alt;
-use nom::bytes::streaming::{
-    is_not,
-    take_while_m_n,
+//! String parser
+//!
+//! Based on nom parser basic example for String parser
+use crate::ast::{
+    StringFragment,
+    StringIdent,
 };
-use nom::character::streaming::{
-    char,
-    multispace1,
+use nom::{
+    branch::alt,
+    bytes::streaming::{
+        is_not,
+        take_while_m_n,
+    },
+    character::streaming::{
+        char,
+        multispace1,
+    },
+    combinator::{
+        map,
+        map_opt,
+        map_res,
+        value,
+        verify,
+    },
+    error::ParseError,
+    multi::fold_many0,
+    sequence::{
+        delimited,
+        preceded,
+    },
+    IResult,
 };
-use nom::combinator::{
-    map,
-    map_opt,
-    map_res,
-    value,
-    verify,
-};
-use nom::error::ParseError;
-use nom::multi::fold_many0;
-use nom::sequence::{
-    delimited,
-    preceded,
-};
-use nom::IResult;
 
 // parser combinators are constructed from the bottom up:
 // first we write parsers for the smallest elements (escaped characters),
@@ -101,16 +110,6 @@ fn parse_literal<'a, E: ParseError<&'a str>>(input: &'a str) -> IResult<&'a str,
     verify(not_quote_slash, |s: &str| !s.is_empty())(input)
 }
 
-/// A string fragment contains a fragment of a string being parsed: either
-/// a non-empty Literal (a series of non-escaped characters), a single
-/// parsed escaped character, or a block of escaped whitespace.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-enum StringFragment<'a> {
-    Literal(&'a str),
-    EscapedChar(char),
-    EscapedWS,
-}
-
 /// Combine parse_literal, parse_escaped_whitespace, and parse_escaped_char
 /// into a StringFragment.
 fn parse_fragment<'a, E: ParseError<&'a str>>(
@@ -127,7 +126,9 @@ fn parse_fragment<'a, E: ParseError<&'a str>>(
 
 /// Parse a string. Use a loop of parse_fragment and push all of the fragments
 /// into an output string.
-pub fn parse_string<'a, E: ParseError<&'a str>>(input: &'a str) -> IResult<&'a str, String, E> {
+pub fn parse_string<'a, E: ParseError<&'a str>>(
+    input: &'a str,
+) -> IResult<&'a str, StringIdent, E> {
     // fold_many0 is the equivalent of iterator::fold. It runs a parser in a loop,
     // and for each output value, calls a folding function on each output value.
     let build_string = fold_many0(
@@ -151,5 +152,6 @@ pub fn parse_string<'a, E: ParseError<&'a str>>(input: &'a str) -> IResult<&'a s
     // " character, the closing delimiter " would never match. When using
     // `delimited` with a looping parser (like fold_many0), be sure that the
     // loop won't accidentally match your closing delimiter!
-    delimited(char('"'), build_string, char('"'))(input)
+    let (i, o) = delimited(char('"'), build_string, char('"'))(input)?;
+    Ok((i, StringIdent(o)))
 }

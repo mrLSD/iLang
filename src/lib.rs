@@ -12,6 +12,8 @@ mod char;
 
 #[cfg(test)]
 mod char_test;
+#[cfg(test)]
+mod string_test;
 mod tests;
 #[cfg(test)]
 mod token_test;
