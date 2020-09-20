@@ -119,11 +119,6 @@ pub fn ident(data: Span) -> ParseResult<ast::Ident> {
     Ok((i, o))
 }
 
-/// Get string data
-pub fn string(data: Span) -> ParseResult<String> {
-    Ok((data, "".to_string()))
-}
-
 /// Parse expression operations
 /// ## RULES:
 /// ```js

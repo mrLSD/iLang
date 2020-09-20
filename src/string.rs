@@ -22,7 +22,6 @@ use nom::{
         value,
         verify,
     },
-    error::ParseError,
     multi::fold_many0,
     sequence::{
         delimited,
@@ -38,7 +37,7 @@ use nom::{
 /// Parse a unicode sequence, of the form u{XXXX}, where XXXX is 1 to 6
 /// hexadecimal numerals. We will combine this later with parse_escaped_char
 /// to parse sequences like \u{00AC}.
-fn parse_unicode<'a, E: ParseError<&'a str>>(input: &'a str) -> IResult<&'a str, char, E> {
+fn parse_unicode(input: &str) -> IResult<&str, char> {
     // `take_while_m_n` parses between `m` and `n` bytes (inclusive) that match
     // a predicate. `parse_hex` here parses between 1 and 6 hexadecimal numerals.
     let parse_hex = take_while_m_n(1, 6, |c: char| c.is_ascii_hexdigit());
@@ -66,7 +65,7 @@ fn parse_unicode<'a, E: ParseError<&'a str>>(input: &'a str) -> IResult<&'a str,
 }
 
 /// Parse an escaped character: \n, \t, \r, \u{00AC}, etc.
-fn parse_escaped_char<'a, E: ParseError<&'a str>>(input: &'a str) -> IResult<&'a str, char, E> {
+fn parse_escaped_char(input: &str) -> IResult<&str, char> {
     preceded(
         char('\\'),
         // `alt` tries each parser in sequence, returning the result of
@@ -91,14 +90,12 @@ fn parse_escaped_char<'a, E: ParseError<&'a str>>(input: &'a str) -> IResult<&'a
 
 /// Parse a backslash, followed by any amount of whitespace. This is used later
 /// to discard any escaped whitespace.
-fn parse_escaped_whitespace<'a, E: ParseError<&'a str>>(
-    input: &'a str,
-) -> IResult<&'a str, &'a str, E> {
+fn parse_escaped_whitespace(input: &str) -> IResult<&str, &str> {
     preceded(char('\\'), multispace1)(input)
 }
 
 /// Parse a non-empty block of text that doesn't include \ or "
-fn parse_literal<'a, E: ParseError<&'a str>>(input: &'a str) -> IResult<&'a str, &'a str, E> {
+fn parse_literal(input: &str) -> IResult<&str, &str> {
     // `is_not` parses a string of 0 or more characters that aren't one of the
     // given characters.
     let not_quote_slash = is_not("\"\\");
@@ -112,9 +109,7 @@ fn parse_literal<'a, E: ParseError<&'a str>>(input: &'a str) -> IResult<&'a str,
 
 /// Combine parse_literal, parse_escaped_whitespace, and parse_escaped_char
 /// into a StringFragment.
-fn parse_fragment<'a, E: ParseError<&'a str>>(
-    input: &'a str,
-) -> IResult<&'a str, StringFragment<'a>, E> {
+fn parse_fragment(input: &str) -> IResult<&str, StringFragment> {
     alt((
         // The `map` combinator runs a parser, then applies a function to the output
         // of that parser.
@@ -126,9 +121,7 @@ fn parse_fragment<'a, E: ParseError<&'a str>>(
 
 /// Parse a string. Use a loop of parse_fragment and push all of the fragments
 /// into an output string.
-pub fn parse_string<'a, E: ParseError<&'a str>>(
-    input: &'a str,
-) -> IResult<&'a str, StringIdent, E> {
+pub fn parse_string(input: &str) -> IResult<&str, StringIdent> {
     // fold_many0 is the equivalent of iterator::fold. It runs a parser in a loop,
     // and for each output value, calls a folding function on each output value.
     let build_string = fold_many0(
