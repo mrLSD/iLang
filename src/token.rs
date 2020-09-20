@@ -552,7 +552,7 @@ pub fn main(data: Span) -> ParseResult<ast::Main> {
 }
 
 pub fn number(data: Span) -> ParseResult<ast::BasicTypeExpression> {
-    map(double, |v| BasicTypeExpression::Number(v))(data)
+    map(double, BasicTypeExpression::Number)(data)
 }
 
 /// Expression basic/common types values parser

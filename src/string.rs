@@ -22,7 +22,6 @@ use nom::{
         map_opt,
         map_res,
         value,
-        verify,
     },
     multi::fold_many0,
     sequence::{
@@ -95,6 +94,9 @@ fn parse_escaped_whitespace(input: Span) -> ParseResult<Span> {
 
 /// Parse a non-empty block of text that doesn't include \ or "
 fn parse_literal(input: Span) -> ParseResult<Span> {
+    use nom::error::ErrorKind;
+    use nom::Err;
+
     // `is_not` parses a string of 0 or more characters that aren't one of the
     // given characters.
     let not_quote_slash = is_not("\"\\");
@@ -103,7 +105,13 @@ fn parse_literal(input: Span) -> ParseResult<Span> {
     // the parser. The verification function accepts out output only if it
     // returns true. In this case, we want to ensure that the output of is_not
     // is non-empty.
-    verify(not_quote_slash, |s: &str| !s.is_empty())(input)
+    let (i, o) = not_quote_slash(input)?;
+    if !o.fragment().is_empty() {
+        Ok((i, o))
+    } else {
+        Err(Err::Error((i, ErrorKind::Verify)))
+    }
+    //verify(not_quote_slash, |s: Span| !s.fragment().is_empty())(input)
 }
 
 /// Combine parse_literal, parse_escaped_whitespace, and parse_escaped_char
