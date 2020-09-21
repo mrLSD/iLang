@@ -1132,8 +1132,7 @@ fn test_function_call_func_val_sequence() {
     match &x.function_value[2] {
         FunctionValue::ValueList(v) => {
             assert_eq!(v.len(), 1);
-            println!("{:#?}", v[0]);
-            /*if let ValueExpression::TypeExpression(x) = &v[0] {
+            if let ValueExpression::TypeExpression(x) = &v[0] {
                 if let BasicTypeExpression::Bool(b) = x {
                     assert_eq!(b, &true);
                 } else {
@@ -1141,7 +1140,7 @@ fn test_function_call_func_val_sequence() {
                 }
             } else {
                 unimplemented!()
-            }*/
+            }
         }
         _ => unimplemented!(),
     }
@@ -1161,10 +1160,10 @@ fn test_function_call_func_val_sequence() {
         _ => unimplemented!(),
     }
 }
-/*
+
 #[test]
 fn test_function_call_func_val_sequence_brackets() {
-    let x = function_call(Span::new("func1.func2 (val1) (val2)"))
+    let x = function_call(Span::new(r#"func1.func2 (val1) ("str")"#))
         .unwrap()
         .1;
     assert_eq!(x.function_call_name.len(), 2);
@@ -1174,19 +1173,31 @@ fn test_function_call_func_val_sequence_brackets() {
     match &x.function_value[0] {
         FunctionValue::ValueList(v) => {
             assert_eq!(v.len(), 1);
-            assert_eq!(v[0].fragment(), &"val1");
+            if let ValueExpression::ParameterValue(v) = v[0] {
+                assert_eq!(v.fragment(), &"val1");
+            } else {
+                unimplemented!()
+            }
         }
         _ => unimplemented!(),
     }
     match &x.function_value[1] {
         FunctionValue::ValueList(v) => {
             assert_eq!(v.len(), 1);
-            assert_eq!(v[0].fragment(), &"val2");
+            if let ValueExpression::TypeExpression(v) = &v[0] {
+                if let BasicTypeExpression::String(s) = v {
+                    assert_eq!(s, &String::from("str"));
+                } else {
+                    unimplemented!()
+                }
+            } else {
+                unimplemented!()
+            }
         }
         _ => unimplemented!(),
     }
 }
-
+/*
 #[test]
 fn test_function_call_func_val_multi_sequence() {
     let x = function_call(Span::new("func1.func2 (val1, val2)"))
