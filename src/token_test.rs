@@ -602,11 +602,23 @@ fn test_value_list_brackets() {
         unimplemented!()
     };
     assert_eq!(x.fragment(), &"val1");
+
+    let x = value_list(Span::new("(100)")).unwrap().1;
+    let x = if let ValueExpression::TypeExpression(v) = &x[0] {
+        if let BasicTypeExpression::Number(v) = v {
+            v
+        } else {
+            unimplemented!()
+        }
+    } else {
+        unimplemented!()
+    };
+    assert_eq!(x, &100.);
 }
 
 #[test]
 fn test_value_list_brackets_sequence() {
-    let x = value_list(Span::new("(val1, val2)")).unwrap().1;
+    let x = value_list(Span::new("(val1, 100)")).unwrap().1;
     let v = if let ValueExpression::ParameterValue(v) = &x[0] {
         v
     } else {
@@ -614,12 +626,16 @@ fn test_value_list_brackets_sequence() {
     };
     assert_eq!(v.fragment(), &"val1");
 
-    let v = if let ValueExpression::ParameterValue(v) = &x[1] {
-        v
+    let x = if let ValueExpression::TypeExpression(v) = &x[1] {
+        if let BasicTypeExpression::Number(v) = v {
+            v
+        } else {
+            unimplemented!()
+        }
     } else {
         unimplemented!()
     };
-    assert_eq!(v.fragment(), &"val2");
+    assert_eq!(x, &100.);
 }
 
 #[test]
@@ -655,8 +671,7 @@ fn test_value_list_multi_brackets_sequence() {
     } else {
         unimplemented!()
     };
-    assert_eq!(v.fragment(), &"val2");
-}
+    assert_eq!(v.fragment(), &"val2");}
 
 #[test]
 fn test_let_value_list_one() {
