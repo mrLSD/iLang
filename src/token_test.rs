@@ -1197,7 +1197,7 @@ fn test_function_call_func_val_sequence_brackets() {
         _ => unimplemented!(),
     }
 }
-/*
+
 #[test]
 fn test_function_call_func_val_multi_sequence() {
     let x = function_call(Span::new("func1.func2 (val1, val2)"))
@@ -1210,8 +1210,16 @@ fn test_function_call_func_val_multi_sequence() {
     match &x.function_value[0] {
         FunctionValue::ValueList(v) => {
             assert_eq!(v.len(), 2);
-            assert_eq!(v[0].fragment(), &"val1");
-            assert_eq!(v[1].fragment(), &"val2");
+            if let ValueExpression::ParameterValue(x) = &v[0] {
+                assert_eq!(x.fragment(), &"val1");
+            } else {
+                unimplemented!()
+            }
+            if let ValueExpression::ParameterValue(x) = &v[1] {
+                assert_eq!(x.fragment(), &"val2");
+            } else {
+                unimplemented!()
+            }
         }
         _ => unimplemented!(),
     }
@@ -1237,8 +1245,16 @@ fn test_function_call_func_val_multi_brackets() {
     match &x.function_value[0] {
         FunctionValue::ValueList(v) => {
             assert_eq!(v.len(), 2);
-            assert_eq!(v[0].fragment(), &"val1");
-            assert_eq!(v[1].fragment(), &"val2");
+            if let ValueExpression::ParameterValue(x) = &v[0] {
+                assert_eq!(x.fragment(), &"val1");
+            } else {
+                unimplemented!()
+            }
+            if let ValueExpression::ParameterValue(x) = &v[1] {
+                assert_eq!(x.fragment(), &"val2");
+            } else {
+                unimplemented!()
+            }
         }
         _ => unimplemented!(),
     }
@@ -1265,7 +1281,11 @@ fn test_function_call_func_val_in_func() {
                 match &v.function_value[0] {
                     FunctionValue::ValueList(v) => {
                         assert_eq!(v.len(), 1);
-                        assert_eq!(v[0].fragment(), &"val2");
+                        if let ValueExpression::ParameterValue(x) = &v[0] {
+                            assert_eq!(x.fragment(), &"val2");
+                        } else {
+                            unimplemented!()
+                        }
                     }
                     _ => unimplemented!(),
                 }
@@ -1300,8 +1320,16 @@ fn test_expression_func_multi_val_params() {
             match &x.function_value[0] {
                 FunctionValue::ValueList(v) => {
                     assert_eq!(v.len(), 2);
-                    assert_eq!(v[0].fragment(), &"val1");
-                    assert_eq!(v[1].fragment(), &"val2");
+                    if let ValueExpression::ParameterValue(x) = &v[0] {
+                        assert_eq!(x.fragment(), &"val1");
+                    } else {
+                        unimplemented!()
+                    }
+                    if let ValueExpression::ParameterValue(x) = &v[1] {
+                        assert_eq!(x.fragment(), &"val2");
+                    } else {
+                        unimplemented!()
+                    }
                 }
                 _ => unimplemented!(),
             }
@@ -1309,7 +1337,7 @@ fn test_expression_func_multi_val_params() {
         _ => unimplemented!(),
     }
 }
-
+/*
 #[test]
 fn test_expression_multi_func_sequence_params() {
     let x = expression(Span::new("func1.func2 val1 val2")).unwrap().1;
@@ -2246,7 +2274,7 @@ fn test_main_func_complex() {
         _ => unimplemented!(),
     }
 }
-
+*/
 #[test]
 fn test_expression_value_type() {
     let x = expression_value_type(Span::new("true")).unwrap();
@@ -2289,4 +2317,3 @@ fn test_expression_value_type() {
     };
     assert_eq!(x, 10.1_f64);
 }
-*/
