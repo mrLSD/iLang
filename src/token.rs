@@ -261,10 +261,10 @@ pub fn parameter_list(data: Span) -> ParseResult<ast::ParameterList> {
 /// value-list = (parameter-value | "(" (parameter-value [","])* ")")
 /// ```
 #[allow(clippy::let_and_return)]
-pub fn value_list(data: Span) -> ParseResult<Vec<ast::ValueList>> {
+pub fn value_list(data: Span) -> ParseResult<ast::ValueList> {
     let val_expr = &alt((
-        map(expression_value_type, ast::ValueList::TypeExpression),
-        map(parameter_value, |v| ast::ValueList::ParameterValue(vec![v])),
+        map(expression_value_type, ast::ValueExpression::TypeExpression),
+        map(parameter_value, ast::ValueExpression::ParameterValue),
     ));
     let val_list = map(
         get_from_brackets(tuple((
