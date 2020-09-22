@@ -260,11 +260,16 @@ pub fn parameter_list(data: Span) -> ParseResult<ast::ParameterList> {
 /// ```js
 /// value-list = (parameter-value | "(" (parameter-value [","])* ")")
 /// ```
-pub fn value_list(data: Span) -> ParseResult<ast::ValueList> {
+#[allow(clippy::let_and_return)]
+pub fn value_list(data: Span) -> ParseResult<Vec<ast::ValueList>> {
+    let val_expr = &alt((
+        map(expression_value_type, ast::ValueList::TypeExpression),
+        map(parameter_value, |v| ast::ValueList::ParameterValue(vec![v])),
+    ));
     let val_list = map(
         get_from_brackets(tuple((
-            parameter_value,
-            many0(preceded(delimited_space(tag(",")), parameter_value)),
+            val_expr,
+            many0(preceded(delimited_space(tag(",")), val_expr)),
         ))),
         |(first, mut second)| {
             let mut res_list = vec![first];
@@ -272,7 +277,8 @@ pub fn value_list(data: Span) -> ParseResult<ast::ValueList> {
             res_list
         },
     );
-    alt((map(parameter_value, |v| vec![v]), val_list))(data)
+    let res = alt((map(val_expr, |v| vec![v]), val_list))(data);
+    res
 }
 
 /// Let binding Value list from parameter values list
@@ -357,12 +363,15 @@ pub fn module(data: Span) -> ParseResult<ast::Module> {
 /// function-value = (value-list | "(" expression ")")
 /// ```
 pub fn function_value(data: Span) -> ParseResult<ast::FunctionValue> {
-    alt((
+    /*alt((
         map(value_list, ast::FunctionValue::ValueList),
         map(get_from_brackets(expression), |v| {
             ast::FunctionValue::Expression(Box::new(v))
         }),
-    ))(data)
+    ))(data)*/
+    map(get_from_brackets(expression), |v| {
+        ast::FunctionValue::Expression(Box::new(v))
+    })(data)
 }
 
 /// Function value

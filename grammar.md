@@ -43,7 +43,8 @@ function-body-statement = (let-binding | function-call | expression)
 // Let binding
 let-binding = "let" let-value-list "=" function-body
 let-value-list = (parameter-value-list [","])+
-value-list = (parameter-value | "(" (parameter-value [","])* ")")
+expression-value-type = (string | boolean | number)
+value-list = ((parameter-value | expression-value-type) | "(" ((parameter-value | expression-value-type) [","])* ")")
 
 // Function call statements
 function-call = function-call-name (function-value+ | "(" [function-value [","] ]* ")")

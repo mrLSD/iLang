@@ -58,7 +58,11 @@ pub enum ParameterList<'a> {
 }
 
 /// List of Values
-pub type ValueList<'a> = Vec<ParameterValue<'a>>;
+#[derive(Debug, Clone, PartialEq)]
+pub enum ValueList<'a> {
+    ParameterValue(Vec<ParameterValue<'a>>),
+    TypeExpression(BasicTypeExpression),
+}
 
 /// Name of functions
 pub type FunctionName<'a> = Ident<'a>;
