@@ -1,5 +1,11 @@
 use crate::ast::*;
 use crate::token::*;
+use nom::combinator::map;
+use nom::branch::alt;
+use nom::multi::{many0, many1};
+use nom::sequence::{tuple, preceded};
+use nom::bytes::complete::tag;
+use crate::string::parse_string;
 
 #[test]
 fn test_name() {
@@ -671,7 +677,8 @@ fn test_value_list_multi_brackets_sequence() {
     } else {
         unimplemented!()
     };
-    assert_eq!(v.fragment(), &"val2");}
+    assert_eq!(v.fragment(), &"val2");
+}
 
 #[test]
 fn test_let_value_list_one() {
@@ -897,13 +904,24 @@ fn test_namespace_fail() {
     let res = namespace(Span::new("namespace"));
     assert!(res.is_err());
 }
-/*
+
 #[test]
 fn test_function_value_brackets() {
     match function_value(Span::new("(val1, (val2))")).unwrap().1 {
         FunctionValue::ValueList(x) => {
-            assert_eq!(x[0].fragment(), &"val1");
-            assert_eq!(x[1].fragment(), &"val2");
+            let v = if let ValueExpression::ParameterValue(v) = &x[0] {
+                v
+            } else {
+                unimplemented!()
+            };
+            assert_eq!(v.fragment(), &"val1");
+
+            let v = if let ValueExpression::ParameterValue(v) = &x[1] {
+                v
+            } else {
+                unimplemented!()
+            };
+            assert_eq!(v.fragment(), &"val2");
         }
         _ => unimplemented!(),
     }
@@ -920,8 +938,16 @@ fn test_function_value_with_expressions() {
                 ExpressionFunctionValueCall::FunctionValue(ref x) => match x {
                     FunctionValue::ValueList(v) => {
                         assert_eq!(v.len(), 2);
-                        assert_eq!(v[0].fragment(), &"val1");
-                        assert_eq!(v[1].fragment(), &"val2");
+                        if let ValueExpression::ParameterValue(v) = &v[0] {
+                            assert_eq!(v.fragment(), &"val1");
+                        } else {
+                            unimplemented!()
+                        }
+                        if let ValueExpression::ParameterValue(v) = &v[1] {
+                            assert_eq!(v.fragment(), &"val2");
+                        } else {
+                            unimplemented!()
+                        }
                     }
                     _ => unimplemented!(),
                 },
@@ -936,7 +962,11 @@ fn test_function_value_with_expressions() {
                     match &x.function_value[0] {
                         FunctionValue::ValueList(v) => {
                             assert_eq!(v.len(), 1);
-                            assert_eq!(v[0].fragment(), &"val3");
+                            if let ValueExpression::ParameterValue(v) = &v[0] {
+                                assert_eq!(v.fragment(), &"val3");
+                            } else {
+                                unimplemented!()
+                            }
                         }
                         _ => unimplemented!(),
                     }
@@ -946,6 +976,7 @@ fn test_function_value_with_expressions() {
         }
         _ => unimplemented!(),
     }
+    //println!("{:#?}", x);
 }
 
 #[test]
@@ -979,19 +1010,25 @@ fn test_function_call_name_sequence_and_value() {
 
 #[test]
 fn test_function_call_func_val() {
-    let x = function_call(Span::new("func1 val1")).unwrap().1;
+    let x = function_call(Span::new("func1 val1"));
+    //println!("{:#?}", x);
+    let x = x.unwrap().1;
     assert_eq!(x.function_call_name.len(), 1);
     assert_eq!(x.function_value.len(), 1);
     assert_eq!(x.function_call_name[0].fragment(), &"func1");
     match &x.function_value[0] {
         FunctionValue::ValueList(v) => {
             assert_eq!(v.len(), 1);
-            assert_eq!(v[0].fragment(), &"val1");
+            if let ValueExpression::ParameterValue(v) = &v[0] {
+                assert_eq!(v.fragment(), &"val1");
+            } else {
+                unimplemented!()
+            }
         }
         _ => unimplemented!(),
     }
 }
-
+/*
 #[test]
 fn test_function_call_func_val_sequence() {
     let x = function_call(Span::new("func1.func2 val1 val2")).unwrap().1;
@@ -2132,3 +2169,33 @@ fn test_expression_value_type() {
     assert_eq!(x, 10.1_f64);
 }
 */
+
+#[test]
+fn test_list_fv() {
+    let i = Span::new("10");
+    //let ex = alt((parse_string, number, boolean));
+    let ex = number;
+    
+    // let val_expr = alt((
+    //     map(expression_value_type, ValueExpression::TypeExpression),
+    //     map(parameter_value, ValueExpression::ParameterValue),
+    // ));
+    let val_expr = map(parameter_value, ValueExpression::ParameterValue);
+    let val_expr = delimited_space(ex);    
+    
+    /*let val_list = map(
+        get_from_brackets(tuple((
+            val_expr,
+            many0(preceded(delimited_space(tag(",")), val_expr)),
+        ))),
+        |(first, mut second)| {
+            let mut res_list = vec![first];
+            res_list.append(&mut second);
+            res_list
+        },
+    );*/
+    let x = many0(val_expr)(i);
+    //let x = val_expr(i);
+    
+    println!("{:#?}", x);
+}
