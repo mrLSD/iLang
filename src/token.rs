@@ -396,7 +396,7 @@ pub fn function_call_name(data: Span) -> ParseResult<ast::FunctionCallName> {
 pub fn function_call(data: Span) -> ParseResult<ast::FunctionCall> {
     let (i, _) = function_call_name(data)?;
     //println!("{:#?}", i);
-    
+
     let func_val = alt((
         many1(function_value),
         // Detect only empty brackets. Other cases covered via `function_value` parser

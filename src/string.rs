@@ -7,6 +7,10 @@ use crate::ast::{
     Span,
     StringFragment,
 };
+use nom::combinator::{
+    complete,
+    cond,
+};
 use nom::{
     branch::alt,
     bytes::streaming::{
@@ -117,32 +121,45 @@ fn parse_fragment(input: Span) -> ParseResult<StringFragment> {
     ))(input)
 }
 
+/// fold_many0 is the equivalent of iterator::fold. It runs a parser in a loop,
+/// and for each output value, calls a folding function on each output value.
+fn build_string(input: Span) -> ParseResult<String> {
+    map(
+        cond(
+            input.fragment().len() > 0,
+            fold_many0(
+                // Our parser function– parses a single string fragment
+                parse_fragment,
+                // Our init value, an empty string
+                String::new(),
+                // Our folding function. For each fragment, append the fragment to the
+                // string.
+                |mut string, fragment| {
+                    match fragment {
+                        StringFragment::Literal(s) => string.push_str(s.fragment()),
+                        StringFragment::EscapedChar(c) => string.push(c),
+                        StringFragment::EscapedWS => {}
+                    }
+                    string
+                },
+            ),
+        ),
+        |v| {
+            if v.is_none() {
+                return "".to_string();
+            }
+            v.unwrap()
+        },
+    )(input)
+}
+
 /// Parse a string. Use a loop of parse_fragment and push all of the fragments
 /// into an output string.
 pub fn parse_string(input: Span) -> ParseResult<BasicTypeExpression> {
-    // fold_many0 is the equivalent of iterator::fold. It runs a parser in a loop,
-    // and for each output value, calls a folding function on each output value.
-    let build_string = fold_many0(
-        // Our parser function– parses a single string fragment
-        parse_fragment,
-        // Our init value, an empty string
-        String::new(),
-        // Our folding function. For each fragment, append the fragment to the
-        // string.
-        |mut string, fragment| {
-            match fragment {
-                StringFragment::Literal(s) => string.push_str(s.fragment()),
-                StringFragment::EscapedChar(c) => string.push(c),
-                StringFragment::EscapedWS => {}
-            }
-            string
-        },
-    );
-
     // Finally, parse the string. Note that, if `build_string` could accept a raw
     // " character, the closing delimiter " would never match. When using
     // `delimited` with a looping parser (like fold_many0), be sure that the
     // loop won't accidentally match your closing delimiter!
-    let (i, o) = delimited(char('"'), build_string, char('"'))(input)?;
+    let (i, o) = complete(delimited(char('"'), build_string, char('"')))(input)?;
     Ok((i, BasicTypeExpression::String(o)))
 }

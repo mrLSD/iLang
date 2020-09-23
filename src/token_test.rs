@@ -1,11 +1,20 @@
 use crate::ast::*;
-use crate::token::*;
-use nom::combinator::map;
-use nom::branch::alt;
-use nom::multi::{many0, many1};
-use nom::sequence::{tuple, preceded};
-use nom::bytes::complete::tag;
 use crate::string::parse_string;
+use crate::token::*;
+use nom::branch::alt;
+use nom::bytes::complete::tag;
+use nom::combinator::{
+    cut,
+    map,
+};
+use nom::multi::{
+    many0,
+    many1,
+};
+use nom::sequence::{
+    preceded,
+    tuple,
+};
 
 #[test]
 fn test_name() {
@@ -2172,17 +2181,17 @@ fn test_expression_value_type() {
 
 #[test]
 fn test_list_fv() {
-    let i = Span::new("10");
+    let i = Span::new(" \"test1\" \"test2\" ");
     //let ex = alt((parse_string, number, boolean));
-    let ex = number;
-    
+    let ex = parse_string;
+
     // let val_expr = alt((
     //     map(expression_value_type, ValueExpression::TypeExpression),
     //     map(parameter_value, ValueExpression::ParameterValue),
     // ));
     let val_expr = map(parameter_value, ValueExpression::ParameterValue);
-    let val_expr = delimited_space(ex);    
-    
+    let val_expr = delimited_space(ex);
+
     /*let val_list = map(
         get_from_brackets(tuple((
             val_expr,
@@ -2196,6 +2205,6 @@ fn test_list_fv() {
     );*/
     let x = many0(val_expr)(i);
     //let x = val_expr(i);
-    
+
     println!("{:#?}", x);
 }
