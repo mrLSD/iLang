@@ -618,24 +618,45 @@ fn test_value_list_brackets() {
 
 #[test]
 fn test_value_list_brackets_sequence() {
-    let x = value_list(Span::new("(val1, 100)")).unwrap().1;
-    let v = if let ValueExpression::ParameterValue(v) = &x[0] {
-        v
+    let x = value_list(Span::new(r#"(val1, 100, true, "test")"#))
+        .unwrap()
+        .1;
+    assert_eq!(x.len(), 4);
+    if let ValueExpression::ParameterValue(v) = &x[0] {
+        assert_eq!(v.fragment(), &"val1");
     } else {
         unimplemented!()
-    };
-    assert_eq!(v.fragment(), &"val1");
+    }
 
-    let x = if let ValueExpression::TypeExpression(v) = &x[1] {
+    if let ValueExpression::TypeExpression(v) = &x[1] {
         if let BasicTypeExpression::Number(v) = v {
-            v
+            assert_eq!(v, &100.);
         } else {
             unimplemented!()
         }
     } else {
         unimplemented!()
-    };
-    assert_eq!(x, &100.);
+    }
+
+    if let ValueExpression::TypeExpression(v) = &x[2] {
+        if let BasicTypeExpression::Bool(v) = v {
+            assert_eq!(v, &true);
+        } else {
+            unimplemented!()
+        }
+    } else {
+        unimplemented!()
+    }
+
+    if let ValueExpression::TypeExpression(v) = &x[3] {
+        if let BasicTypeExpression::String(v) = v {
+            assert_eq!(v, &String::from("test"));
+        } else {
+            unimplemented!()
+        }
+    } else {
+        unimplemented!()
+    }
 }
 
 #[test]
@@ -970,7 +991,6 @@ fn test_function_value_with_expressions() {
         }
         _ => unimplemented!(),
     }
-    //println!("{:#?}", x);
 }
 
 #[test]
@@ -1005,7 +1025,6 @@ fn test_function_call_name_sequence_and_value() {
 #[test]
 fn test_function_call_func_val() {
     let x = function_call(Span::new("func1 val1"));
-    //println!("{:#?}", x);
     let x = x.unwrap().1;
     assert_eq!(x.function_call_name.len(), 1);
     assert_eq!(x.function_value.len(), 1);
@@ -1022,30 +1041,76 @@ fn test_function_call_func_val() {
         _ => unimplemented!(),
     }
 }
-/*
+
 #[test]
 fn test_function_call_func_val_sequence() {
-    let x = function_call(Span::new("func1.func2 val1 val2")).unwrap().1;
+    let x = function_call(Span::new(r#"func1.func2 val1 10 true "test1""#))
+        .unwrap()
+        .1;
     assert_eq!(x.function_call_name.len(), 2);
-    assert_eq!(x.function_value.len(), 2);
+    assert_eq!(x.function_value.len(), 4);
     assert_eq!(x.function_call_name[0].fragment(), &"func1");
     assert_eq!(x.function_call_name[1].fragment(), &"func2");
     match &x.function_value[0] {
         FunctionValue::ValueList(v) => {
             assert_eq!(v.len(), 1);
-            assert_eq!(v[0].fragment(), &"val1");
+            if let ValueExpression::ParameterValue(v) = &v[0] {
+                assert_eq!(v.fragment(), &"val1");
+            } else {
+                unimplemented!()
+            }
         }
         _ => unimplemented!(),
     }
     match &x.function_value[1] {
         FunctionValue::ValueList(v) => {
             assert_eq!(v.len(), 1);
-            assert_eq!(v[0].fragment(), &"val2");
+            if let ValueExpression::TypeExpression(x) = &v[0] {
+                if let BasicTypeExpression::Number(n) = x {
+                    assert_eq!(n, &10.);
+                } else {
+                    unimplemented!()
+                }
+            } else {
+                unimplemented!()
+            }
+        }
+        _ => unimplemented!(),
+    }
+    match &x.function_value[2] {
+        FunctionValue::ValueList(v) => {
+            assert_eq!(v.len(), 1);
+            println!("{:#?}", v);
+            /*if let ValueExpression::TypeExpression(x) = &v[0] {
+                if let BasicTypeExpression::Bool(b) = x {
+                    assert_eq!(b, &true);
+                } else {
+                    unimplemented!()
+                }
+            } else {
+                unimplemented!()
+            }*/
+        }
+        _ => unimplemented!(),
+    }
+    match &x.function_value[3] {
+        FunctionValue::ValueList(v) => {
+            assert_eq!(v.len(), 1);
+            println!("{:#?}", v);
+            if let ValueExpression::TypeExpression(x) = &v[0] {
+                if let BasicTypeExpression::String(s) = x {
+                    assert_eq!(s, &String::from("test1"));
+                } else {
+                    unimplemented!()
+                }
+            } else {
+                unimplemented!()
+            }
         }
         _ => unimplemented!(),
     }
 }
-
+/*
 #[test]
 fn test_function_call_func_val_sequence_brackets() {
     let x = function_call(Span::new("func1.func2 (val1) (val2)"))
