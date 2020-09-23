@@ -572,5 +572,5 @@ pub fn boolean(data: Span) -> ParseResult<ast::BasicTypeExpression> {
 
 /// Expression basic/common types values parser
 pub fn expression_value_type(data: Span) -> ParseResult<ast::BasicTypeExpression> {
-    alt((parse_string, number, boolean))(data)
+    delimited_space(alt((parse_string, number, boolean)))(data)
 }

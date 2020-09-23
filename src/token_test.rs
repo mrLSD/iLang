@@ -1,5 +1,6 @@
 use crate::ast::*;
 use crate::token::*;
+use nom::multi::many1;
 
 #[test]
 fn test_name() {
@@ -582,6 +583,40 @@ fn test_value_list_one() {
 }
 
 #[test]
+fn test_value_list_many() {
+    let data = Span::new(r#"true 10 "test""#);
+    let x = many1(value_list)(data).unwrap().1;
+    assert_eq!(x.len(), 3);
+    if let ValueExpression::TypeExpression(v) = &x[0][0] {
+        if let BasicTypeExpression::Bool(v) = v {
+            assert_eq!(v, &true);
+        } else {
+            unimplemented!()
+        }
+    } else {
+        unimplemented!()
+    }
+    if let ValueExpression::TypeExpression(v) = &x[1][0] {
+        if let BasicTypeExpression::Number(v) = v {
+            assert_eq!(v, &10.);
+        } else {
+            unimplemented!()
+        }
+    } else {
+        unimplemented!()
+    }
+    if let ValueExpression::TypeExpression(v) = &x[2][0] {
+        if let BasicTypeExpression::String(v) = v {
+            assert_eq!(v, &String::from("test"));
+        } else {
+            unimplemented!()
+        }
+    } else {
+        unimplemented!()
+    }
+}
+
+#[test]
 fn test_value_list_sequence() {
     let x = value_list(Span::new("val1, val2")).unwrap();
     assert_eq!(x.0.fragment(), &", val2");
@@ -1040,6 +1075,23 @@ fn test_function_call_func_val() {
         }
         _ => unimplemented!(),
     }
+
+    let x = function_call(Span::new("func1 val1"));
+    let x = x.unwrap().1;
+    assert_eq!(x.function_call_name.len(), 1);
+    assert_eq!(x.function_value.len(), 1);
+    assert_eq!(x.function_call_name[0].fragment(), &"func1");
+    match &x.function_value[0] {
+        FunctionValue::ValueList(v) => {
+            assert_eq!(v.len(), 1);
+            if let ValueExpression::ParameterValue(v) = &v[0] {
+                assert_eq!(v.fragment(), &"val1");
+            } else {
+                unimplemented!()
+            }
+        }
+        _ => unimplemented!(),
+    }
 }
 
 #[test]
@@ -1080,7 +1132,7 @@ fn test_function_call_func_val_sequence() {
     match &x.function_value[2] {
         FunctionValue::ValueList(v) => {
             assert_eq!(v.len(), 1);
-            println!("{:#?}", v);
+            println!("{:#?}", v[0]);
             /*if let ValueExpression::TypeExpression(x) = &v[0] {
                 if let BasicTypeExpression::Bool(b) = x {
                     assert_eq!(b, &true);
@@ -1096,7 +1148,6 @@ fn test_function_call_func_val_sequence() {
     match &x.function_value[3] {
         FunctionValue::ValueList(v) => {
             assert_eq!(v.len(), 1);
-            println!("{:#?}", v);
             if let ValueExpression::TypeExpression(x) = &v[0] {
                 if let BasicTypeExpression::String(s) = x {
                     assert_eq!(s, &String::from("test1"));
