@@ -1,20 +1,5 @@
 use crate::ast::*;
-use crate::string::parse_string;
 use crate::token::*;
-use nom::branch::alt;
-use nom::bytes::complete::tag;
-use nom::combinator::{
-    cut,
-    map,
-};
-use nom::multi::{
-    many0,
-    many1,
-};
-use nom::sequence::{
-    preceded,
-    tuple,
-};
 
 #[test]
 fn test_name() {
@@ -2178,33 +2163,3 @@ fn test_expression_value_type() {
     assert_eq!(x, 10.1_f64);
 }
 */
-
-#[test]
-fn test_list_fv() {
-    let i = Span::new(" \"test1\" \"test2\" ");
-    //let ex = alt((parse_string, number, boolean));
-    let ex = parse_string;
-
-    // let val_expr = alt((
-    //     map(expression_value_type, ValueExpression::TypeExpression),
-    //     map(parameter_value, ValueExpression::ParameterValue),
-    // ));
-    let val_expr = map(parameter_value, ValueExpression::ParameterValue);
-    let val_expr = delimited_space(ex);
-
-    /*let val_list = map(
-        get_from_brackets(tuple((
-            val_expr,
-            many0(preceded(delimited_space(tag(",")), val_expr)),
-        ))),
-        |(first, mut second)| {
-            let mut res_list = vec![first];
-            res_list.append(&mut second);
-            res_list
-        },
-    );*/
-    let x = many0(val_expr)(i);
-    //let x = val_expr(i);
-
-    println!("{:#?}", x);
-}

@@ -7,10 +7,7 @@ use crate::ast::{
     Span,
     StringFragment,
 };
-use nom::combinator::{
-    complete,
-    cond,
-};
+
 use nom::{
     branch::alt,
     bytes::streaming::{
@@ -22,6 +19,7 @@ use nom::{
         multispace1,
     },
     combinator::{
+        complete,
         map,
         map_opt,
         map_res,
@@ -124,31 +122,20 @@ fn parse_fragment(input: Span) -> ParseResult<StringFragment> {
 /// fold_many0 is the equivalent of iterator::fold. It runs a parser in a loop,
 /// and for each output value, calls a folding function on each output value.
 fn build_string(input: Span) -> ParseResult<String> {
-    map(
-        cond(
-            input.fragment().len() > 0,
-            fold_many0(
-                // Our parser function– parses a single string fragment
-                parse_fragment,
-                // Our init value, an empty string
-                String::new(),
-                // Our folding function. For each fragment, append the fragment to the
-                // string.
-                |mut string, fragment| {
-                    match fragment {
-                        StringFragment::Literal(s) => string.push_str(s.fragment()),
-                        StringFragment::EscapedChar(c) => string.push(c),
-                        StringFragment::EscapedWS => {}
-                    }
-                    string
-                },
-            ),
-        ),
-        |v| {
-            if v.is_none() {
-                return "".to_string();
+    fold_many0(
+        // Our parser function– parses a single string fragment
+        parse_fragment,
+        // Our init value, an empty string
+        String::new(),
+        // Our folding function. For each fragment, append the fragment to the
+        // string.
+        |mut string, fragment| {
+            match fragment {
+                StringFragment::Literal(s) => string.push_str(s.fragment()),
+                StringFragment::EscapedChar(c) => string.push(c),
+                StringFragment::EscapedWS => {}
             }
-            v.unwrap()
+            string
         },
     )(input)
 }
