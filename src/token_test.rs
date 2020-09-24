@@ -1546,7 +1546,7 @@ fn test_expression_func_params_plus_value() {
         _ => unimplemented!(),
     }
 }
-/*
+
 #[test]
 fn test_expression_func_params_plus_func_params() {
     let x = expression(Span::new("(func1 val1) + (func2 val2)"))
@@ -1558,7 +1558,11 @@ fn test_expression_func_params_plus_func_params() {
             assert_eq!(x.function_value.len(), 1);
             match &x.function_value[0] {
                 FunctionValue::ValueList(v) => {
-                    assert_eq!(v[0].fragment(), &"val1");
+                    if let ValueExpression::ParameterValue(x) = &v[0] {
+                        assert_eq!(x.fragment(), &"val1");
+                    } else {
+                        unimplemented!()
+                    }
                 }
                 _ => unimplemented!(),
             }
@@ -1572,7 +1576,11 @@ fn test_expression_func_params_plus_func_params() {
             assert_eq!(v.function_value.len(), 1);
             match &v.function_value[0] {
                 FunctionValue::ValueList(v) => {
-                    assert_eq!(v[0].fragment(), &"val2");
+                    if let ValueExpression::ParameterValue(x) = &v[0] {
+                        assert_eq!(x.fragment(), &"val2");
+                    } else {
+                        unimplemented!()
+                    }
                 }
                 _ => unimplemented!(),
             }
@@ -1595,7 +1603,11 @@ fn test_expression_brackets_func_params_plus_func_params() {
                         assert_eq!(x.function_value.len(), 1);
                         match &x.function_value[0] {
                             FunctionValue::ValueList(v) => {
-                                assert_eq!(v[0].fragment(), &"val1");
+                                if let ValueExpression::ParameterValue(x) = &v[0] {
+                                    assert_eq!(x.fragment(), &"val1");
+                                } else {
+                                    unimplemented!()
+                                }
                             }
                             _ => unimplemented!(),
                         }
@@ -1612,7 +1624,11 @@ fn test_expression_brackets_func_params_plus_func_params() {
                         match &v.function_value[0] {
                             FunctionValue::ValueList(v) => {
                                 assert_eq!(v.len(), 1);
-                                assert_eq!(v[0].fragment(), &"val2");
+                                if let ValueExpression::ParameterValue(x) = &v[0] {
+                                    assert_eq!(x.fragment(), &"val2");
+                                } else {
+                                    unimplemented!()
+                                }
                             }
                             _ => unimplemented!(),
                         }
@@ -1635,7 +1651,11 @@ fn test_expression_value_plus_func_params_plus_value() {
         ExpressionFunctionValueCall::FunctionValue(x) => match x {
             FunctionValue::ValueList(v) => {
                 assert_eq!(v.len(), 1);
-                assert_eq!(v[0].fragment(), &"val1");
+                if let ValueExpression::ParameterValue(x) = &v[0] {
+                    assert_eq!(x.fragment(), &"val1");
+                } else {
+                    unimplemented!()
+                }
             }
             _ => unimplemented!(),
         },
@@ -1649,7 +1669,11 @@ fn test_expression_value_plus_func_params_plus_value() {
             assert_eq!(v.function_value.len(), 1);
             match &v.function_value[0] {
                 FunctionValue::ValueList(v) => {
-                    assert_eq!(v[0].fragment(), &"val2");
+                    if let ValueExpression::ParameterValue(x) = &v[0] {
+                        assert_eq!(x.fragment(), &"val2");
+                    } else {
+                        unimplemented!()
+                    }
                 }
                 _ => unimplemented!(),
             }
@@ -1661,7 +1685,11 @@ fn test_expression_value_plus_func_params_plus_value() {
         ExpressionFunctionValueCall::FunctionValue(v) => match &v {
             FunctionValue::ValueList(v) => {
                 assert_eq!(v.len(), 1);
-                assert_eq!(v[0].fragment(), &"val3");
+                if let ValueExpression::ParameterValue(x) = &v[0] {
+                    assert_eq!(x.fragment(), &"val3");
+                } else {
+                    unimplemented!()
+                }
             }
             _ => unimplemented!(),
         },
@@ -1679,7 +1707,11 @@ fn test_expression_value_plus_func_params_partly_parsed() {
         ExpressionFunctionValueCall::FunctionValue(x) => match x {
             FunctionValue::ValueList(v) => {
                 assert_eq!(v.len(), 1);
-                assert_eq!(v[0].fragment(), &"val1");
+                if let ValueExpression::ParameterValue(x) = &v[0] {
+                    assert_eq!(x.fragment(), &"val1");
+                } else {
+                    unimplemented!()
+                }
             }
             _ => unimplemented!(),
         },
@@ -1693,7 +1725,11 @@ fn test_expression_value_plus_func_params_partly_parsed() {
             assert_eq!(v.function_value.len(), 1);
             match &v.function_value[0] {
                 FunctionValue::ValueList(v) => {
-                    assert_eq!(v[0].fragment(), &"val2");
+                    if let ValueExpression::ParameterValue(x) = &v[0] {
+                        assert_eq!(x.fragment(), &"val2");
+                    } else {
+                        unimplemented!()
+                    }
                 }
                 _ => unimplemented!(),
             }
@@ -1716,7 +1752,11 @@ fn test_expression_complex_statement() {
             assert_eq!(v.function_value.len(), 1);
             match &v.function_value[0] {
                 FunctionValue::ValueList(v) => {
-                    assert_eq!(v[0].fragment(), &"val1");
+                    if let ValueExpression::ParameterValue(x) = &v[0] {
+                        assert_eq!(x.fragment(), &"val1");
+                    } else {
+                        unimplemented!()
+                    }
                 }
                 _ => unimplemented!(),
             }
@@ -1734,8 +1774,16 @@ fn test_expression_complex_statement() {
                         match &x.function_value[0] {
                             FunctionValue::ValueList(v) => {
                                 assert_eq!(v.len(), 2);
-                                assert_eq!(v[0].fragment(), &"val2");
-                                assert_eq!(v[1].fragment(), &"val3");
+                                if let ValueExpression::ParameterValue(x) = &v[0] {
+                                    assert_eq!(x.fragment(), &"val2");
+                                } else {
+                                    unimplemented!()
+                                }
+                                if let ValueExpression::ParameterValue(x) = &v[1] {
+                                    assert_eq!(x.fragment(), &"val3");
+                                } else {
+                                    unimplemented!()
+                                }
                             }
                             _ => unimplemented!(),
                         }
@@ -1750,7 +1798,11 @@ fn test_expression_complex_statement() {
                     ExpressionFunctionValueCall::FunctionValue(ref x) => match x {
                         FunctionValue::ValueList(v) => {
                             assert_eq!(v.len(), 1);
-                            assert_eq!(v[0].fragment(), &"val4");
+                            if let ValueExpression::ParameterValue(x) = &v[0] {
+                                assert_eq!(x.fragment(), &"val4");
+                            } else {
+                                unimplemented!()
+                            }
                         }
                         _ => unimplemented!(),
                     },
@@ -1766,14 +1818,22 @@ fn test_expression_complex_statement() {
                         match &x.function_value[0] {
                             FunctionValue::ValueList(v) => {
                                 assert_eq!(v.len(), 1);
-                                assert_eq!(v[0].fragment(), &"val5");
+                                if let ValueExpression::ParameterValue(x) = &v[0] {
+                                    assert_eq!(x.fragment(), &"val5");
+                                } else {
+                                    unimplemented!()
+                                }
                             }
                             _ => unimplemented!(),
                         }
                         match &x.function_value[1] {
                             FunctionValue::ValueList(v) => {
                                 assert_eq!(v.len(), 1);
-                                assert_eq!(v[0].fragment(), &"val6");
+                                if let ValueExpression::ParameterValue(x) = &v[0] {
+                                    assert_eq!(x.fragment(), &"val6");
+                                } else {
+                                    unimplemented!()
+                                }
                             }
                             _ => unimplemented!(),
                         }
@@ -1807,13 +1867,21 @@ fn test_function_body_statement_func_values() {
             assert_eq!(v.function_value.len(), 2);
             match &v.function_value[0] {
                 FunctionValue::ValueList(v) => {
-                    assert_eq!(v[0].fragment(), &"val1");
+                    if let ValueExpression::ParameterValue(x) = &v[0] {
+                        assert_eq!(x.fragment(), &"val1");
+                    } else {
+                        unimplemented!()
+                    }
                 }
                 _ => unimplemented!(),
             }
             match &v.function_value[1] {
                 FunctionValue::ValueList(v) => {
-                    assert_eq!(v[0].fragment(), &"val2");
+                    if let ValueExpression::ParameterValue(x) = &v[0] {
+                        assert_eq!(x.fragment(), &"val2");
+                    } else {
+                        unimplemented!()
+                    }
                 }
                 _ => unimplemented!(),
             }
@@ -1833,7 +1901,11 @@ fn test_function_body_values_sum() {
                     match x.function_statement {
                         ExpressionFunctionValueCall::FunctionValue(v) => match v {
                             FunctionValue::ValueList(ref v) => {
-                                assert_eq!(v[0].fragment(), &"val1");
+                                if let ValueExpression::ParameterValue(x) = &v[0] {
+                                    assert_eq!(x.fragment(), &"val1");
+                                } else {
+                                    unimplemented!()
+                                }
                             }
                             _ => unimplemented!(),
                         },
@@ -1846,7 +1918,11 @@ fn test_function_body_values_sum() {
                     match x.expression.unwrap().function_statement {
                         ExpressionFunctionValueCall::FunctionValue(ref v) => match v {
                             FunctionValue::ValueList(ref v) => {
-                                assert_eq!(v[0].fragment(), &"val2");
+                                if let ValueExpression::ParameterValue(x) = &v[0] {
+                                    assert_eq!(x.fragment(), &"val2");
+                                } else {
+                                    unimplemented!()
+                                }
                             }
                             _ => unimplemented!(),
                         },
@@ -1860,7 +1936,7 @@ fn test_function_body_values_sum() {
         _ => unimplemented!(),
     }
 }
-
+/*
 #[test]
 fn test_function_body_let_binding_simple() {
     let x = function_body_statement(Span::new("let val1 = val2")).unwrap();
