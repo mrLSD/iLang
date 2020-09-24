@@ -3,14 +3,20 @@
 [![Build Status](https://travis-ci.org/mrLSD/iLang.svg?branch=master)](https://travis-ci.org/mrLSD/iLang)
 [![Coverage Status](https://coveralls.io/repos/github/mrLSD/iLang/badge.svg?branch=master)](https://coveralls.io/github/mrLSD/iLang?branch=master)
 
-iLang is a functional programming language from scratch. 
-In the current stage, it's a dialect from F#. It is not related to .NET or .NET Core platform.
-Grammar based on EBNF, and described [here](grammar.md).
+**iLang** is a functional programming language from scratch.
+It is general purpose, strongly typed, multi-paradigm programming 
+language that encompasses functional programming methods. 
+
+**iLang** is a cross-platform and compiler based on LLVM. 
+
+**iLang** corresponds as a member of the ML language family. 
+
+Formal grammar based on EBNF, and it is described in the document [here](grammar.md).
 
 Current main goals of the project
-* grammar creation
-* AST implementation
-* compiler creation based on LLVM
+* [x] grammar creation
+* [x] AST implementation
+* [ ] compiler creation based on LLVM
 
 Implementation based on *Rust language* 
 to achieve the goals of reliability, efficiency, speed, memory safety.

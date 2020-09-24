@@ -13,6 +13,7 @@ use nom::{
     },
     combinator::{
         map,
+        not,
         opt,
     },
     error::ParseError,
@@ -20,6 +21,7 @@ use nom::{
         many0,
         many1,
     },
+    number::complete::double,
     sequence::tuple,
     sequence::{
         delimited,
@@ -30,6 +32,8 @@ use nom::{
     InputTakeAtPosition,
 };
 
+use crate::ast::BasicTypeExpression;
+use crate::string::parse_string;
 use crate::{
     ast,
     ast::{
@@ -38,7 +42,7 @@ use crate::{
     },
     char::AsChar,
 };
-use nom::combinator::not;
+use nom::combinator::value;
 
 /// Apply parser func for delimited space
 /// ## RULE:
@@ -256,11 +260,16 @@ pub fn parameter_list(data: Span) -> ParseResult<ast::ParameterList> {
 /// ```js
 /// value-list = (parameter-value | "(" (parameter-value [","])* ")")
 /// ```
+#[allow(clippy::let_and_return)]
 pub fn value_list(data: Span) -> ParseResult<ast::ValueList> {
+    let val_expr = &alt((
+        map(expression_value_type, ast::ValueExpression::TypeExpression),
+        map(parameter_value, ast::ValueExpression::ParameterValue),
+    ));
     let val_list = map(
         get_from_brackets(tuple((
-            parameter_value,
-            many0(preceded(delimited_space(tag(",")), parameter_value)),
+            val_expr,
+            many0(preceded(delimited_space(tag(",")), val_expr)),
         ))),
         |(first, mut second)| {
             let mut res_list = vec![first];
@@ -268,7 +277,8 @@ pub fn value_list(data: Span) -> ParseResult<ast::ValueList> {
             res_list
         },
     );
-    alt((map(parameter_value, |v| vec![v]), val_list))(data)
+    let res = alt((map(val_expr, |v| vec![v]), val_list))(data);
+    res
 }
 
 /// Let binding Value list from parameter values list
@@ -546,4 +556,21 @@ pub fn main(data: Span) -> ParseResult<ast::Main> {
         map(delimited_space(function), ast::MainStatement::Function),
         map(delimited_space(let_binding), ast::MainStatement::LetBinding),
     )))(data)
+}
+
+/// Numbers parser
+pub fn number(data: Span) -> ParseResult<ast::BasicTypeExpression> {
+    map(double, BasicTypeExpression::Number)(data)
+}
+
+/// Boolean parser
+pub fn boolean(data: Span) -> ParseResult<ast::BasicTypeExpression> {
+    let parse_true = value(true, tag("true"));
+    let parse_frue = value(false, tag("false"));
+    map(alt((parse_true, parse_frue)), BasicTypeExpression::Bool)(data)
+}
+
+/// Expression basic/common types values parser
+pub fn expression_value_type(data: Span) -> ParseResult<ast::BasicTypeExpression> {
+    delimited_space(alt((parse_string, number, boolean)))(data)
 }

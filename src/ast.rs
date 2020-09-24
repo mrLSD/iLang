@@ -58,7 +58,14 @@ pub enum ParameterList<'a> {
 }
 
 /// List of Values
-pub type ValueList<'a> = Vec<ParameterValue<'a>>;
+#[derive(Debug, Clone, PartialEq)]
+pub enum ValueExpression<'a> {
+    ParameterValue(ParameterValue<'a>),
+    TypeExpression(BasicTypeExpression),
+}
+
+/// Value expression lust
+pub type ValueList<'a> = Vec<ValueExpression<'a>>;
 
 /// Name of functions
 pub type FunctionName<'a> = Ident<'a>;
@@ -167,3 +174,25 @@ pub enum MainStatement<'a> {
 
 /// Main - entry point for all definitions
 pub type Main<'a> = Vec<MainStatement<'a>>;
+
+/// A string fragment contains a fragment of a string being parsed: either
+/// a non-empty Literal (a series of non-escaped characters), a single
+/// parsed escaped character, or a block of escaped whitespace.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum StringFragment<'a> {
+    Literal(Span<'a>),
+    EscapedChar(char),
+    EscapedWS,
+}
+
+/// String identifier
+/// Basic component for string parser
+pub struct StringIdent(pub String);
+
+/// Basic and most common types for expressions ident
+#[derive(Debug, Clone, PartialEq)]
+pub enum BasicTypeExpression {
+    String(String),
+    Number(f64),
+    Bool(bool),
+}
