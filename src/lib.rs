@@ -9,6 +9,7 @@ pub mod string;
 pub mod token;
 
 mod char;
+mod llvm;
 
 #[cfg(test)]
 mod char_test;
