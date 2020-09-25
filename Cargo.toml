@@ -12,5 +12,3 @@ edition = "2018"
 nom = "5.1"
 nom_locate = "2.0"
 llvm-sys = "100.2"
-
-
