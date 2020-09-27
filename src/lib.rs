@@ -5,11 +5,11 @@
 #![warn(clippy::all)]
 
 pub mod ast;
+pub mod llvm;
 pub mod string;
 pub mod token;
 
 mod char;
-mod llvm;
 
 #[cfg(test)]
 mod char_test;
