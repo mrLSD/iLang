@@ -7,6 +7,7 @@
 //!
 //! https://llvm.org/docs/LangRef.html#id1246
 
+#[derive(Debug, Eq, PartialEq, Clone)]
 pub enum VisibilityStyles {
     Default,
     Hidden,
