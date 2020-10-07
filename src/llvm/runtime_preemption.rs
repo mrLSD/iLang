@@ -7,16 +7,16 @@
 //! https://llvm.org/docs/LangRef.html#runtime-preemption-specifiers
 
 #[derive(Debug, Eq, PartialEq, Clone)]
-pub enum RuntimePreemption {
+pub enum RuntimePreemptionSpecifier {
     DsoPreemptable,
     DsoLocal,
 }
 
-impl std::fmt::Display for RuntimePreemption {
+impl std::fmt::Display for RuntimePreemptionSpecifier {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         let s = match self {
-            RuntimePreemption::DsoPreemptable => "dso_preemptable",
-            RuntimePreemption::DsoLocal => "dso_local",
+            RuntimePreemptionSpecifier::DsoPreemptable => "dso_preemptable",
+            RuntimePreemptionSpecifier::DsoLocal => "dso_local",
         };
 
         write!(f, "{}", s)
