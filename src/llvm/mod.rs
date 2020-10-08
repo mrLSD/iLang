@@ -5,5 +5,8 @@ pub mod global_variables;
 pub mod linkage_types;
 pub mod parameter_attributes;
 pub mod runtime_preemption;
+pub mod section;
 pub mod thread_local_storage;
+pub mod types;
 pub mod visibility_styles;
+pub mod comdat;
