@@ -81,37 +81,37 @@ impl<N: std::fmt::Display> std::fmt::Display for IntegerType<N> {
 
 impl std::fmt::Display for Integer1Type {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(f, "i{}", IntegerType(1))
+        write!(f, "{}", IntegerType(1))
     }
 }
 
 impl std::fmt::Display for Integer8Type {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(f, "i{}", IntegerType(8))
+        write!(f, "{}", IntegerType(8))
     }
 }
 
 impl std::fmt::Display for Integer16Type {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(f, "i{}", IntegerType(16))
+        write!(f, "{}", IntegerType(16))
     }
 }
 
 impl std::fmt::Display for Integer32Type {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(f, "i{}", IntegerType(32))
+        write!(f, "{}", IntegerType(32))
     }
 }
 
 impl std::fmt::Display for Integer64Type {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(f, "i{}", IntegerType(64))
+        write!(f, "{}", IntegerType(64))
     }
 }
 
 impl std::fmt::Display for Integer128Type {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(f, "i{}", IntegerType(128))
+        write!(f, "{}", IntegerType(128))
     }
 }
 
@@ -126,7 +126,7 @@ impl std::fmt::Display for FloatingPointType {
             FloatingPointType::X86fp80 => "x86_fp80",
             FloatingPointType::PpcFp128 => "ppc_fp80",
         };
-        write!(f, "%{}", s)
+        write!(f, "{}", s)
     }
 }
 

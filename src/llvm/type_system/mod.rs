@@ -11,6 +11,7 @@
 //! https://llvm.org/docs/LangRef.html#type-system
 
 pub mod aggregate;
+pub mod instructions;
 pub mod single_value;
 
 use super::types::Type;
