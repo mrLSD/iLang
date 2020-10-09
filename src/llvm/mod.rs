@@ -15,6 +15,7 @@ pub mod prefix;
 pub mod runtime_preemption;
 pub mod section;
 pub mod source_filename;
+pub mod target_triple;
 pub mod thread_local_storage;
 pub mod types;
 pub mod visibility_styles;
