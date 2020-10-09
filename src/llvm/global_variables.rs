@@ -9,15 +9,15 @@
 
 use super::{
     addrspace::AddrSpace,
+    align::Alignment,
+    comdat::ComDat,
     dll_storage_classes::DLLStorageClasses,
     linkage_types::LinkageTypes,
     runtime_preemption::RuntimePreemptionSpecifier,
+    section::Section,
     thread_local_storage::ThreadLocalStorage,
     types::Type,
     visibility_styles::VisibilityStyles,
-    section::Section,
-    comdat::ComDat,
-    ali
 };
 
 #[derive(Debug, Eq, PartialEq, Clone)]
@@ -47,7 +47,8 @@ pub struct GlobalVariable<T> {
     initializer_constant: Option<T>,
     section: Option<Section>,
     comdat: Option<ComDat>,
-    aligment: Alig
+    alignment: Option<Alignment>,
+    metadata: Option<String>,
 }
 
 impl std::fmt::Display for UnnamedAddr {
