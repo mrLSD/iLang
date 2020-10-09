@@ -11,6 +11,7 @@ pub mod gc_stratagy_name;
 pub mod global_variables;
 pub mod ifunc;
 pub mod linkage_types;
+pub mod module_inline_asm;
 pub mod parameter_attributes;
 pub mod prefix;
 pub mod runtime_preemption;
