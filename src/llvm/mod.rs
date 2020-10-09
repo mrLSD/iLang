@@ -4,6 +4,7 @@ pub mod align;
 pub mod attribute_groups;
 pub mod calling_convention;
 pub mod comdat;
+pub mod data_layout;
 pub mod dll_storage_classes;
 pub mod functions;
 pub mod gc_stratagy_name;
