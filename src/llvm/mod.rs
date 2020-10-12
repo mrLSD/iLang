@@ -1,4 +1,5 @@
 pub mod addrspace;
+pub mod aliases;
 pub mod align;
 pub mod calling_convention;
 pub mod comdat;
