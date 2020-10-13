@@ -20,13 +20,15 @@
 //! ```
 //! https://llvm.org/docs/LangRef.html#aliases
 
-use crate::llvm::dll_storage_classes::DLLStorageClasses;
-use crate::llvm::global_variables::UnnamedAddr;
-use crate::llvm::linkage_types::LinkageTypes;
-use crate::llvm::runtime_preemption::RuntimePreemptionSpecifier;
-use crate::llvm::thread_local_storage::ThreadLocalStorage;
-use crate::llvm::types::Type;
-use crate::llvm::visibility_styles::VisibilityStyles;
+use super::{
+    dll_storage_classes::DLLStorageClasses,
+    global_variables::UnnamedAddr,
+    linkage_types::LinkageTypes,
+    runtime_preemption::RuntimePreemptionSpecifier,
+    thread_local_storage::ThreadLocalStorage,
+    types::Type,
+    visibility_styles::VisibilityStyles,
+};
 
 #[derive(Debug, Eq, PartialEq, Clone)]
 pub struct Alias<T> {
@@ -43,38 +45,40 @@ pub struct Alias<T> {
 
 impl<T: std::fmt::Display> std::fmt::Display for Alias<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        let mut s = format!("@{} = ", self.name);
+        let mut s = format!("@{} =", self.name);
         if self.linkage.is_some() {
-            s = format!("{} {} ", s, self.linkage.as_ref().unwrap());
+            s = format!("{} {}", s, self.linkage.as_ref().unwrap());
         }
         if self.preemption_specifier.is_some() {
-            s = format!("{} {} ", s, self.preemption_specifier.as_ref().unwrap());
+            s = format!("{} {}", s, self.preemption_specifier.as_ref().unwrap());
         }
         if self.visibility.is_some() {
-            s = format!("{} {} ", s, self.visibility.as_ref().unwrap());
+            s = format!("{} {}", s, self.visibility.as_ref().unwrap());
         }
         if self.dll_storage_classes.is_some() {
-            s = format!("{} {} ", s, self.dll_storage_classes.as_ref().unwrap());
+            s = format!("{} {}", s, self.dll_storage_classes.as_ref().unwrap());
         }
         if self.thread_local.is_some() {
-            s = format!("{} {} ", s, self.thread_local.as_ref().unwrap());
+            s = format!("{} {}", s, self.thread_local.as_ref().unwrap());
         }
         if self.unnamed_addr.is_some() {
-            s = format!("{} {} ", s, self.unnamed_addr.as_ref().unwrap());
+            s = format!("{} {}", s, self.unnamed_addr.as_ref().unwrap());
         }
-        let s: String = self
+        s = format!("{} alias", s);
+
+        let s = self
             .aliasee_type
             .iter()
             .enumerate()
-            .fold(s, |x, (ctr, ty)| -> String {
-                // Calculation for comma
+            .fold(s, |x, (ctr, ty)| {
+                // Calculation for comma for 1-th element
                 if ctr == 0 {
-                    format!("{} {} ", x, ty)
+                    format!("{} {},", x, ty)
                 } else {
-                    format!("{}, {} ", x, ty)
+                    format!("{} {}", x, ty)
                 }
             });
-        let s = format!("{} {} ", s, self.aleasee);
+        let s = format!("{} @{}", s, self.aleasee);
 
         write!(f, "{}", s)
     }
