@@ -4,6 +4,7 @@ pub mod align;
 pub mod calling_convention;
 pub mod comdat;
 pub mod dll_storage_classes;
+pub mod functions;
 pub mod global_variables;
 pub mod ifunc;
 pub mod linkage_types;
