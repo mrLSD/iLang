@@ -9,6 +9,7 @@ pub mod global_variables;
 pub mod ifunc;
 pub mod linkage_types;
 pub mod parameter_attributes;
+pub mod prefix;
 pub mod runtime_preemption;
 pub mod section;
 pub mod thread_local_storage;
