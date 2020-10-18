@@ -522,7 +522,12 @@ pub fn function(data: Span) -> ParseResult<ast::Function> {
                     function_name,
                 )),
             ),
-            parameter_list,
+            alt((
+                parameter_list,
+                map(get_from_brackets(multispace0), |_| {
+                    ast::ParameterList::ParameterValueList(vec![])
+                }),
+            )),
             opt(preceded(delimited_space(tag(":")), return_type)),
             preceded(delimited_space(tag("=")), function_body),
         )),
@@ -550,12 +555,15 @@ pub fn function(data: Span) -> ParseResult<ast::Function> {
 /// )+
 /// ```
 pub fn main(data: Span) -> ParseResult<ast::Main> {
-    many1(alt((
+    let (i, o) = many1(alt((
         map(delimited_space(namespace), ast::MainStatement::Namespace),
         map(delimited_space(module), ast::MainStatement::Module),
         map(delimited_space(function), ast::MainStatement::Function),
         map(delimited_space(let_binding), ast::MainStatement::LetBinding),
     )))(data)
+    .unwrap();
+    //println!("{:#?}", o);
+    Ok((i, o))
 }
 
 /// Numbers parser

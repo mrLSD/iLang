@@ -3,6 +3,7 @@ use super::{
     token::*,
 };
 use nom::multi::many1;
+use crate::parser::ast::BasicTypeExpression::Number;
 
 #[test]
 fn test_name() {
@@ -1061,6 +1062,11 @@ fn test_function_call_name_sequence_and_value() {
 
 #[test]
 fn test_function_call_func_val() {
+    let (i, o) = function_call(Span::new("func1 ()")).unwrap();
+    assert_eq!(i.fragment(), &"");
+    assert_eq!(o.function_call_name[0].fragment(), &"func1");
+    assert_eq!(o.function_value.len(), 0);
+
     let x = function_call(Span::new("func1 val1"));
     let x = x.unwrap().1;
     assert_eq!(x.function_call_name.len(), 1);
@@ -2107,6 +2113,42 @@ fn test_let_binding_value_plus_value() {
                 _ => unimplemented!(),
             }
         }
+        _ => unimplemented!(),
+    }
+}
+
+#[test]
+fn test_function_simple_empty() {
+    let x = function(Span::new("let func1 () = 10")).unwrap();
+    assert_eq!(x.0.fragment(), &"");
+    let x = x.1;
+    assert_eq!(x.function_name.fragment(), &"func1");
+    match x.parameter_list {
+        ParameterList::ParameterValueList(ref v) => {
+            assert_eq!(v.len(), 0);
+        },
+        _ => unimplemented!(),
+    };
+    assert_eq!(x.function_body.len(), 1);
+    match &x.function_body[0] {
+        FunctionBodyStatement::Expression(x) => match &x.function_statement {
+            ExpressionFunctionValueCall::FunctionValue(v) => match v {
+                FunctionValue::ValueList(v) => {
+                    assert_eq!(v.len(), 1);
+                    if let ValueExpression::TypeExpression(x) = &v[0] {
+                        if let Number(n) = x {
+                            assert_eq!(n, &10.);
+                        } else {
+                            unimplemented!()
+                        }
+                    } else {
+                        unimplemented!()
+                    }
+                }
+                _ => unimplemented!(),
+            },
+            _ => unimplemented!(),
+        },
         _ => unimplemented!(),
     }
 }

@@ -1,12 +1,9 @@
 #![allow(unused_imports)]
+use super::read_source;
 use crate::parser::{
     ast::Span,
     token::main,
 };
-
-fn read_source(file: &str) -> String {
-    std::fs::read_to_string(file).expect("file not found")
-}
 
 #[test]
 #[allow(dead_code)]
