@@ -2,8 +2,8 @@ use super::{
     ast::*,
     token::*,
 };
-use nom::multi::many1;
 use crate::parser::ast::BasicTypeExpression::Number;
+use nom::multi::many1;
 
 #[test]
 fn test_name() {
@@ -2126,7 +2126,7 @@ fn test_function_simple_empty() {
     match x.parameter_list {
         ParameterList::ParameterValueList(ref v) => {
             assert_eq!(v.len(), 0);
-        },
+        }
         _ => unimplemented!(),
     };
     assert_eq!(x.function_body.len(), 1);
@@ -2552,4 +2552,11 @@ fn test_expression_value_type() {
         unimplemented!()
     };
     assert_eq!(x, 10.1_f64);
+}
+
+#[test]
+fn test_function_body_block() {
+    let x = function_body(Span::new("\tfunc1 val1")).unwrap();
+    assert_eq!(x.0.fragment(), &"");
+    println!("{:#?}", x.1);
 }

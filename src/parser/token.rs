@@ -43,6 +43,7 @@ use super::{
     char::AsChar,
     string::parse_string,
 };
+use nom::character::complete::space0;
 
 /// Apply parser func for delimited space
 /// ## RULE:
@@ -416,6 +417,15 @@ pub fn function_body(data: Span) -> ParseResult<ast::FunctionBody> {
     many0(function_body_statement)(data)
 }
 
+pub fn function_body1(data: Span) -> ParseResult<ast::FunctionBodyExtend> {
+    many0(map(tuple((space0, function_body_statement)), |(v1, v2)| {
+        ast::FunctionBodyStatementExtend {
+            spaces: v1,
+            statement: v2,
+        }
+    }))(data)
+}
+
 /// Function body statement parser
 /// ## RULES:
 /// ```js
@@ -562,7 +572,7 @@ pub fn main(data: Span) -> ParseResult<ast::Main> {
         map(delimited_space(let_binding), ast::MainStatement::LetBinding),
     )))(data)
     .unwrap();
-    //println!("{:#?}", o);
+    println!("{:#?}", o);
     Ok((i, o))
 }
 

@@ -1,2 +1,3 @@
-let x () = 1
-
+let x () = y
+let x () = y
+let z = 1
