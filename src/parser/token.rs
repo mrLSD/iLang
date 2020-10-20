@@ -2,36 +2,24 @@
 //!
 //! Parse grammar lexical constructions to AST tokens.
 //!
-use nom::{
-    branch::alt,
-    bytes::complete::tag,
-    character::complete::{
-        alpha1,
-        char,
-        multispace0,
-        multispace1,
-    },
-    combinator::{
-        map,
-        not,
-        opt,
-        value,
-    },
-    error::ParseError,
-    multi::{
-        many0,
-        many1,
-    },
-    number::complete::double,
-    sequence::tuple,
-    sequence::{
-        delimited,
-        preceded,
-        terminated,
-    },
-    IResult,
-    InputTakeAtPosition,
-};
+use nom::{branch::alt, bytes::complete::tag, character::complete::{
+    alpha1,
+    char,
+    multispace0,
+    multispace1,
+}, combinator::{
+    map,
+    not,
+    opt,
+    value,
+}, error::ParseError, multi::{
+    many0,
+    many1,
+}, number::complete::double, sequence::tuple, sequence::{
+    delimited,
+    preceded,
+    terminated,
+}, IResult, InputTakeAtPosition};
 
 use super::{
     ast,
@@ -43,7 +31,6 @@ use super::{
     char::AsChar,
     string::parse_string,
 };
-use nom::character::complete::space0;
 
 /// Apply parser func for delimited space
 /// ## RULE:
@@ -414,15 +401,58 @@ pub fn function_call(data: Span) -> ParseResult<ast::FunctionCall> {
 /// function-body = [function-body-statement]*
 /// ```
 pub fn function_body(data: Span) -> ParseResult<ast::FunctionBody> {
-    many0(function_body_statement)(data)
-}
-
-pub fn function_body1(data: Span) -> ParseResult<ast::FunctionBodyExtend> {
-    many0(map(tuple((space0, function_body_statement)), |(v1, v2)| {
-        ast::FunctionBodyStatementExtend {
-            spaces: v1,
-            statement: v2,
-        }
+    many0(map(function_body_statement, |f| {
+        match f {
+            ast::FunctionBodyStatement::Expression(ref e) => {
+                match e.function_statement {
+                    ast::ExpressionFunctionValueCall::FunctionValue(ref x) => {
+                        match x {
+                            ast::FunctionValue::ValueList(ref v) => {
+                                match v[0] {
+                                    ast::ValueExpression::ParameterValue(ref p) => {
+                                        let line = p.location_line();
+                                        let offset = p.get_column();
+                                        println!("ValueExpression{:?}", (line, offset));
+                                    }
+                                    _ => unimplemented!()
+                                }
+                            }
+                            _ => unimplemented!()
+                        }
+                    }
+                    ast::ExpressionFunctionValueCall::FunctionCall(ref x) => {
+                        let line = x.function_call_name[0].location_line();
+                        let offset = x.function_call_name[0].get_column();
+                        println!("FunctionCall{:?}", (line, offset));
+                    }
+                }
+            }
+            ast::FunctionBodyStatement::LetBinding(ref x) => {
+                match x.value_list[0] {
+                    ast::ParameterValueList::ParameterValue(ref p) => {
+                            let line = p.location_line();
+                            let offset = p.get_column();
+                            println!("LetBinding.ParameterValue{:?}", (line, offset));
+                    }
+                    ast::ParameterValueList::ParameterList(ref l) => {
+                        match l[0] {
+                            ast::ParameterValueType::Value(ref v) => {
+                                let line = v.location_line();
+                                let offset = v.get_column();
+                                println!("LetBinding.ParameterList{:?}", (line, offset));
+                            }
+                            _ => unimplemented!()
+                        }
+                    }
+                }
+            }
+            ast::FunctionBodyStatement::FunctionCall(ref x) => {
+                let line = x.function_call_name[0].location_line();
+                let offset = x.function_call_name[0].get_column();
+                println!("FunctionCall{:?}", (line, offset));
+            }
+        };
+        f
     }))(data)
 }
 

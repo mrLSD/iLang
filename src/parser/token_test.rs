@@ -2556,7 +2556,12 @@ fn test_expression_value_type() {
 
 #[test]
 fn test_function_body_block() {
-    let x = function_body(Span::new("\tfunc1 val1")).unwrap();
-    assert_eq!(x.0.fragment(), &"");
-    println!("{:#?}", x.1);
+    let _x = let_binding(Span::new("let x =\n    x")).unwrap();
+    let _x = let_binding(Span::new("let x =\n\t x()")).unwrap();
+    let _x = let_binding(Span::new("let x =\n  x(x)")).unwrap();
+    let _x = let_binding(Span::new("let x =\n   let x = \n   x")).unwrap();
+    //println!("{:#?}", x);
+    
+    // let x = function_body1(Span::new("\tfunc1 val1")).unwrap();
+    // println!("{:#?}", x);
 }

@@ -105,14 +105,6 @@ pub struct LetBinding<'a> {
     pub function_body: FunctionBody<'a>,
 }
 
-pub type FunctionBodyExtend<'a> = Vec<FunctionBodyStatementExtend<'a>>;
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct FunctionBodyStatementExtend<'a> {
-    pub spaces: Span<'a>,
-    pub statement: FunctionBodyStatement<'a>,
-}
-
 /// Function body
 pub type FunctionBody<'a> = Vec<FunctionBodyStatement<'a>>;
 
