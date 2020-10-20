@@ -2036,6 +2036,7 @@ fn test_function_body() {
 #[test]
 fn test_let_binding_simple() {
     let x = let_binding(Span::new("let x = y")).unwrap();
+    println!("{:#?}", x);
     assert_eq!(x.0.fragment(), &"");
     let x = x.1;
     assert_eq!(x.value_list.len(), 1);

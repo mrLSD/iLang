@@ -430,17 +430,15 @@ pub fn function_body1(data: Span) -> ParseResult<ast::FunctionBody> {
                 }
                 println!("{:#?}", o);
                 println!("{:?}", i1);
-                
+
+                i = i1;
+                acc.push(o.clone());
                 match o {
                     ast::FunctionBodyStatement::LetBinding(_) => {},
                     _ => {
-                        return Ok((i1, acc));
-                        //println!("{:?}", i);
+                        return Ok((i, acc));
                     }
                 }
-
-                i = i1;
-                acc.push(o);
             }
         }
     }
