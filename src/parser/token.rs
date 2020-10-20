@@ -46,6 +46,7 @@ use super::{
 use nom::character::complete::space0;
 use nom::combinator::cut;
 use nom::error::ErrorKind;
+use crate::parser::ast::FunctionBodyStatement;
 
 /// Apply parser func for delimited space
 /// ## RULE:
@@ -418,24 +419,112 @@ pub fn function_call(data: Span) -> ParseResult<ast::FunctionCall> {
 }
 
 pub fn function_body1(data: Span) -> ParseResult<ast::FunctionBody> {
+    #[derive(Debug)]
+    struct Block {
+        line: u32,
+        column: usize,
+    }
+    fn select_block(f: &FunctionBodyStatement, a: &mut Vec<Block>) {
+        println!("-> select_block");
+        match f {
+            ast::FunctionBodyStatement::Expression(ref e) => match e.function_statement {
+                ast::ExpressionFunctionValueCall::FunctionValue(ref x) => match x {
+                    ast::FunctionValue::ValueList(ref v) => match v[0] {
+                        ast::ValueExpression::ParameterValue(ref p) => {
+                            let line = p.location_line();
+                            let column = p.get_column();
+                            a.push(Block{
+                                line,
+                                column,
+                            });
+                            println!("FunctionBodyStatement.ValueExpression{:?}", (line, column));
+                        }
+                        ast::ValueExpression::TypeExpression(ref t) => {
+                            println!("\t# FunctionBodyStatement.TypeExpression: {:#?}", t);
+                        }
+                    },
+                    _ => unimplemented!(),
+                },
+                ast::ExpressionFunctionValueCall::FunctionCall(ref x) => {
+                    let line = x.function_call_name[0].location_line();
+                    let column = x.function_call_name[0].get_column();
+                    a.push(Block{
+                        line,
+                        column,
+                    });
+                    println!("FunctionBodyStatement.FunctionCall{:?}", (line, column));
+                }
+            },
+            ast::FunctionBodyStatement::LetBinding(ref x) => {
+                let line = x.let_position.location_line();
+                let offset = x.let_position.get_column();
+                println!("# LetBinding{:#?}", (line, offset));
+                match x.value_list[0] {
+                    ast::ParameterValueList::ParameterValue(ref p) => {
+                        let line = p.location_line();
+                        let column = p.get_column();
+                        a.push(Block{
+                            line,
+                            column,
+                        });
+                        println!("LetBinding.ParameterValue{:?}", (line, column));
+                    }
+                    ast::ParameterValueList::ParameterList(ref l) => match l[0] {
+                        ast::ParameterValueType::Value(ref v) => {
+                            let line = v.location_line();
+                            let column = v.get_column();
+                            a.push(Block{
+                                line,
+                                column,
+                            });
+                            println!("LetBinding.ParameterList{:?}", (line, column));
+                        }
+                        _ => unimplemented!(),
+                    },
+                }
+            }
+            ast::FunctionBodyStatement::FunctionCall(ref x) => {
+                let line = x.function_call_name[0].location_line();
+                let column = x.function_call_name[0].get_column();
+                a.push(Block{
+                    line,
+                    column,
+                });
+                println!("FunctionCall{:?}", (line, column));
+            }
+        }
+    }
+    
     let mut acc = vec![];
+    let mut block: Vec<Block> = vec![];
     let mut i = data.clone();
     loop {
         match function_body_statement(i.clone()) {
-            Err(nom::Err::Error(_)) => return Ok((i, acc)),
+            Err(nom::Err::Error(_)) => {
+                println!("-> block {:#?}", block);
+                return Ok((i, acc))
+            },
             Err(e) => return Err(e),
             Ok((i1, o)) => {
                 if i1 == i {
                     return Err(nom::Err::Error((i, ErrorKind::Many0)));
                 }
-                println!("{:#?}", o);
+                println!("{:?}", acc.len());
                 println!("{:?}", i1);
+                println!("{:#?}", o);
 
                 i = i1;
                 acc.push(o.clone());
                 match o {
-                    ast::FunctionBodyStatement::LetBinding(_) => {},
+                    ast::FunctionBodyStatement::LetBinding(ref v) => {
+                        block.push(Block {
+                            line: v.let_position.location_line(),
+                            column: v.let_position.get_column(),
+                        });
+                    },
                     _ => {
+                        select_block(&o, &mut block);
+                        println!("-> block {:#?}", block);
                         return Ok((i, acc));
                     }
                 }

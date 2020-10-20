@@ -2574,9 +2574,9 @@ fn test_function_body_block() {
     //let _x = let_binding(Span::new("let x = fn() x")).unwrap();
 
     //FunctionCall(1, 9) - skip after
-    let _x = let_binding(Span::new("let x = fn()\n let y = z"));
+    //let _x = let_binding(Span::new("let x = fn()\n let y = z"));
     
-    //let _x = let_binding(Span::new("let x = \nlet y = z\n  w y")).unwrap();
+    let _x = let_binding(Span::new("let x = \n let y = z\n  w y")).unwrap();
     //println!("{:#?}", _x);
 
     // let x = function_body1(Span::new("\tfunc1 val1")).unwrap();
