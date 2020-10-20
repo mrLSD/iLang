@@ -101,6 +101,7 @@ pub type LetValueList<'a> = Vec<ParameterValueList<'a>>;
 /// Let binding
 #[derive(Debug, Clone, PartialEq)]
 pub struct LetBinding<'a> {
+    pub let_position: Span<'a>,
     pub value_list: LetValueList<'a>,
     pub function_body: FunctionBody<'a>,
 }

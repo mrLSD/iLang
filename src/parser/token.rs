@@ -2,24 +2,36 @@
 //!
 //! Parse grammar lexical constructions to AST tokens.
 //!
-use nom::{branch::alt, bytes::complete::tag, character::complete::{
-    alpha1,
-    char,
-    multispace0,
-    multispace1,
-}, combinator::{
-    map,
-    not,
-    opt,
-    value,
-}, error::ParseError, multi::{
-    many0,
-    many1,
-}, number::complete::double, sequence::tuple, sequence::{
-    delimited,
-    preceded,
-    terminated,
-}, IResult, InputTakeAtPosition};
+use nom::{
+    branch::alt,
+    bytes::complete::tag,
+    character::complete::{
+        alpha1,
+        char,
+        multispace0,
+        multispace1,
+    },
+    combinator::{
+        map,
+        not,
+        opt,
+        value,
+    },
+    error::ParseError,
+    multi::{
+        many0,
+        many1,
+    },
+    number::complete::double,
+    sequence::tuple,
+    sequence::{
+        delimited,
+        preceded,
+        terminated,
+    },
+    IResult,
+    InputTakeAtPosition,
+};
 
 use super::{
     ast,
@@ -31,6 +43,9 @@ use super::{
     char::AsChar,
     string::parse_string,
 };
+use nom::character::complete::space0;
+use nom::combinator::cut;
+use nom::error::ErrorKind;
 
 /// Apply parser func for delimited space
 /// ## RULE:
@@ -41,7 +56,14 @@ pub fn delimited_space<'a, O, F>(func: F) -> impl Fn(Span<'a>) -> ParseResult<O>
 where
     F: Fn(Span<'a>) -> ParseResult<O>,
 {
-    delimited(multispace0, func, multispace0)
+    delimited(space0, func, multispace0)
+}
+
+pub fn delimited_white_space<'a, O, F>(func: F) -> impl Fn(Span<'a>) -> ParseResult<O>
+where
+    F: Fn(Span<'a>) -> ParseResult<O>,
+{
+    delimited(space0, func, space0)
 }
 
 /// Apply parser for brackets case
@@ -314,7 +336,7 @@ pub fn namespace(data: Span) -> ParseResult<ast::Namespace> {
 /// accessibility-modifier = ("public" | "internal" | "private")
 /// ```
 pub fn accessibility_modifier(data: Span) -> ParseResult<ast::AccessibilityModifier> {
-    delimited_space(alt((tag("public"), tag("internal"), tag("private"))))(data)
+    delimited_white_space(alt((tag("public"), tag("internal"), tag("private"))))(data)
 }
 
 /// Module parser
@@ -395,6 +417,35 @@ pub fn function_call(data: Span) -> ParseResult<ast::FunctionCall> {
     })(data)
 }
 
+pub fn function_body1(data: Span) -> ParseResult<ast::FunctionBody> {
+    let mut acc = vec![];
+    let mut i = data.clone();
+    loop {
+        match function_body_statement(i.clone()) {
+            Err(nom::Err::Error(_)) => return Ok((i, acc)),
+            Err(e) => return Err(e),
+            Ok((i1, o)) => {
+                if i1 == i {
+                    return Err(nom::Err::Error((i, ErrorKind::Many0)));
+                }
+                println!("{:#?}", o);
+                println!("{:?}", i1);
+                
+                match o {
+                    ast::FunctionBodyStatement::LetBinding(_) => {},
+                    _ => {
+                        return Ok((i1, acc));
+                        //println!("{:?}", i);
+                    }
+                }
+
+                i = i1;
+                acc.push(o);
+            }
+        }
+    }
+}
+
 /// Function body parser
 /// ## RULES:
 /// ```js
@@ -403,47 +454,44 @@ pub fn function_call(data: Span) -> ParseResult<ast::FunctionCall> {
 pub fn function_body(data: Span) -> ParseResult<ast::FunctionBody> {
     many0(map(function_body_statement, |f| {
         match f {
-            ast::FunctionBodyStatement::Expression(ref e) => {
-                match e.function_statement {
-                    ast::ExpressionFunctionValueCall::FunctionValue(ref x) => {
-                        match x {
-                            ast::FunctionValue::ValueList(ref v) => {
-                                match v[0] {
-                                    ast::ValueExpression::ParameterValue(ref p) => {
-                                        let line = p.location_line();
-                                        let offset = p.get_column();
-                                        println!("ValueExpression{:?}", (line, offset));
-                                    }
-                                    _ => unimplemented!()
-                                }
-                            }
-                            _ => unimplemented!()
-                        }
-                    }
-                    ast::ExpressionFunctionValueCall::FunctionCall(ref x) => {
-                        let line = x.function_call_name[0].location_line();
-                        let offset = x.function_call_name[0].get_column();
-                        println!("FunctionCall{:?}", (line, offset));
-                    }
-                }
-            }
-            ast::FunctionBodyStatement::LetBinding(ref x) => {
-                match x.value_list[0] {
-                    ast::ParameterValueList::ParameterValue(ref p) => {
+            ast::FunctionBodyStatement::Expression(ref e) => match e.function_statement {
+                ast::ExpressionFunctionValueCall::FunctionValue(ref x) => match x {
+                    ast::FunctionValue::ValueList(ref v) => match v[0] {
+                        ast::ValueExpression::ParameterValue(ref p) => {
                             let line = p.location_line();
                             let offset = p.get_column();
-                            println!("LetBinding.ParameterValue{:?}", (line, offset));
-                    }
-                    ast::ParameterValueList::ParameterList(ref l) => {
-                        match l[0] {
-                            ast::ParameterValueType::Value(ref v) => {
-                                let line = v.location_line();
-                                let offset = v.get_column();
-                                println!("LetBinding.ParameterList{:?}", (line, offset));
-                            }
-                            _ => unimplemented!()
+                            println!("FunctionBodyStatement.ValueExpression{:?}", (line, offset));
                         }
+                        ast::ValueExpression::TypeExpression(ref t) => {
+                            println!("\t# FunctionBodyStatement.TypeExpression: {:#?}", t);
+                        }
+                    },
+                    _ => unimplemented!(),
+                },
+                ast::ExpressionFunctionValueCall::FunctionCall(ref x) => {
+                    let line = x.function_call_name[0].location_line();
+                    let offset = x.function_call_name[0].get_column();
+                    println!("FunctionBodyStatement.FunctionCall{:?}", (line, offset));
+                }
+            },
+            ast::FunctionBodyStatement::LetBinding(ref x) => {
+                let line = x.let_position.location_line();
+                let offset = x.let_position.get_column();
+                println!("# LetBinding{:#?}", (line, offset));
+                match x.value_list[0] {
+                    ast::ParameterValueList::ParameterValue(ref p) => {
+                        let line = p.location_line();
+                        let offset = p.get_column();
+                        println!("LetBinding.ParameterValue{:?}", (line, offset));
                     }
+                    ast::ParameterValueList::ParameterList(ref l) => match l[0] {
+                        ast::ParameterValueType::Value(ref v) => {
+                            let line = v.location_line();
+                            let offset = v.get_column();
+                            println!("LetBinding.ParameterList{:?}", (line, offset));
+                        }
+                        _ => unimplemented!(),
+                    },
                 }
             }
             ast::FunctionBodyStatement::FunctionCall(ref x) => {
@@ -461,7 +509,7 @@ pub fn function_body(data: Span) -> ParseResult<ast::FunctionBody> {
 /// ```js
 /// function-body-statement = (let-binding | function-call | expression)
 /// ```
-pub fn function_body_statement(data: Span) -> ParseResult<ast::FunctionBodyStatement> {
+pub fn  function_body_statement(data: Span) -> ParseResult<ast::FunctionBodyStatement> {
     alt((
         map(let_binding, ast::FunctionBodyStatement::LetBinding),
         map(function_call, ast::FunctionBodyStatement::FunctionCall),
@@ -479,11 +527,12 @@ pub fn function_body_statement(data: Span) -> ParseResult<ast::FunctionBodyState
 pub fn let_binding(data: Span) -> ParseResult<ast::LetBinding> {
     map(
         tuple((
-            preceded(delimited_space(tag("let")), let_value_list),
-            preceded(delimited_space(tag("=")), function_body),
+            tuple((delimited_space(tag("let")), let_value_list)),
+            preceded(delimited_space(tag("=")), function_body1),
         )),
         |v| ast::LetBinding {
-            value_list: v.0,
+            let_position: (v.0).0,
+            value_list: (v.0).1,
             function_body: v.1,
         },
     )(data)
@@ -533,7 +582,7 @@ pub fn expression(data: Span) -> ParseResult<ast::Expression> {
 /// function-name = [MULTISPACE] ident [MULTISPACE]
 /// ```
 pub fn function_name(data: Span) -> ParseResult<ast::FunctionName> {
-    delimited_space(ident)(data)
+    delimited_white_space(ident)(data)
 }
 
 /// Return type parser
@@ -602,7 +651,7 @@ pub fn main(data: Span) -> ParseResult<ast::Main> {
         map(delimited_space(let_binding), ast::MainStatement::LetBinding),
     )))(data)
     .unwrap();
-    println!("{:#?}", o);
+    //println!("{:#?}", o);
     Ok((i, o))
 }
 
