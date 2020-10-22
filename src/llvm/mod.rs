@@ -11,6 +11,7 @@ pub mod functions;
 pub mod gc_stratagy_name;
 pub mod global_variables;
 pub mod ifunc;
+pub mod instructions;
 pub mod linkage_types;
 pub mod module_inline_asm;
 pub mod parameter_attributes;

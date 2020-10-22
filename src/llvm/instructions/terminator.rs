@@ -130,4 +130,3 @@ impl std::fmt::Display for IndirectBr {
         write!(f, "switch {}", s)
     }
 }
-1
