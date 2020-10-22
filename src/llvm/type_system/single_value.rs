@@ -11,6 +11,24 @@ use crate::llvm::types::Type;
 #[derive(Debug, Eq, PartialEq, Clone)]
 pub struct IntegerType<N>(N);
 
+#[derive(Debug, Eq, PartialEq, Clone)]
+pub struct Integer1Type;
+
+#[derive(Debug, Eq, PartialEq, Clone)]
+pub struct Integer8Type;
+
+#[derive(Debug, Eq, PartialEq, Clone)]
+pub struct Integer16Type;
+
+#[derive(Debug, Eq, PartialEq, Clone)]
+pub struct Integer32Type;
+
+#[derive(Debug, Eq, PartialEq, Clone)]
+pub struct Integer64Type;
+
+#[derive(Debug, Eq, PartialEq, Clone)]
+pub struct Integer128Type;
+
 /// The binary format of half, float, double, and fp128 correspond to
 /// the IEEE-754-2008 specifications for binary16, binary32, binary64, and
 /// binary128 respectively.
@@ -57,7 +75,43 @@ pub struct VectorType {
 
 impl<N: std::fmt::Display> std::fmt::Display for IntegerType<N> {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(f, "%i{}", self.0)
+        write!(f, "i{}", self.0)
+    }
+}
+
+impl std::fmt::Display for Integer1Type {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "i{}", IntegerType(1))
+    }
+}
+
+impl std::fmt::Display for Integer8Type {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "i{}", IntegerType(8))
+    }
+}
+
+impl std::fmt::Display for Integer16Type {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "i{}", IntegerType(16))
+    }
+}
+
+impl std::fmt::Display for Integer32Type {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "i{}", IntegerType(32))
+    }
+}
+
+impl std::fmt::Display for Integer64Type {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "i{}", IntegerType(64))
+    }
+}
+
+impl std::fmt::Display for Integer128Type {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "i{}", IntegerType(128))
     }
 }
 
