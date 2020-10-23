@@ -22,3 +22,4 @@ pub mod thread_local_storage;
 pub mod types;
 pub mod visibility_styles;
 pub mod function_attributes;
+pub mod type_system;
