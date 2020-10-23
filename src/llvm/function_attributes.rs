@@ -1,12 +1,12 @@
 //! # Function Attributes
-//! 
-//! Function attributes are set to communicate additional information 
-//! about a function. Function attributes are considered to be part of 
-//! the function, not of the function type, so functions with different 
+//!
+//! Function attributes are set to communicate additional information
+//! about a function. Function attributes are considered to be part of
+//! the function, not of the function type, so functions with different
 //! function attributes can have the same function type.
-//! 
-//! Function attributes are simple keywords that follow the type 
-//! specified. If multiple attributes are needed, they are space 
+//!
+//! Function attributes are simple keywords that follow the type
+//! specified. If multiple attributes are needed, they are space
 //! separated.
 //!
 //! https://llvm.org/docs/LangRef.html#function-attributes
@@ -74,8 +74,8 @@ nocf_check
 shadowcallstack
 */
 impl std::fmt::Display for FunctionAttributes {
-	fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-		let s = "";
-		write!(f, "module asm \"{}\"", s)
-	}
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        let s = "";
+        write!(f, "module asm \"{}\"", s)
+    }
 }
