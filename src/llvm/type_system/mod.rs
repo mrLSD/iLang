@@ -7,10 +7,16 @@
 //! generated code and enables novel analyses and transformations that
 //! are not feasible to perform on normal three address code
 //! representations.
+//!
+//! https://llvm.org/docs/LangRef.html#type-system
+
+pub mod aggregate;
+pub mod single_value;
 
 use super::types::Type;
 
 /// The void type does not represent any value and has no size.
+/// https://llvm.org/docs/LangRef.html#void-type
 #[derive(Debug, Eq, PartialEq, Clone)]
 pub struct VoidType;
 
@@ -22,9 +28,10 @@ pub struct VoidType;
 /// ```html
 /// <returntype> (<parameter list>)
 /// ```
+/// https://llvm.org/docs/LangRef.html#function-type
 #[derive(Debug, Eq, PartialEq, Clone)]
 pub struct FunctionType {
-    return_type: Type,
+    return_type: Box<Type>,
     parameter_list: Vec<Type>,
     variable_argument: bool,
 }
