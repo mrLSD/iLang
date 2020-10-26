@@ -1,4 +1,4 @@
-use crate::char::*;
+use super::char::*;
 
 #[test]
 fn test_char() {

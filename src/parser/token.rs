@@ -15,6 +15,7 @@ use nom::{
         map,
         not,
         opt,
+        value,
     },
     error::ParseError,
     multi::{
@@ -32,17 +33,16 @@ use nom::{
     InputTakeAtPosition,
 };
 
-use crate::ast::BasicTypeExpression;
-use crate::string::parse_string;
-use crate::{
+use super::{
     ast,
+    ast::BasicTypeExpression,
     ast::{
         ParseResult,
         Span,
     },
     char::AsChar,
+    string::parse_string,
 };
-use nom::combinator::value;
 
 /// Apply parser func for delimited space
 /// ## RULE:

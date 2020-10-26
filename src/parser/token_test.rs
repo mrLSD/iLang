@@ -1,5 +1,7 @@
-use crate::ast::*;
-use crate::token::*;
+use super::{
+    ast::*,
+    token::*,
+};
 use nom::multi::many1;
 
 #[test]
