@@ -419,6 +419,29 @@ pub fn function_call(data: Span) -> ParseResult<ast::FunctionCall> {
     })(data)
 }
 
+/// ## Function body parser with specific rules:
+/// * check spaces for function body block
+/// * calculate is block part of current block
+/// * check rules for line numb
+///
+/// ## Main rules is:
+/// * LetBinding can't be start on the 1-th line
+/// * LetBinding can't stop current parser, because it's possibly
+/// many invocations of LetBinding in the block
+/// * expression will complete current parser/block
+/// * FunctionCall can't stop current parser/block
+/// * parser will be ended if next expression or block is out of
+/// current scope
+/// * current block scope calculated as:
+/// 1) should be next line for for parsed token (we don't have
+/// delimiters like ";")
+/// 2) next line should have same alignment. For example if previous
+/// line has 5 spaces, next line should has same spaces count or greater
+///
+/// ## RULES:
+/// ```js
+/// function-body = [function-body-statement]*
+/// ```
 pub fn function_body(data: Span) -> ParseResult<ast::FunctionBody> {
     #[derive(Debug)]
     struct Block {
@@ -426,7 +449,6 @@ pub fn function_body(data: Span) -> ParseResult<ast::FunctionBody> {
         column: usize,
     }
     fn select_block(func_body: &ast::FunctionBodyStatement) -> Block {
-        println!("-> select_block");
         match func_body {
             ast::FunctionBodyStatement::Expression(ref e) => match e.function_statement {
                 ast::ExpressionFunctionValueCall::FunctionValue(ref x) => match x {
@@ -434,51 +456,36 @@ pub fn function_body(data: Span) -> ParseResult<ast::FunctionBody> {
                         ast::ValueExpression::ParameterValue(ref param_val) => {
                             let line = param_val.location_line();
                             let column = param_val.get_column();
-                            println!("FunctionBodyStatement.ValueExpression{:?}", (line, column));
                             Block { line, column }
                         }
-                        ast::ValueExpression::TypeExpression(ref ty) => {
-                            println!("\t# FunctionBodyStatement.TypeExpression: {:#?}", ty);
-                            Block { line: 1, column: 1 }
-                        }
+                        ast::ValueExpression::TypeExpression(_) => Block { line: 1, column: 1 },
                     },
                     _ => unimplemented!(),
                 },
                 ast::ExpressionFunctionValueCall::FunctionCall(ref fn_call) => {
                     let line = fn_call.function_call_name[0].location_line();
                     let column = fn_call.function_call_name[0].get_column();
-                    println!("FunctionBodyStatement.FunctionCall{:?}", (line, column));
                     Block { line, column }
                 }
             },
-            ast::FunctionBodyStatement::LetBinding(ref let_bind) => {
-                let line = let_bind.let_position.location_line();
-                let offset = let_bind.let_position.get_column();
-                println!("# LetBinding{:#?}", (line, offset));
-                match let_bind.value_list[0] {
-                    ast::ParameterValueList::ParameterValue(ref param_val) => {
+            ast::FunctionBodyStatement::LetBinding(ref let_bind) => match let_bind.value_list[0] {
+                ast::ParameterValueList::ParameterValue(ref param_val) => {
+                    let line = param_val.location_line();
+                    let column = param_val.get_column();
+                    Block { line, column }
+                }
+                ast::ParameterValueList::ParameterList(ref param_val_ty) => match param_val_ty[0] {
+                    ast::ParameterValueType::Value(ref param_val) => {
                         let line = param_val.location_line();
                         let column = param_val.get_column();
-                        println!("LetBinding.ParameterValue{:?}", (line, column));
                         Block { line, column }
                     }
-                    ast::ParameterValueList::ParameterList(ref param_val_ty) => {
-                        match param_val_ty[0] {
-                            ast::ParameterValueType::Value(ref param_val) => {
-                                let line = param_val.location_line();
-                                let column = param_val.get_column();
-                                println!("LetBinding.ParameterList{:?}", (line, column));
-                                Block { line, column }
-                            }
-                            _ => unimplemented!(),
-                        }
-                    }
-                }
-            }
+                    _ => unimplemented!(),
+                },
+            },
             ast::FunctionBodyStatement::FunctionCall(ref fn_call) => {
                 let line = fn_call.function_call_name[0].location_line();
                 let column = fn_call.function_call_name[0].get_column();
-                println!("FunctionCall{:?}", (line, column));
                 Block { line, column }
             }
         }
@@ -490,7 +497,6 @@ pub fn function_body(data: Span) -> ParseResult<ast::FunctionBody> {
     loop {
         match function_body_statement(inp) {
             Err(nom::Err::Error(_)) => {
-                println!("-> block {:#?}", block);
                 return Ok((inp, acc));
             }
             Err(e) => return Err(e),
@@ -498,9 +504,6 @@ pub fn function_body(data: Span) -> ParseResult<ast::FunctionBody> {
                 if new_inp == inp {
                     return Err(nom::Err::Error((inp, ErrorKind::Many0)));
                 }
-                println!("{:?}", acc.len());
-                println!("{:?}", new_inp);
-                println!("{:#?}", o);
 
                 match o {
                     ast::FunctionBodyStatement::LetBinding(ref let_bind) => {
@@ -508,7 +511,7 @@ pub fn function_body(data: Span) -> ParseResult<ast::FunctionBody> {
                             line: let_bind.let_position.location_line(),
                             column: let_bind.let_position.get_column(),
                         };
-                        println!("LetBinding{:?}", new_block);
+
                         if let Some(b) = block {
                             // Check is it first line or same line or column is less
                             if new_block.line == 1
@@ -529,7 +532,6 @@ pub fn function_body(data: Span) -> ParseResult<ast::FunctionBody> {
                     ast::FunctionBodyStatement::FunctionCall(ref fn_call) => {
                         let line = fn_call.function_call_name[0].location_line();
                         let column = fn_call.function_call_name[0].get_column();
-                        println!("FunctionCall.MAIN{:?}", (line, column));
                         let new_block = Block { line, column };
                         if let Some(b) = &block {
                             // Check is it same line or column is less
@@ -542,7 +544,6 @@ pub fn function_body(data: Span) -> ParseResult<ast::FunctionBody> {
                     }
                     _ => {
                         let new_block = select_block(&o);
-                        println!("-> block {:#?}", block);
                         if let Some(b) = block {
                             // Check is it same line or column is less
                             if new_block.line <= b.line || new_block.column < b.column {
@@ -559,64 +560,6 @@ pub fn function_body(data: Span) -> ParseResult<ast::FunctionBody> {
             }
         }
     }
-}
-
-/// Function body parser
-/// ## RULES:
-/// ```js
-/// function-body = [function-body-statement]*
-/// ```
-pub fn function_body1(data: Span) -> ParseResult<ast::FunctionBody> {
-    many0(map(function_body_statement, |f| {
-        match f {
-            ast::FunctionBodyStatement::Expression(ref e) => match e.function_statement {
-                ast::ExpressionFunctionValueCall::FunctionValue(ref x) => match x {
-                    ast::FunctionValue::ValueList(ref v) => match v[0] {
-                        ast::ValueExpression::ParameterValue(ref p) => {
-                            let line = p.location_line();
-                            let offset = p.get_column();
-                            println!("FunctionBodyStatement.ValueExpression{:?}", (line, offset));
-                        }
-                        ast::ValueExpression::TypeExpression(ref t) => {
-                            println!("\t# FunctionBodyStatement.TypeExpression: {:#?}", t);
-                        }
-                    },
-                    _ => unimplemented!(),
-                },
-                ast::ExpressionFunctionValueCall::FunctionCall(ref x) => {
-                    let line = x.function_call_name[0].location_line();
-                    let offset = x.function_call_name[0].get_column();
-                    println!("FunctionBodyStatement.FunctionCall{:?}", (line, offset));
-                }
-            },
-            ast::FunctionBodyStatement::LetBinding(ref x) => {
-                let line = x.let_position.location_line();
-                let offset = x.let_position.get_column();
-                println!("# LetBinding{:#?}", (line, offset));
-                match x.value_list[0] {
-                    ast::ParameterValueList::ParameterValue(ref p) => {
-                        let line = p.location_line();
-                        let offset = p.get_column();
-                        println!("LetBinding.ParameterValue{:?}", (line, offset));
-                    }
-                    ast::ParameterValueList::ParameterList(ref l) => match l[0] {
-                        ast::ParameterValueType::Value(ref v) => {
-                            let line = v.location_line();
-                            let offset = v.get_column();
-                            println!("LetBinding.ParameterList{:?}", (line, offset));
-                        }
-                        _ => unimplemented!(),
-                    },
-                }
-            }
-            ast::FunctionBodyStatement::FunctionCall(ref x) => {
-                let line = x.function_call_name[0].location_line();
-                let offset = x.function_call_name[0].get_column();
-                println!("FunctionCall{:?}", (line, offset));
-            }
-        };
-        f
-    }))(data)
 }
 
 /// Function body statement parser
@@ -766,7 +709,6 @@ pub fn main(data: Span) -> ParseResult<ast::Main> {
         map(delimited_space(let_binding), ast::MainStatement::LetBinding),
     )))(data)
     .unwrap();
-    //println!("{:#?}", o);
     Ok((i, o))
 }
 
