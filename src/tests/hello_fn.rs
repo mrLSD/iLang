@@ -7,9 +7,9 @@ use crate::parser::{
 
 #[test]
 #[allow(dead_code)]
-pub fn test_exampels_hello_fn() {
+pub fn test_exampels_hello_fn1() {
     let src = read_source("./examples/hello_fn.i");
     let _res = main(Span::new(src.as_str())).unwrap();
-    //println!("{:#?}", _res);
+    println!("{:#?}", _res);
     //assert_eq!(res.0.fragment(), &"");
 }

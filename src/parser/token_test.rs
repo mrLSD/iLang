@@ -2581,6 +2581,10 @@ fn test_let_binding_body_blocks() {
 
     let x = let_binding(Span::new("let x =\n let y = z\n w")).unwrap();
     assert_eq!(x.0.fragment(), &"");
+
+    let x = let_binding(Span::new("let x =\n fn()\n 1")).unwrap();
+    println!("{:#?}", x);
+    //assert_eq!(x.0.fragment(), &"");
 }
 
 #[test]

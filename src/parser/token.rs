@@ -526,6 +526,20 @@ pub fn function_body(data: Span) -> ParseResult<ast::FunctionBody> {
                         }
                         block = Some(new_block);
                     }
+                    ast::FunctionBodyStatement::FunctionCall(ref fn_call) => {
+                        let line = fn_call.function_call_name[0].location_line();
+                        let column = fn_call.function_call_name[0].get_column();
+                        println!("FunctionCall.MAIN{:?}", (line, column));
+                        let new_block = Block { line, column };
+                        if let Some(b) = &block {
+                            // Check is it same line or column is less
+                            if new_block.line <= b.line || new_block.column < b.column {
+                                // Return prev statement and decline current
+                                return Ok((inp, acc));
+                            }
+                        }
+                        block = Some(new_block);
+                    }
                     _ => {
                         let new_block = select_block(&o);
                         println!("-> block {:#?}", block);
