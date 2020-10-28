@@ -11,6 +11,7 @@ use nom::{
         multispace0,
         multispace1,
         space0,
+        space1,
     },
     combinator::{
         map,
@@ -418,7 +419,7 @@ pub fn function_call(data: Span) -> ParseResult<ast::FunctionCall> {
     })(data)
 }
 
-pub fn function_body1(data: Span) -> ParseResult<ast::FunctionBody> {
+pub fn function_body(data: Span) -> ParseResult<ast::FunctionBody> {
     #[derive(Debug)]
     struct Block {
         line: u32,
@@ -551,7 +552,7 @@ pub fn function_body1(data: Span) -> ParseResult<ast::FunctionBody> {
 /// ```js
 /// function-body = [function-body-statement]*
 /// ```
-pub fn function_body(data: Span) -> ParseResult<ast::FunctionBody> {
+pub fn function_body1(data: Span) -> ParseResult<ast::FunctionBody> {
     many0(map(function_body_statement, |f| {
         match f {
             ast::FunctionBodyStatement::Expression(ref e) => match e.function_statement {
@@ -628,7 +629,7 @@ pub fn let_binding(data: Span) -> ParseResult<ast::LetBinding> {
     map(
         tuple((
             tuple((delimited_space(tag("let")), let_value_list)),
-            preceded(delimited_space(tag("=")), function_body1),
+            preceded(delimited_space(tag("=")), function_body),
         )),
         |v| ast::LetBinding {
             let_position: (v.0).0,
@@ -703,9 +704,9 @@ pub fn function(data: Span) -> ParseResult<ast::Function> {
     map(
         tuple((
             preceded(
-                terminated(tag("let"), multispace1),
+                terminated(tag("let"), space1),
                 tuple((
-                    opt(map(delimited_space(tag("inline")), |_| {
+                    opt(map(delimited_white_space(tag("inline")), |_| {
                         ast::FunctionModifier::Inline
                     })),
                     function_name,
@@ -718,7 +719,8 @@ pub fn function(data: Span) -> ParseResult<ast::Function> {
                 }),
             )),
             opt(preceded(delimited_space(tag(":")), return_type)),
-            preceded(delimited_space(tag("=")), function_body),
+            preceded(delimited_space(
+                tag("=")), function_body),
         )),
         |v| {
             let func_name = v.0;

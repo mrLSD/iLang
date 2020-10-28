@@ -10,6 +10,6 @@ use crate::parser::{
 pub fn test_exampels_hello_fn() {
     let src = read_source("./examples/hello_fn.i");
     let _res = main(Span::new(src.as_str())).unwrap();
-    println!("{:#?}", _res);
+    //println!("{:#?}", _res);
     //assert_eq!(res.0.fragment(), &"");
 }
