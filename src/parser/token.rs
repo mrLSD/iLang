@@ -507,10 +507,19 @@ pub fn function_body1(data: Span) -> ParseResult<ast::FunctionBody> {
                             line: let_bind.let_position.location_line(),
                             column: let_bind.let_position.get_column(),
                         };
+                        println!("LetBinding{:?}", new_block);
                         if let Some(b) = block {
-                            // Check is it same line or column is less
-                            if new_block.line <= b.line || new_block.column < b.column {
+                            // Check is it first line or same line or column is less
+                            if new_block.line == 1
+                                || new_block.line <= b.line
+                                || new_block.column < b.column
+                            {
                                 // Return prev statement and decline current
+                                return Ok((inp, acc));
+                            }
+                        } else {
+                            // Check is it first line
+                            if new_block.line == 1 {
                                 return Ok((inp, acc));
                             }
                         }

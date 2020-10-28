@@ -2556,29 +2556,37 @@ fn test_expression_value_type() {
 }
 
 #[test]
-fn test_function_body_block() {
-    // let _x = let_binding(Span::new("let x =\n    x")).unwrap();
-    // let _x = let_binding(Span::new("let x =\n\t x()")).unwrap();
-    // let _x = let_binding(Span::new("let x =\n  x(x)")).unwrap();
+fn test_let_binding_body_blocks() {
+    let x = let_binding(Span::new("let x =\n    x")).unwrap();
+    assert_eq!(x.0.fragment(), &"");
 
-    //============================
-    //Err
-    //let _x = let_binding(Span::new("let x = x fn()")).unwrap();
+    let x = let_binding(Span::new("let x =\n\t x()")).unwrap();
+    assert_eq!(x.0.fragment(), &"");
 
-    //ValueExpression(1, 9) - after that - skip parse
-    //FunctionCall(2, 1)
-    //let _x = let_binding(Span::new("let x = x\nfn()")).unwrap();
+    let x = let_binding(Span::new("let x =\n  x(x)")).unwrap();
+    assert_eq!(x.0.fragment(), &"");
 
-    //FunctionCall(1, 9) - skip after
-    //ValueExpression(1, 14)
-    //let _x = let_binding(Span::new("let x = fn() x")).unwrap();
+    let x = let_binding(Span::new("let x = x fn()")).unwrap();
+    assert_eq!(x.0.fragment(), &"()");
 
-    //FunctionCall(1, 9) - skip after
-    //let _x = let_binding(Span::new("let x = fn()\n let y = z"));
+    let x = let_binding(Span::new("let x = x\nfn()")).unwrap();
+    assert_eq!(x.0.fragment(), &"fn()");
 
-    let _x = let_binding(Span::new("let x = \n let y = z\n  w y")).unwrap();
-    //println!("{:#?}", _x);
+    let x = let_binding(Span::new("let x = fn() x")).unwrap();
+    assert_eq!(x.0.fragment(), &"x");
 
-    // let x = function_body1(Span::new("\tfunc1 val1")).unwrap();
-    // println!("{:#?}", x);
+    let x = let_binding(Span::new("let x = fn()\n let y = z")).unwrap();
+    assert_eq!(x.0.fragment(), &"let y = z");
+
+    let x = let_binding(Span::new("let x = \n   let y = z\n  w y")).unwrap();
+    assert_eq!(x.0.fragment(), &"w y");
+
+    let x = let_binding(Span::new("let x = \n  let y = z\n  w y")).unwrap();
+    assert_eq!(x.0.fragment(), &"");
+
+    let x = let_binding(Span::new("let x = let y = z\n  w y")).unwrap();
+    assert_eq!(x.0.fragment(), &"let y = z\n  w y");
+
+    let x = let_binding(Span::new("let x =\n let y = z\n w")).unwrap();
+    assert_eq!(x.0.fragment(), &"");
 }
