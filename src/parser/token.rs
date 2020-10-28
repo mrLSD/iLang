@@ -719,8 +719,7 @@ pub fn function(data: Span) -> ParseResult<ast::Function> {
                 }),
             )),
             opt(preceded(delimited_space(tag(":")), return_type)),
-            preceded(delimited_space(
-                tag("=")), function_body),
+            preceded(delimited_space(tag("=")), function_body),
         )),
         |v| {
             let func_name = v.0;
