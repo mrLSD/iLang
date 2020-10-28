@@ -2560,22 +2560,22 @@ fn test_function_body_block() {
     // let _x = let_binding(Span::new("let x =\n    x")).unwrap();
     // let _x = let_binding(Span::new("let x =\n\t x()")).unwrap();
     // let _x = let_binding(Span::new("let x =\n  x(x)")).unwrap();
-    
+
     //============================
     //Err
     //let _x = let_binding(Span::new("let x = x fn()")).unwrap();
-    
+
     //ValueExpression(1, 9) - after that - skip parse
     //FunctionCall(2, 1)
     //let _x = let_binding(Span::new("let x = x\nfn()")).unwrap();
-    
+
     //FunctionCall(1, 9) - skip after
     //ValueExpression(1, 14)
     //let _x = let_binding(Span::new("let x = fn() x")).unwrap();
 
     //FunctionCall(1, 9) - skip after
     //let _x = let_binding(Span::new("let x = fn()\n let y = z"));
-    
+
     let _x = let_binding(Span::new("let x = \n let y = z\n  w y")).unwrap();
     //println!("{:#?}", _x);
 
