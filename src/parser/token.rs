@@ -459,7 +459,11 @@ pub fn function_body(data: Span) -> ParseResult<ast::FunctionBody> {
                             let column = param_val.get_column();
                             Block { line, column }
                         }
-                        ast::ValueExpression::TypeExpression(_) => Block { line: 1, column: 1 },
+                        ast::ValueExpression::TypeExpression(ref e) => {
+                            let line = e.position.line;
+                            let column = e.position.column;
+                            Block { line, column }
+                        }
                     },
                     _ => unimplemented!(),
                 },

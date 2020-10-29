@@ -2581,8 +2581,7 @@ fn test_let_binding_body_blocks() {
     assert_eq!(x.0.fragment(), &"");
 
     let _x = let_binding(Span::new("let x =\n fn()\n 1")).unwrap();
-    //println!("{:#?}", x);
-    //assert_eq!(x.0.fragment(), &"");
+    assert_eq!(x.0.fragment(), &"");
 }
 
 #[test]
