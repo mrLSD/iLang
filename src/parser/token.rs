@@ -48,6 +48,7 @@ use super::{
     char::AsChar,
     string::parse_string,
 };
+use crate::parser::ast::ExpressionPosition;
 
 /// Apply parser func for delimited space
 /// ## RULE:
@@ -725,6 +726,14 @@ pub fn boolean(data: Span) -> ParseResult<ast::BasicTypeExpression> {
 }
 
 /// Expression basic/common types values parser
-pub fn expression_value_type(data: Span) -> ParseResult<ast::BasicTypeExpression> {
-    delimited_space(alt((parse_string, number, boolean)))(data)
+pub fn expression_value_type(data: Span) -> ParseResult<ast::TypeExpression> {
+    map(delimited_space(alt((parse_string, number, boolean))), |e| {
+        ast::TypeExpression {
+            expr: e,
+            position: ExpressionPosition {
+                line: data.location_line(),
+                column: data.get_column(),
+            },
+        }
+    })(data)
 }
