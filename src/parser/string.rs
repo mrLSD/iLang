@@ -1,7 +1,7 @@
 //! String parser
 //!
 //! Based on nom parser basic example for String parser
-use crate::ast::{
+use super::ast::{
     BasicTypeExpression,
     ParseResult,
     Span,

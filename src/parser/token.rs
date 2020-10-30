@@ -10,13 +10,19 @@ use nom::{
         char,
         multispace0,
         multispace1,
+        space0,
+        space1,
     },
     combinator::{
         map,
         not,
         opt,
+        value,
     },
-    error::ParseError,
+    error::{
+        ErrorKind,
+        ParseError,
+    },
     multi::{
         many0,
         many1,
@@ -32,17 +38,17 @@ use nom::{
     InputTakeAtPosition,
 };
 
-use crate::ast::BasicTypeExpression;
-use crate::string::parse_string;
-use crate::{
+use super::{
     ast,
+    ast::BasicTypeExpression,
     ast::{
         ParseResult,
         Span,
     },
     char::AsChar,
+    string::parse_string,
 };
-use nom::combinator::value;
+use crate::parser::ast::ExpressionPosition;
 
 /// Apply parser func for delimited space
 /// ## RULE:
@@ -53,7 +59,14 @@ pub fn delimited_space<'a, O, F>(func: F) -> impl Fn(Span<'a>) -> ParseResult<O>
 where
     F: Fn(Span<'a>) -> ParseResult<O>,
 {
-    delimited(multispace0, func, multispace0)
+    delimited(space0, func, multispace0)
+}
+
+pub fn delimited_white_space<'a, O, F>(func: F) -> impl Fn(Span<'a>) -> ParseResult<O>
+where
+    F: Fn(Span<'a>) -> ParseResult<O>,
+{
+    delimited(space0, func, space0)
 }
 
 /// Apply parser for brackets case
@@ -326,7 +339,7 @@ pub fn namespace(data: Span) -> ParseResult<ast::Namespace> {
 /// accessibility-modifier = ("public" | "internal" | "private")
 /// ```
 pub fn accessibility_modifier(data: Span) -> ParseResult<ast::AccessibilityModifier> {
-    delimited_space(alt((tag("public"), tag("internal"), tag("private"))))(data)
+    delimited_white_space(alt((tag("public"), tag("internal"), tag("private"))))(data)
 }
 
 /// Module parser
@@ -407,13 +420,151 @@ pub fn function_call(data: Span) -> ParseResult<ast::FunctionCall> {
     })(data)
 }
 
-/// Function body parser
+/// ## Function body parser with specific rules:
+/// * check spaces for function body block
+/// * calculate is block part of current block
+/// * check rules for line numb
+///
+/// ## Main rules is:
+/// * LetBinding can't be start on the 1-th line
+/// * LetBinding can't stop current parser, because it's possibly
+/// many invocations of LetBinding in the block
+/// * expression will complete current parser/block
+/// * FunctionCall can't stop current parser/block
+/// * parser will be ended if next expression or block is out of
+/// current scope
+/// * current block scope calculated as:
+/// 1) should be next line for for parsed token (we don't have
+/// delimiters like ";")
+/// 2) next line should have same alignment. For example if previous
+/// line has 5 spaces, next line should has same spaces count or greater
+///
 /// ## RULES:
 /// ```js
 /// function-body = [function-body-statement]*
 /// ```
 pub fn function_body(data: Span) -> ParseResult<ast::FunctionBody> {
-    many0(function_body_statement)(data)
+    #[derive(Debug)]
+    struct Block {
+        line: u32,
+        column: usize,
+    }
+    fn select_block(func_body: &ast::FunctionBodyStatement) -> Block {
+        match func_body {
+            ast::FunctionBodyStatement::Expression(ref e) => match e.function_statement {
+                ast::ExpressionFunctionValueCall::FunctionValue(ref x) => match x {
+                    ast::FunctionValue::ValueList(ref val_list) => match val_list[0] {
+                        ast::ValueExpression::ParameterValue(ref param_val) => {
+                            let line = param_val.location_line();
+                            let column = param_val.get_column();
+                            Block { line, column }
+                        }
+                        ast::ValueExpression::TypeExpression(ref e) => {
+                            let line = e.position.line;
+                            let column = e.position.column;
+                            Block { line, column }
+                        }
+                    },
+                    _ => unimplemented!(),
+                },
+                ast::ExpressionFunctionValueCall::FunctionCall(ref fn_call) => {
+                    let line = fn_call.function_call_name[0].location_line();
+                    let column = fn_call.function_call_name[0].get_column();
+                    Block { line, column }
+                }
+            },
+            ast::FunctionBodyStatement::LetBinding(ref let_bind) => match let_bind.value_list[0] {
+                ast::ParameterValueList::ParameterValue(ref param_val) => {
+                    let line = param_val.location_line();
+                    let column = param_val.get_column();
+                    Block { line, column }
+                }
+                ast::ParameterValueList::ParameterList(ref param_val_ty) => match param_val_ty[0] {
+                    ast::ParameterValueType::Value(ref param_val) => {
+                        let line = param_val.location_line();
+                        let column = param_val.get_column();
+                        Block { line, column }
+                    }
+                    _ => unimplemented!(),
+                },
+            },
+            ast::FunctionBodyStatement::FunctionCall(ref fn_call) => {
+                let line = fn_call.function_call_name[0].location_line();
+                let column = fn_call.function_call_name[0].get_column();
+                Block { line, column }
+            }
+        }
+    }
+
+    let mut acc = vec![];
+    let mut block: Option<Block> = None;
+    let mut inp = data;
+    loop {
+        match function_body_statement(inp) {
+            Err(nom::Err::Error(_)) => {
+                return Ok((inp, acc));
+            }
+            Err(e) => return Err(e),
+            Ok((new_inp, o)) => {
+                if new_inp == inp {
+                    return Err(nom::Err::Error((inp, ErrorKind::Many0)));
+                }
+
+                match o {
+                    ast::FunctionBodyStatement::LetBinding(ref let_bind) => {
+                        let new_block = Block {
+                            line: let_bind.let_position.location_line(),
+                            column: let_bind.let_position.get_column(),
+                        };
+
+                        if let Some(b) = block {
+                            // Check is it first line or same line or column is less
+                            if new_block.line == 1
+                                || new_block.line <= b.line
+                                || new_block.column < b.column
+                            {
+                                // Return prev statement and decline current
+                                return Ok((inp, acc));
+                            }
+                        } else {
+                            // Check is it first line
+                            if new_block.line == 1 {
+                                return Ok((inp, acc));
+                            }
+                        }
+                        block = Some(new_block);
+                    }
+                    ast::FunctionBodyStatement::FunctionCall(ref fn_call) => {
+                        let line = fn_call.function_call_name[0].location_line();
+                        let column = fn_call.function_call_name[0].get_column();
+                        let new_block = Block { line, column };
+                        if let Some(b) = &block {
+                            // Check is it same line or column is less
+                            if new_block.line <= b.line || new_block.column < b.column {
+                                // Return prev statement and decline current
+                                return Ok((inp, acc));
+                            }
+                        }
+                        block = Some(new_block);
+                    }
+                    _ => {
+                        let new_block = select_block(&o);
+                        if let Some(b) = block {
+                            // Check is it same line or column is less
+                            if new_block.line <= b.line || new_block.column < b.column {
+                                // Return prev statement and decline current
+                                return Ok((inp, acc));
+                            }
+                        }
+                        acc.push(o.clone());
+                        return Ok((new_inp, acc));
+                    }
+                }
+                inp = new_inp;
+                acc.push(o.clone());
+            }
+        }
+    }
 }
 
 /// Function body statement parser
@@ -439,11 +590,12 @@ pub fn function_body_statement(data: Span) -> ParseResult<ast::FunctionBodyState
 pub fn let_binding(data: Span) -> ParseResult<ast::LetBinding> {
     map(
         tuple((
-            preceded(delimited_space(tag("let")), let_value_list),
+            tuple((delimited_space(tag("let")), let_value_list)),
             preceded(delimited_space(tag("=")), function_body),
         )),
         |v| ast::LetBinding {
-            value_list: v.0,
+            let_position: (v.0).0,
+            value_list: (v.0).1,
             function_body: v.1,
         },
     )(data)
@@ -493,7 +645,7 @@ pub fn expression(data: Span) -> ParseResult<ast::Expression> {
 /// function-name = [MULTISPACE] ident [MULTISPACE]
 /// ```
 pub fn function_name(data: Span) -> ParseResult<ast::FunctionName> {
-    delimited_space(ident)(data)
+    delimited_white_space(ident)(data)
 }
 
 /// Return type parser
@@ -514,15 +666,20 @@ pub fn function(data: Span) -> ParseResult<ast::Function> {
     map(
         tuple((
             preceded(
-                terminated(tag("let"), multispace1),
+                terminated(tag("let"), space1),
                 tuple((
-                    opt(map(delimited_space(tag("inline")), |_| {
+                    opt(map(delimited_white_space(tag("inline")), |_| {
                         ast::FunctionModifier::Inline
                     })),
                     function_name,
                 )),
             ),
-            parameter_list,
+            alt((
+                parameter_list,
+                map(get_from_brackets(multispace0), |_| {
+                    ast::ParameterList::ParameterValueList(vec![])
+                }),
+            )),
             opt(preceded(delimited_space(tag(":")), return_type)),
             preceded(delimited_space(tag("=")), function_body),
         )),
@@ -550,12 +707,14 @@ pub fn function(data: Span) -> ParseResult<ast::Function> {
 /// )+
 /// ```
 pub fn main(data: Span) -> ParseResult<ast::Main> {
-    many1(alt((
+    let (i, o) = many1(alt((
         map(delimited_space(namespace), ast::MainStatement::Namespace),
         map(delimited_space(module), ast::MainStatement::Module),
         map(delimited_space(function), ast::MainStatement::Function),
         map(delimited_space(let_binding), ast::MainStatement::LetBinding),
     )))(data)
+    .unwrap();
+    Ok((i, o))
 }
 
 /// Numbers parser
@@ -571,6 +730,14 @@ pub fn boolean(data: Span) -> ParseResult<ast::BasicTypeExpression> {
 }
 
 /// Expression basic/common types values parser
-pub fn expression_value_type(data: Span) -> ParseResult<ast::BasicTypeExpression> {
-    delimited_space(alt((parse_string, number, boolean)))(data)
+pub fn expression_value_type(data: Span) -> ParseResult<ast::TypeExpression> {
+    map(delimited_space(alt((parse_string, number, boolean))), |e| {
+        ast::TypeExpression {
+            expr: e,
+            position: ExpressionPosition {
+                line: data.location_line(),
+                column: data.get_column(),
+            },
+        }
+    })(data)
 }
