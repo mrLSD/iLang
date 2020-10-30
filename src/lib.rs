@@ -4,5 +4,6 @@
 //!
 #![warn(clippy::all)]
 
+pub mod compiler;
 pub mod parser;
 mod tests;
