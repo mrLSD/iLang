@@ -2,6 +2,7 @@
 //!
 //! Native compilation and builders
 
+use inkwell::targets::FileType;
 use inkwell::{
     context::Context,
     memory_buffer::MemoryBuffer,
@@ -15,6 +16,8 @@ use inkwell::{
     },
     OptimizationLevel,
 };
+use std::path::Path;
+use std::process::Command;
 
 fn apply_target_to_module(target_machine: &TargetMachine, module: &Module) {
     module.set_triple(&target_machine.get_triple());
@@ -38,7 +41,8 @@ fn get_native_target_machine() -> Result<TargetMachine, String> {
 }
 
 /// Build executable code
-pub fn builder(src: String) -> Result<(), String> {
+pub fn builder(app_name: String, src: String) -> Result<(), String> {
+    let build_dir = "build";
     let context = Context::create();
     let memory_buffer = MemoryBuffer::create_from_memory_range(src.as_bytes(), "amin");
     let module = context
@@ -47,5 +51,42 @@ pub fn builder(src: String) -> Result<(), String> {
 
     let target_machine = get_native_target_machine()?;
     apply_target_to_module(&target_machine, &module);
-    Ok(())
+
+    if !Path::new("build").is_dir() {
+        std::fs::create_dir("build").expect("Can't create `build` directory");
+    };
+
+    let obj_file_name = format!("{}/{}.o", build_dir, app_name);
+    let a_file_name = format!("{}/lib{}.a", build_dir, app_name);
+    let app_file_name = format!("{}/{}", build_dir, app_name);
+    let obj_file = Path::new(&obj_file_name);
+
+    target_machine
+        .write_to_file(&module, FileType::Object, obj_file)
+        .map_err(|v| v.to_string())?;
+
+    Command::new("ar")
+        .args(&["crs", &obj_file_name, &a_file_name])
+        .spawn()
+        .map_err(|_| "Failed to run `ar` command".to_string())?
+        .wait()
+        .map_err(|_| "Failed to process `ar` command".to_string())?;
+
+    Command::new("ld")
+        .args(&[
+            "-o",
+            &app_file_name,
+            "-dynamic-linker",
+            "/lib64/ld-linux-x86-64.so.2",
+            "/usr/lib/x86_64-linux-gnu/crt1.o",
+            "/usr/lib/x86_64-linux-gnu/crti.o",
+            "/usr/lib/x86_64-linux-gnu/crtn.o",
+            "-lc",
+            &a_file_name,
+        ])
+        .spawn()
+        .map_err(|_| "Failed to run `ld` command".to_string())?
+        .wait()
+        .map_err(|_| "Failed to process `ld` command".to_string())?;
+    Ok(std::fs::remove_file(obj_file).or::<String>(Ok(()))?)
 }
