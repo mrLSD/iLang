@@ -2,13 +2,13 @@
 //!
 //! Native compilation and builders
 
-use inkwell::targets::FileType;
 use inkwell::{
     context::Context,
     memory_buffer::MemoryBuffer,
     module::Module,
     targets::{
         CodeModel,
+        FileType,
         InitializationConfig,
         RelocMode,
         Target,
@@ -16,14 +16,19 @@ use inkwell::{
     },
     OptimizationLevel,
 };
-use std::path::Path;
-use std::process::Command;
+use std::{
+    path::Path,
+    process::Command,
+};
 
+/// Apply module ot initialized Target Machine
 fn apply_target_to_module(target_machine: &TargetMachine, module: &Module) {
     module.set_triple(&target_machine.get_triple());
     module.set_data_layout(&target_machine.get_target_data().get_data_layout());
 }
+
 // TODO: Set configuration options for target mathin optimization
+/// Init Target Machine for current environment
 fn get_native_target_machine() -> Result<TargetMachine, String> {
     Target::initialize_native(&InitializationConfig::default())?;
     let target_triple = TargetMachine::get_default_triple();
@@ -57,13 +62,20 @@ pub fn builder(app_name: String, src: String) -> Result<(), String> {
     };
 
     let obj_file_name = format!("{}/{}.o", build_dir, app_name);
-    let a_file_name = format!("{}/lib{}.a", build_dir, app_name);
-    let app_file_name = format!("{}/{}", build_dir, app_name);
     let obj_file = Path::new(&obj_file_name);
 
     target_machine
         .write_to_file(&module, FileType::Object, obj_file)
         .map_err(|v| v.to_string())?;
+
+    ar_builder(app_name.clone(), build_dir)?;
+    ld_builder(app_name, build_dir)
+}
+
+/// Run `ar` tool for link libraries to static lib
+pub fn ar_builder(app_name: String, build_dir: &str) -> Result<(), String> {
+    let obj_file_name = format!("{}/{}.o", build_dir, app_name);
+    let a_file_name = format!("{}/lib{}.a", build_dir, app_name);
 
     Command::new("ar")
         .args(&["crs", &obj_file_name, &a_file_name])
@@ -71,6 +83,15 @@ pub fn builder(app_name: String, src: String) -> Result<(), String> {
         .map_err(|_| "Failed to run `ar` command".to_string())?
         .wait()
         .map_err(|_| "Failed to process `ar` command".to_string())?;
+    Ok(())
+}
+
+/// Run linker with `ld` tool
+pub fn ld_builder(app_name: String, build_dir: &str) -> Result<(), String> {
+    let obj_file_name = format!("{}/{}.o", build_dir, app_name);
+    let a_file_name = format!("{}/lib{}.a", build_dir, app_name);
+    let app_file_name = format!("{}/{}", build_dir, app_name);
+    let obj_file = Path::new(&obj_file_name);
 
     Command::new("ld")
         .args(&[
@@ -88,5 +109,21 @@ pub fn builder(app_name: String, src: String) -> Result<(), String> {
         .map_err(|_| "Failed to run `ld` command".to_string())?
         .wait()
         .map_err(|_| "Failed to process `ld` command".to_string())?;
+    Ok(std::fs::remove_file(obj_file).or::<String>(Ok(()))?)
+}
+
+/// Run linker with `gcc` tool
+pub fn gcc_builder(app_name: String, build_dir: &str) -> Result<(), String> {
+    let obj_file_name = format!("{}/{}.o", build_dir, app_name);
+    let a_file_name = format!("{}/lib{}.a", build_dir, app_name);
+    let app_file_name = format!("{}/{}", build_dir, app_name);
+    let obj_file = Path::new(&obj_file_name);
+
+    Command::new("gcc")
+        .args(&["-o", &app_file_name, &a_file_name])
+        .spawn()
+        .map_err(|_| "Failed to run `gcc` command".to_string())?
+        .wait()
+        .map_err(|_| "Failed to process `gcc` command".to_string())?;
     Ok(std::fs::remove_file(obj_file).or::<String>(Ok(()))?)
 }
