@@ -1,5 +1,8 @@
-use crate::ast::*;
-use crate::token::*;
+use super::{
+    ast::*,
+    token::*,
+};
+use crate::parser::ast::BasicTypeExpression::Number;
 use nom::multi::many1;
 
 #[test]
@@ -547,7 +550,7 @@ fn test_value_list_one() {
 
     let x = value_list(Span::new("100")).unwrap().1;
     let x = if let ValueExpression::TypeExpression(v) = &x[0] {
-        if let BasicTypeExpression::Number(v) = v {
+        if let BasicTypeExpression::Number(v) = v.expr {
             v
         } else {
             unimplemented!()
@@ -555,11 +558,11 @@ fn test_value_list_one() {
     } else {
         unimplemented!()
     };
-    assert_eq!(x, &100.);
+    assert_eq!(x, 100.);
 
     let x = value_list(Span::new("\"test\"")).unwrap().1;
     let x = if let ValueExpression::TypeExpression(v) = &x[0] {
-        if let BasicTypeExpression::String(v) = v {
+        if let BasicTypeExpression::String(v) = &v.expr {
             v
         } else {
             unimplemented!()
@@ -571,7 +574,7 @@ fn test_value_list_one() {
 
     let x = value_list(Span::new("true")).unwrap().1;
     let x = if let ValueExpression::TypeExpression(v) = &x[0] {
-        if let BasicTypeExpression::Bool(v) = v {
+        if let BasicTypeExpression::Bool(v) = v.expr {
             v
         } else {
             unimplemented!()
@@ -579,7 +582,7 @@ fn test_value_list_one() {
     } else {
         unimplemented!()
     };
-    assert_eq!(x, &true);
+    assert_eq!(x, true);
 }
 
 #[test]
@@ -588,8 +591,8 @@ fn test_value_list_many() {
     let x = many1(value_list)(data).unwrap().1;
     assert_eq!(x.len(), 3);
     if let ValueExpression::TypeExpression(v) = &x[0][0] {
-        if let BasicTypeExpression::Bool(v) = v {
-            assert_eq!(v, &true);
+        if let BasicTypeExpression::Bool(v) = v.expr {
+            assert_eq!(v, true);
         } else {
             unimplemented!()
         }
@@ -597,8 +600,8 @@ fn test_value_list_many() {
         unimplemented!()
     }
     if let ValueExpression::TypeExpression(v) = &x[1][0] {
-        if let BasicTypeExpression::Number(v) = v {
-            assert_eq!(v, &10.);
+        if let BasicTypeExpression::Number(v) = v.expr {
+            assert_eq!(v, 10.);
         } else {
             unimplemented!()
         }
@@ -606,7 +609,7 @@ fn test_value_list_many() {
         unimplemented!()
     }
     if let ValueExpression::TypeExpression(v) = &x[2][0] {
-        if let BasicTypeExpression::String(v) = v {
+        if let BasicTypeExpression::String(v) = &v.expr {
             assert_eq!(v, &String::from("test"));
         } else {
             unimplemented!()
@@ -640,7 +643,7 @@ fn test_value_list_brackets() {
 
     let x = value_list(Span::new("(100)")).unwrap().1;
     let x = if let ValueExpression::TypeExpression(v) = &x[0] {
-        if let BasicTypeExpression::Number(v) = v {
+        if let BasicTypeExpression::Number(v) = v.expr {
             v
         } else {
             unimplemented!()
@@ -648,7 +651,7 @@ fn test_value_list_brackets() {
     } else {
         unimplemented!()
     };
-    assert_eq!(x, &100.);
+    assert_eq!(x, 100.);
 }
 
 #[test]
@@ -664,8 +667,8 @@ fn test_value_list_brackets_sequence() {
     }
 
     if let ValueExpression::TypeExpression(v) = &x[1] {
-        if let BasicTypeExpression::Number(v) = v {
-            assert_eq!(v, &100.);
+        if let BasicTypeExpression::Number(v) = v.expr {
+            assert_eq!(v, 100.);
         } else {
             unimplemented!()
         }
@@ -674,8 +677,8 @@ fn test_value_list_brackets_sequence() {
     }
 
     if let ValueExpression::TypeExpression(v) = &x[2] {
-        if let BasicTypeExpression::Bool(v) = v {
-            assert_eq!(v, &true);
+        if let BasicTypeExpression::Bool(v) = v.expr {
+            assert_eq!(v, true);
         } else {
             unimplemented!()
         }
@@ -684,7 +687,7 @@ fn test_value_list_brackets_sequence() {
     }
 
     if let ValueExpression::TypeExpression(v) = &x[3] {
-        if let BasicTypeExpression::String(v) = v {
+        if let BasicTypeExpression::String(v) = &v.expr {
             assert_eq!(v, &String::from("test"));
         } else {
             unimplemented!()
@@ -1059,6 +1062,11 @@ fn test_function_call_name_sequence_and_value() {
 
 #[test]
 fn test_function_call_func_val() {
+    let (i, o) = function_call(Span::new("func1 ()")).unwrap();
+    assert_eq!(i.fragment(), &"");
+    assert_eq!(o.function_call_name[0].fragment(), &"func1");
+    assert_eq!(o.function_value.len(), 0);
+
     let x = function_call(Span::new("func1 val1"));
     let x = x.unwrap().1;
     assert_eq!(x.function_call_name.len(), 1);
@@ -1118,8 +1126,8 @@ fn test_function_call_func_val_sequence() {
         FunctionValue::ValueList(v) => {
             assert_eq!(v.len(), 1);
             if let ValueExpression::TypeExpression(x) = &v[0] {
-                if let BasicTypeExpression::Number(n) = x {
-                    assert_eq!(n, &10.);
+                if let BasicTypeExpression::Number(n) = x.expr {
+                    assert_eq!(n, 10.);
                 } else {
                     unimplemented!()
                 }
@@ -1133,8 +1141,8 @@ fn test_function_call_func_val_sequence() {
         FunctionValue::ValueList(v) => {
             assert_eq!(v.len(), 1);
             if let ValueExpression::TypeExpression(x) = &v[0] {
-                if let BasicTypeExpression::Bool(b) = x {
-                    assert_eq!(b, &true);
+                if let BasicTypeExpression::Bool(b) = x.expr {
+                    assert_eq!(b, true);
                 } else {
                     unimplemented!()
                 }
@@ -1148,7 +1156,7 @@ fn test_function_call_func_val_sequence() {
         FunctionValue::ValueList(v) => {
             assert_eq!(v.len(), 1);
             if let ValueExpression::TypeExpression(x) = &v[0] {
-                if let BasicTypeExpression::String(s) = x {
+                if let BasicTypeExpression::String(s) = &x.expr {
                     assert_eq!(s, &String::from("test1"));
                 } else {
                     unimplemented!()
@@ -1185,7 +1193,7 @@ fn test_function_call_func_val_sequence_brackets() {
         FunctionValue::ValueList(v) => {
             assert_eq!(v.len(), 1);
             if let ValueExpression::TypeExpression(v) = &v[0] {
-                if let BasicTypeExpression::String(s) = v {
+                if let BasicTypeExpression::String(s) = &v.expr {
                     assert_eq!(s, &String::from("str"));
                 } else {
                     unimplemented!()
@@ -1974,38 +1982,30 @@ fn test_function_body_let_binding_simple() {
 }
 
 #[test]
-fn test_function_body() {
-    let x = function_body(Span::new("(func1 val1) (val2, val3)")).unwrap();
+fn test_function_body1() {
+    let x = function_body(Span::new("func1 val1 (val2, val3)")).unwrap();
     assert_eq!(x.0.fragment(), &"");
     let x = x.1;
-    assert_eq!(x.len(), 2);
+    assert_eq!(x.len(), 1);
     match &x[0] {
-        FunctionBodyStatement::Expression(e) => match &e.function_statement {
-            ExpressionFunctionValueCall::FunctionCall(v) => {
-                assert_eq!(v.function_call_name[0].fragment(), &"func1");
-                assert_eq!(v.function_value.len(), 1);
-                match &v.function_value[0] {
-                    FunctionValue::ValueList(v) => {
-                        assert_eq!(v.len(), 1);
-                        if let ValueExpression::ParameterValue(x) = &v[0] {
-                            assert_eq!(x.fragment(), &"val1");
-                        } else {
-                            unimplemented!()
-                        }
-                    }
-                    _ => unimplemented!(),
-                }
-            }
-            _ => unimplemented!(),
-        },
-        _ => unimplemented!(),
-    }
-
-    match &x[1] {
-        FunctionBodyStatement::Expression(e) => match &e.function_statement {
-            ExpressionFunctionValueCall::FunctionValue(v) => match v {
+        FunctionBodyStatement::FunctionCall(ref fn_call) => {
+            assert_eq!(fn_call.function_call_name.len(), 1);
+            assert_eq!(fn_call.function_call_name[0].fragment(), &"func1");
+            assert_eq!(fn_call.function_value.len(), 2);
+            match &fn_call.function_value[0] {
                 FunctionValue::ValueList(v) => {
-                    assert_eq!(x.len(), 2);
+                    assert_eq!(x.len(), 1);
+                    if let ValueExpression::ParameterValue(x) = &v[0] {
+                        assert_eq!(x.fragment(), &"val1");
+                    } else {
+                        unimplemented!()
+                    }
+                }
+                _ => unimplemented!(),
+            }
+            match &fn_call.function_value[1] {
+                FunctionValue::ValueList(v) => {
+                    assert_eq!(x.len(), 1);
                     if let ValueExpression::ParameterValue(x) = &v[0] {
                         assert_eq!(x.fragment(), &"val2");
                     } else {
@@ -2018,9 +2018,8 @@ fn test_function_body() {
                     }
                 }
                 _ => unimplemented!(),
-            },
-            _ => unimplemented!(),
-        },
+            }
+        }
         _ => unimplemented!(),
     }
 }
@@ -2105,6 +2104,42 @@ fn test_let_binding_value_plus_value() {
                 _ => unimplemented!(),
             }
         }
+        _ => unimplemented!(),
+    }
+}
+
+#[test]
+fn test_function_simple_empty() {
+    let x = function(Span::new("let func1 () = 10")).unwrap();
+    assert_eq!(x.0.fragment(), &"");
+    let x = x.1;
+    assert_eq!(x.function_name.fragment(), &"func1");
+    match x.parameter_list {
+        ParameterList::ParameterValueList(ref v) => {
+            assert_eq!(v.len(), 0);
+        }
+        _ => unimplemented!(),
+    };
+    assert_eq!(x.function_body.len(), 1);
+    match &x.function_body[0] {
+        FunctionBodyStatement::Expression(x) => match &x.function_statement {
+            ExpressionFunctionValueCall::FunctionValue(v) => match v {
+                FunctionValue::ValueList(v) => {
+                    assert_eq!(v.len(), 1);
+                    if let ValueExpression::TypeExpression(x) = &v[0] {
+                        if let Number(n) = x.expr {
+                            assert_eq!(n, 10.);
+                        } else {
+                            unimplemented!()
+                        }
+                    } else {
+                        unimplemented!()
+                    }
+                }
+                _ => unimplemented!(),
+            },
+            _ => unimplemented!(),
+        },
         _ => unimplemented!(),
     }
 }
@@ -2470,7 +2505,7 @@ fn test_main_func_complex() {
 #[test]
 fn test_expression_value_type() {
     let x = expression_value_type(Span::new("true")).unwrap();
-    let x = if let BasicTypeExpression::Bool(v) = x.1 {
+    let x = if let BasicTypeExpression::Bool(v) = (x.1).expr {
         v
     } else {
         unimplemented!()
@@ -2478,7 +2513,7 @@ fn test_expression_value_type() {
     assert_eq!(x, true);
 
     let x = expression_value_type(Span::new("false")).unwrap();
-    let x = if let BasicTypeExpression::Bool(v) = x.1 {
+    let x = if let BasicTypeExpression::Bool(v) = (x.1).expr {
         v
     } else {
         unimplemented!()
@@ -2486,7 +2521,7 @@ fn test_expression_value_type() {
     assert_eq!(x, false);
 
     let x = expression_value_type(Span::new("\"string\"")).unwrap();
-    let x = if let BasicTypeExpression::String(v) = x.1 {
+    let x = if let BasicTypeExpression::String(v) = (x.1).expr {
         v
     } else {
         unimplemented!()
@@ -2494,7 +2529,7 @@ fn test_expression_value_type() {
     assert_eq!(x, String::from("string"));
 
     let x = expression_value_type(Span::new("10")).unwrap();
-    let x = if let BasicTypeExpression::Number(v) = x.1 {
+    let x = if let BasicTypeExpression::Number(v) = (x.1).expr {
         v
     } else {
         unimplemented!()
@@ -2502,10 +2537,58 @@ fn test_expression_value_type() {
     assert_eq!(x, 10_f64);
 
     let x = expression_value_type(Span::new("10.1")).unwrap();
-    let x = if let BasicTypeExpression::Number(v) = x.1 {
+    let x = if let BasicTypeExpression::Number(v) = (x.1).expr {
         v
     } else {
         unimplemented!()
     };
     assert_eq!(x, 10.1_f64);
+}
+
+#[test]
+fn test_let_binding_body_blocks() {
+    let x = let_binding(Span::new("let x =\n    x")).unwrap();
+    assert_eq!(x.0.fragment(), &"");
+
+    let x = let_binding(Span::new("let x =\n\t x()")).unwrap();
+    assert_eq!(x.0.fragment(), &"");
+
+    let x = let_binding(Span::new("let x =\n  x(x)")).unwrap();
+    assert_eq!(x.0.fragment(), &"");
+
+    let x = let_binding(Span::new("let x = x fn()")).unwrap();
+    assert_eq!(x.0.fragment(), &"()");
+
+    let x = let_binding(Span::new("let x = x\nfn()")).unwrap();
+    assert_eq!(x.0.fragment(), &"fn()");
+
+    let x = let_binding(Span::new("let x = fn() x")).unwrap();
+    assert_eq!(x.0.fragment(), &"x");
+
+    let x = let_binding(Span::new("let x = fn()\n let y = z")).unwrap();
+    assert_eq!(x.0.fragment(), &"let y = z");
+
+    let x = let_binding(Span::new("let x = \n   let y = z\n  w y")).unwrap();
+    assert_eq!(x.0.fragment(), &"w y");
+
+    let x = let_binding(Span::new("let x = \n  let y = z\n  w y")).unwrap();
+    assert_eq!(x.0.fragment(), &"");
+
+    let x = let_binding(Span::new("let x = let y = z\n  w y")).unwrap();
+    assert_eq!(x.0.fragment(), &"let y = z\n  w y");
+
+    let x = let_binding(Span::new("let x =\n let y = z\n w")).unwrap();
+    assert_eq!(x.0.fragment(), &"");
+
+    let _x = let_binding(Span::new("let x =\n fn()\n 1")).unwrap();
+    assert_eq!(x.0.fragment(), &"");
+}
+
+#[test]
+fn test_func_binding_body_blocks() {
+    let x = function(Span::new("let fn1 (x1) = x2\nfn2 () = x")).unwrap();
+    assert_eq!(x.0.fragment(), &"fn2 () = x");
+
+    let x = function(Span::new("let fn1 x1 = fn2 x")).unwrap();
+    assert_eq!(x.0.fragment(), &"");
 }

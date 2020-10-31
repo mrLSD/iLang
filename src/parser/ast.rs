@@ -61,7 +61,7 @@ pub enum ParameterList<'a> {
 #[derive(Debug, Clone, PartialEq)]
 pub enum ValueExpression<'a> {
     ParameterValue(ParameterValue<'a>),
-    TypeExpression(BasicTypeExpression),
+    TypeExpression(TypeExpression),
 }
 
 /// Value expression lust
@@ -101,6 +101,7 @@ pub type LetValueList<'a> = Vec<ParameterValueList<'a>>;
 /// Let binding
 #[derive(Debug, Clone, PartialEq)]
 pub struct LetBinding<'a> {
+    pub let_position: Span<'a>,
     pub value_list: LetValueList<'a>,
     pub function_body: FunctionBody<'a>,
 }
@@ -195,4 +196,16 @@ pub enum BasicTypeExpression {
     String(String),
     Number(f64),
     Bool(bool),
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct ExpressionPosition {
+    pub line: u32,
+    pub column: usize,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct TypeExpression {
+    pub expr: BasicTypeExpression,
+    pub position: ExpressionPosition,
 }

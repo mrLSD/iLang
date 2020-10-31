@@ -1,9 +1,11 @@
-use crate::ast::{
-    BasicTypeExpression,
-    Span,
+use super::{
+    ast::{
+        BasicTypeExpression,
+        Span,
+    },
+    string::parse_string,
+    token::delimited_space,
 };
-use crate::string::parse_string;
-use crate::token::delimited_space;
 use nom::multi::many0;
 
 #[test]
