@@ -56,8 +56,25 @@ impl std::fmt::Display for StructureType {
             .type_list
             .iter()
             .enumerate()
-            .fold("".to_string(), |_x, _s| "".to_string());
-        //let s = if self.literal { };
+            .fold("".to_string(), |s, (i, ty)| {
+                // Calculation for comma for 1-th element
+                if i > 0 {
+                    format!("{}, {}", s, ty)
+                } else {
+                    format!("{} {}", s, ty)
+                }
+            });
+        let s = if self.literal {
+            if self.packed {
+                format!("<{{ {} }}>", s)
+            } else {
+                format!("{{ {} }}", s)
+            }
+        } else if self.packed {
+            format!("type {{ {} }}", s)
+        } else {
+            format!("type <{{ {} }}>", s)
+        };
         write!(f, "{}", s)
     }
 }
