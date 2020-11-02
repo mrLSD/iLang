@@ -44,10 +44,58 @@
 //! ```
 //! https://llvm.org/docs/LangRef.html#functions
 
-#[derive(Debug, Eq, PartialEq, Clone)]
-pub struct Function;
+use crate::llvm::{
+    align::Alignment,
+    calling_convention::CallingConvention,
+    comdat::ComDat,
+    dll_storage_classes::DLLStorageClasses,
+    global_variables::UnnamedAddr,
+    linkage_types::LinkageTypes,
+    parameter_attributes::ParameterAttributes,
+    prefix::Prefix,
+    runtime_preemption::RuntimePreemptionSpecifier,
+    types::Type,
+    visibility_styles::VisibilityStyles,
+};
 
-impl std::fmt::Display for Function {
+/// The argument list is a comma separated sequence of arguments where
+/// each argument is of the following form:
+///
+/// Syntax:
+/// ```html
+/// <type> [parameter Attrs] [name]
+/// ```
+#[derive(Debug, Eq, PartialEq, Clone)]
+pub struct ArgumentList<T> {
+    pub parameter_type: Type,
+    pub attributes: Option<ParameterAttributes<T>>,
+}
+
+#[derive(Debug, Eq, PartialEq, Clone)]
+pub struct Function<T> {
+    pub linkage: Option<LinkageTypes>,
+    pub preemption_specifier: Option<RuntimePreemptionSpecifier>,
+    pub visibility: Option<VisibilityStyles>,
+    pub dll_storage_class: Option<DLLStorageClasses>,
+    pub cconv: Option<CallingConvention>,
+    pub ret_attrs: Option<String>,
+    pub result_type: Option<String>,
+    pub function_name: Option<String>,
+    pub argument_list: Option<ArgumentList<T>>,
+    pub unnamed_addr: Option<UnnamedAddr>,
+    pub addr_sapce: Option<String>,
+    pub fn_attrs: Option<String>,
+    pub section_name: Option<String>,
+    pub comdat: Option<ComDat>,
+    pub align: Option<Alignment>,
+    pub gc: Option<String>,
+    pub prefix: Option<Prefix<T>>,
+    pub prologue: Option<String>,
+    pub personality: Option<String>,
+    pub metadata: Option<String>,
+}
+
+impl<T: std::fmt::Display> std::fmt::Display for Function<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         let s = "";
         write!(f, "{}", s)

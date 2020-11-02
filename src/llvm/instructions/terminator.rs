@@ -55,7 +55,7 @@ pub struct Switch {
 /// ```html
 /// indirectbr <somety>* <address>, [ label <dest1>, label <dest2>, ... ]
 /// ```
-/// https://llvm.org/docs/LangRef.html#id1456
+/// https://llvm.org/docs/LangRef.html#indirectbr-instruction
 #[derive(Debug, Eq, PartialEq, Clone)]
 pub struct IndirectBr {
     pub ty: String,

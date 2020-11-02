@@ -14,7 +14,6 @@
 //!
 //! ## Documentation
 //! https://llvm.org/docs/LangRef.html#parameter-attributes
-
 #[derive(Debug, Eq, PartialEq, Clone)]
 pub enum ParameterAttributes<T> {
     ZeroExt,
