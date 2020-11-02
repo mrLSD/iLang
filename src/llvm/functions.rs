@@ -44,6 +44,10 @@
 //! ```
 //! https://llvm.org/docs/LangRef.html#functions
 
+use crate::llvm::addrspace::AddrSpace;
+use crate::llvm::attribute_groups::Personality;
+use crate::llvm::function_attributes::FunctionAttributes;
+use crate::llvm::gc_stratagy_name::GCStrategyName;
 use crate::llvm::{
     align::Alignment,
     calling_convention::CallingConvention,
@@ -57,10 +61,6 @@ use crate::llvm::{
     types::Type,
     visibility_styles::VisibilityStyles,
 };
-use crate::llvm::addrspace::AddrSpace;
-use crate::llvm::function_attributes::FunctionAttributes;
-use crate::llvm::gc_stratagy_name::GCStrategyName;
-use crate::llvm::attribute_groups::Personality;
 
 /// The argument list is a comma separated sequence of arguments where
 /// each argument is of the following form:
@@ -76,7 +76,17 @@ pub struct ArgumentList<T> {
 }
 
 #[derive(Debug, Eq, PartialEq, Clone)]
+pub enum FunctionDefinitionType {
+    Declare,
+    Define,
+}
+
+/// Most commin unction specification
+/// NOTE: prologue, metadata is simple strings without specific Rust types
+/// personality field is not clear is it right or not
+#[derive(Debug, Eq, PartialEq, Clone)]
 pub struct Function<T> {
+    pub definition_type: FunctionDefinitionType,
     pub linkage: Option<LinkageTypes>,
     pub preemption_specifier: Option<RuntimePreemptionSpecifier>,
     pub visibility: Option<VisibilityStyles>,

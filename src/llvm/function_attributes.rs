@@ -13,7 +13,15 @@
 
 // TODO: complete FunctionAttributes
 #[derive(Debug, Eq, PartialEq, Clone)]
-pub struct FunctionAttributes;
+pub struct FunctionAttributes(Vec<FunctionAttributesType>);
+
+#[derive(Debug, Eq, PartialEq, Clone)]
+pub enum FunctionAttributesType {
+    AlignStack(i32),
+    AllocSize(Vec<i32>),
+    AlwaysInline,
+}
+
 /*
 alignstack(i32)
 allocsize(Vec<i32>)
