@@ -20,11 +20,12 @@ addons:
       - gcc
       - binutils-dev
       - libiberty-dev
+      - lsb_release
 
 cache: cargo
 
 script:
-  - bash -c "$(wget -O - https://apt.llvm.org/llvm.sh)"
+  - sudo bash -c "$(wget -O - https://apt.llvm.org/llvm.sh)"
   - cargo build --all
   - cargo test --all
 
