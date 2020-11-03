@@ -20,7 +20,7 @@ addons:
       - gcc
       - binutils-dev
       - libiberty-dev
-      - lsb_release
+      - lsb-release
 
 cache: cargo
 
