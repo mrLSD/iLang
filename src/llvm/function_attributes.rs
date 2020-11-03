@@ -11,6 +11,7 @@
 //!
 //! https://llvm.org/docs/LangRef.html#function-attributes
 
+// TODO: complete FunctionAttributes
 #[derive(Debug, Eq, PartialEq, Clone)]
 pub struct FunctionAttributes;
 /*

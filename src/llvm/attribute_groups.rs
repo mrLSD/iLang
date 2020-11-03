@@ -15,6 +15,9 @@
 //! https://llvm.org/docs/LangRef.html#attribute-groups
 
 #[derive(Debug, Eq, PartialEq, Clone)]
+pub struct Personality(Vec<i32>);
+
+#[derive(Debug, Eq, PartialEq, Clone)]
 pub struct Attributes(i32, Vec<String>);
 
 impl std::fmt::Display for Attributes {
@@ -24,6 +27,17 @@ impl std::fmt::Display for Attributes {
             .iter()
             .fold("".to_string(), |s, x| format!(" {} {} ", s, x));
         let s = format!("attributes #{} {{ {} }}", self.0, s);
+        write!(f, "{}", s)
+    }
+}
+
+impl std::fmt::Display for Personality {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        let s = self
+            .0
+            .iter()
+            .fold("".to_string(), |s, x| format!("{} #{}", s, x));
+        let s = format!("{}", s);
         write!(f, "{}", s)
     }
 }

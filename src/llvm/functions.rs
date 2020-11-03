@@ -57,6 +57,10 @@ use crate::llvm::{
     types::Type,
     visibility_styles::VisibilityStyles,
 };
+use crate::llvm::addrspace::AddrSpace;
+use crate::llvm::function_attributes::FunctionAttributes;
+use crate::llvm::gc_stratagy_name::GCStrategyName;
+use crate::llvm::attribute_groups::Personality;
 
 /// The argument list is a comma separated sequence of arguments where
 /// each argument is of the following form:
@@ -78,20 +82,20 @@ pub struct Function<T> {
     pub visibility: Option<VisibilityStyles>,
     pub dll_storage_class: Option<DLLStorageClasses>,
     pub cconv: Option<CallingConvention>,
-    pub ret_attrs: Option<String>,
-    pub result_type: Option<String>,
-    pub function_name: Option<String>,
+    pub ret_attrs: Option<ParameterAttributes<T>>,
+    pub result_type: Type,
+    pub function_name: String,
     pub argument_list: Option<ArgumentList<T>>,
     pub unnamed_addr: Option<UnnamedAddr>,
-    pub addr_sapce: Option<String>,
-    pub fn_attrs: Option<String>,
+    pub addr_sapce: Option<AddrSpace>,
+    pub fn_attrs: Option<FunctionAttributes>,
     pub section_name: Option<String>,
     pub comdat: Option<ComDat>,
     pub align: Option<Alignment>,
-    pub gc: Option<String>,
+    pub gc: Option<GCStrategyName>,
     pub prefix: Option<Prefix<T>>,
     pub prologue: Option<String>,
-    pub personality: Option<String>,
+    pub personality: Option<Personality>,
     pub metadata: Option<String>,
 }
 
