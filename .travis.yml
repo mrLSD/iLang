@@ -16,6 +16,7 @@ addons:
       - libelf-dev
       - libdw-dev
       - cmake
+      - wget
       - gcc
       - binutils-dev
       - libiberty-dev
@@ -23,6 +24,7 @@ addons:
 cache: cargo
 
 script:
+  - bash -c "$(wget -O - https://apt.llvm.org/llvm.sh)"
   - cargo build --all
   - cargo test --all
 
