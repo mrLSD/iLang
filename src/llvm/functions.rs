@@ -44,15 +44,15 @@
 //! ```
 //! https://llvm.org/docs/LangRef.html#functions
 
-use crate::llvm::addrspace::AddrSpace;
-use crate::llvm::attribute_groups::Personality;
-use crate::llvm::function_attributes::FunctionAttributes;
-use crate::llvm::gc_stratagy_name::GCStrategyName;
 use crate::llvm::{
+    addrspace::AddrSpace,
     align::Alignment,
+    attribute_groups::Personality,
     calling_convention::CallingConvention,
     comdat::ComDat,
     dll_storage_classes::DLLStorageClasses,
+    function_attributes::FunctionAttributes,
+    gc_stratagy_name::GCStrategyName,
     global_variables::UnnamedAddr,
     linkage_types::LinkageTypes,
     parameter_attributes::ParameterAttributes,
@@ -73,6 +73,7 @@ use crate::llvm::{
 pub struct ArgumentList<T> {
     pub parameter_type: Type,
     pub attributes: Option<ParameterAttributes<T>>,
+    pub name: Option<String>,
 }
 
 #[derive(Debug, Eq, PartialEq, Clone)]
@@ -95,7 +96,7 @@ pub struct Function<T> {
     pub ret_attrs: Option<ParameterAttributes<T>>,
     pub result_type: Type,
     pub function_name: String,
-    pub argument_list: Option<ArgumentList<T>>,
+    pub argument_list: Vec<ArgumentList<T>>,
     pub unnamed_addr: Option<UnnamedAddr>,
     pub addr_sapce: Option<AddrSpace>,
     pub fn_attrs: Option<FunctionAttributes>,
@@ -111,7 +112,55 @@ pub struct Function<T> {
 
 impl<T: std::fmt::Display> std::fmt::Display for Function<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        let s = "";
+        let mut s = match self.definition_type {
+            FunctionDefinitionType::Declare => "declare".to_string(),
+            FunctionDefinitionType::Define => "define".to_string(),
+        };
+        if let Some(x) = &self.linkage {
+            s = format!("{} {}", s, x);
+        }
+        if let Some(x) = &self.preemption_specifier {
+            s = format!("{} {}", s, x);
+        }
+        if let Some(x) = &self.visibility {
+            s = format!("{} {}", s, x);
+        }
+        if let Some(x) = &self.dll_storage_class {
+            s = format!("{} {}", s, x);
+        }
+        if let Some(x) = &self.cconv {
+            s = format!("{} {}", s, x);
+        }
+        if let Some(x) = &self.ret_attrs {
+            s = format!("{} {}", s, x);
+        }
+        s = format!("{} {}", s, self.result_type);
+        s = format!("{} @{}", s, self.function_name);
+        let arg = self
+            .argument_list
+            .iter()
+            .enumerate()
+            .fold("".to_string(), |s, (i, x)| {
+                if i > 0 {
+                    format!("{} {}", s, x)
+                } else {
+                    format!("{}, {}", s, x)
+                }
+            });
+        s = format!("{} ({})", s, arg);
+        write!(f, "{}", s)
+    }
+}
+
+impl<T: std::fmt::Display> std::fmt::Display for ArgumentList<T> {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        let mut s = format!("{}", self.parameter_type);
+        if let Some(x) = &self.attributes {
+            s = format!("{} {}", s, x);
+        }
+        if let Some(x) = &self.name {
+            s = format!("{} {}", s, x);
+        }
         write!(f, "{}", s)
     }
 }
