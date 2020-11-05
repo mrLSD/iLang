@@ -39,6 +39,8 @@ jobs:
           override: true
           components: rustfmt, clippy
 
+      - uses: llvm/actions@v1
+        
       - name: Build
         run: cargo build --all
       - name: Tests
