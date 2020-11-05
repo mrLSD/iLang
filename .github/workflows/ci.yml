@@ -10,15 +10,15 @@ jobs:
       matrix:
         os: 
           - ubuntu-16.04
-          - ubuntu-18.04
-          - ubuntu-20.04
-          - windows-latest
+#          - ubuntu-18.04
+#          - ubuntu-20.04
+#          - windows-latest
           - macos-latest
         rust:
           - stable
-          - beta
-          - nightly
-
+#          - beta
+#          - nightly
+          
     steps:
       - uses: actions/checkout@v2
         with:
@@ -46,56 +46,56 @@ jobs:
       - name: Clippy
         run: cargo clippy --all -- -D warnings
         
-  cover:
-    name: Test cover
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v2
-        with:
-          fetch-depth: 1
-      
-      - uses: actions/cache@v2
-        with:
-          path: |
-            ~/.cargo/registry
-            ~/.cargo/git
-            target
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-          
-      - uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: nightly
-          override: true
-
-      - name: Install grcov
-        run: cargo install grcov
-      - name: Run grcov
-        env:
-          RUSTFLAGS: "-Zprofile -Ccodegen-units=1 -Copt-level=0 -Clink-dead-code -Coverflow-checks=off -Zpanic_abort_tests -Cpanic=abort"
-          RUSTDOCFLAGS: "-Cpanic=abort"
-          CARGO_INCREMENTAL: 0
-        run: |
-          cargo build;
-          cargo test;
-          grcov ./target/debug/ -s . -t lcov --llvm \
-              --ignore-not-existing \
-              --ignore *.cargo/* \
-              --ignore *core* \
-              --ignore *std* \
-              --ignore *alloc/* \
-              --ignore *rustup* \
-              --ignore *_test* \
-              --ignore *src/ast.rs* \
-              -o lcov.info         
-      - uses: actions/upload-artifact@v2
-        with:
-          name: lcov.info
-          path: lcov.info
-          
-      - name: Push grcov results to Coveralls via GitHub Action
-        uses: coverallsapp/github-action@master
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          path-to-lcov: "lcov.info"
+#  cover:
+#    name: Test cover
+#    runs-on: ubuntu-latest
+#
+#    steps:
+#      - uses: actions/checkout@v2
+#        with:
+#          fetch-depth: 1
+#      
+#      - uses: actions/cache@v2
+#        with:
+#          path: |
+#            ~/.cargo/registry
+#            ~/.cargo/git
+#            target
+#          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+#          
+#      - uses: actions-rs/toolchain@v1
+#        with:
+#          profile: minimal
+#          toolchain: nightly
+#          override: true
+#
+#      - name: Install grcov
+#        run: cargo install grcov
+#      - name: Run grcov
+#        env:
+#          RUSTFLAGS: "-Zprofile -Ccodegen-units=1 -Copt-level=0 -Clink-dead-code -Coverflow-checks=off -Zpanic_abort_tests -Cpanic=abort"
+#          RUSTDOCFLAGS: "-Cpanic=abort"
+#          CARGO_INCREMENTAL: 0
+#        run: |
+#          cargo build;
+#          cargo test;
+#          grcov ./target/debug/ -s . -t lcov --llvm \
+#              --ignore-not-existing \
+#              --ignore *.cargo/* \
+#              --ignore *core* \
+#              --ignore *std* \
+#              --ignore *alloc/* \
+#              --ignore *rustup* \
+#              --ignore *_test* \
+#              --ignore *src/ast.rs* \
+#              -o lcov.info         
+#      - uses: actions/upload-artifact@v2
+#        with:
+#          name: lcov.info
+#          path: lcov.info
+#          
+#      - name: Push grcov results to Coveralls via GitHub Action
+#        uses: coverallsapp/github-action@master
+#        with:
+#          github-token: ${{ secrets.GITHUB_TOKEN }}
+#          path-to-lcov: "lcov.info"

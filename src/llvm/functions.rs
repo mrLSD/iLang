@@ -99,7 +99,7 @@ pub struct Function<T> {
     pub argument_list: Vec<ArgumentList<T>>,
     pub unnamed_addr: Option<UnnamedAddr>,
     pub addr_sapce: Option<AddrSpace>,
-    pub fn_attrs: Option<FunctionAttributes>,
+    pub fn_attrs: Vec<FunctionAttributes>,
     pub section_name: Option<String>,
     pub comdat: Option<ComDat>,
     pub align: Option<Alignment>,
@@ -148,6 +148,46 @@ impl<T: std::fmt::Display> std::fmt::Display for Function<T> {
                 }
             });
         s = format!("{} ({})", s, arg);
+
+        if let Some(x) = &self.unnamed_addr {
+            s = format!("{} {}", s, x);
+        }
+
+        if let Some(x) = &self.addr_sapce {
+            s = format!("{} {}", s, x);
+        }
+
+        let fn_attrs = self
+            .fn_attrs
+            .iter()
+            .fold("".to_string(), |s, x| format!("{} {}", s, x));
+
+        s = format!("{} {}", s, fn_attrs);
+        if let Some(x) = &self.section_name {
+            s = format!("{} section \"{}\"", s, x);
+        }
+        if let Some(x) = &self.comdat {
+            s = format!("{} comdat {}", s, x);
+        }
+        if let Some(x) = &self.align {
+            s = format!("{} {}", s, x);
+        }
+        if let Some(x) = &self.gc {
+            s = format!("{} {}", s, x);
+        }
+        if let Some(x) = &self.prefix {
+            s = format!("{} {}", s, x);
+        }
+        if let Some(x) = &self.prologue {
+            s = format!("{} prologue {}", s, x);
+        }
+        if let Some(x) = &self.personality {
+            s = format!("{} personality {}", s, x);
+        }
+        if let Some(x) = &self.metadata {
+            s = format!("{} {}", s, x);
+        }
+
         write!(f, "{}", s)
     }
 }
