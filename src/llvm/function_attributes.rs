@@ -20,6 +20,16 @@ pub enum FunctionAttributesType {
     AlignStack(i32),
     AllocSize(Vec<i32>),
     AlwaysInline,
+    Builtin,
+    Cold,
+    Convergent,
+    InaccessibleMemOnly,
+    InaccessibleMemOrArgMemOnly,
+    InlineHint,
+    JumpTable,
+    MinSize,
+    Naked,
+    NoInlineLineTables
 }
 
 /*
@@ -35,7 +45,8 @@ inlinehint
 jumptable
 minsize
 naked
-no-inline-line-tables
+"no-inline-line-tables"
+
 no-jump-tables
 nobuiltin
 noduplicate
@@ -82,9 +93,42 @@ uwtable
 nocf_check
 shadowcallstack
 */
-impl std::fmt::Display for FunctionAttributes {
+impl std::fmt::Display for FunctionAttributesType {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        let s = "";
-        write!(f, "module asm \"{}\"", s)
+        let s = match self {
+            FunctionAttributesType::AlignStack(x) => format!("alignstack({})", x),
+            FunctionAttributesType::AllocSize(x) => {
+                let Vec = x.iter()
+                    .enumerate()
+                    .fold("".to_string(), |x, (i, v)|{
+                        
+                    })
+                format!("allocsize({})", x)
+            },
+            FunctionAttributesType::AlwaysInline => "",
+            FunctionAttributesType::Builtin => "",
+            FunctionAttributesType::Cold => "",
+            FunctionAttributesType::Convergent => "",
+            FunctionAttributesType::InaccessibleMemOnly => "",
+            FunctionAttributesType::InaccessibleMemOrArgMemOnly => "",
+            FunctionAttributesType::InlineHint => "",
+            FunctionAttributesType::JumpTable => "",
+            FunctionAttributesType::MinSize => "",
+
+alwaysinline
+builtin
+cold
+convergent
+inaccessiblememonly
+inaccessiblemem_or_argmemonly
+inlinehint
+jumptable
+minsize
+            
+            FunctionAttributesType::Naked => "naked",
+            FunctionAttributesType::NoInlineLineTables => "\"no-inline-line-tables\"",
+            _ => "",
+        };
+        write!(f, "\"{}\"", s)
     }
 }
