@@ -29,35 +29,22 @@ pub enum FunctionAttributesType {
     JumpTable,
     MinSize,
     Naked,
-    NoInlineLineTables
+    NoInlineLineTables,
+
+    NoJumpTables,
+    NoBuiltin,
+    NoDuplicate,
+    NoFree,
+    NoImplicitFloat,
+    NoInline,
+    NoMerge,
+    NonLazyBind,
+    NoRedZone,
+    IndirectTlsSegRefs,
+    NoReturn,
 }
 
 /*
-alignstack(i32)
-allocsize(Vec<i32>)
-alwaysinline
-builtin
-cold
-convergent
-inaccessiblememonly
-inaccessiblemem_or_argmemonly
-inlinehint
-jumptable
-minsize
-naked
-"no-inline-line-tables"
-
-no-jump-tables
-nobuiltin
-noduplicate
-nofree
-noimplicitfloat
-noinline
-nomerge
-nonlazybind
-noredzone
-indirect-tls-seg-refs
-noreturn
 norecurse
 willreturn
 nosync
@@ -98,37 +85,50 @@ impl std::fmt::Display for FunctionAttributesType {
         let s = match self {
             FunctionAttributesType::AlignStack(x) => format!("alignstack({})", x),
             FunctionAttributesType::AllocSize(x) => {
-                let Vec = x.iter()
-                    .enumerate()
-                    .fold("".to_string(), |x, (i, v)|{
-                        
-                    })
-                format!("allocsize({})", x)
-            },
-            FunctionAttributesType::AlwaysInline => "",
-            FunctionAttributesType::Builtin => "",
-            FunctionAttributesType::Cold => "",
-            FunctionAttributesType::Convergent => "",
-            FunctionAttributesType::InaccessibleMemOnly => "",
-            FunctionAttributesType::InaccessibleMemOrArgMemOnly => "",
-            FunctionAttributesType::InlineHint => "",
-            FunctionAttributesType::JumpTable => "",
-            FunctionAttributesType::MinSize => "",
-
-alwaysinline
-builtin
-cold
-convergent
-inaccessiblememonly
-inaccessiblemem_or_argmemonly
-inlinehint
-jumptable
-minsize
-            
-            FunctionAttributesType::Naked => "naked",
-            FunctionAttributesType::NoInlineLineTables => "\"no-inline-line-tables\"",
-            _ => "",
+                let s = x.iter().enumerate().fold("".to_string(), |x, (i, v)| {
+                    if i > 1 {
+                        format!("{}, {}", x, v)
+                    } else {
+                        format!("{} {}", x, v)
+                    }
+                });
+                format!("allocsize({})", s)
+            }
+            FunctionAttributesType::AlwaysInline => "alwaysinline".to_string(),
+            FunctionAttributesType::Builtin => "builtin".to_string(),
+            FunctionAttributesType::Cold => "cold".to_string(),
+            FunctionAttributesType::Convergent => "convergent".to_string(),
+            FunctionAttributesType::InaccessibleMemOnly => "inaccessiblememonly".to_string(),
+            FunctionAttributesType::InaccessibleMemOrArgMemOnly => {
+                "inaccessiblemem_or_argmemonly".to_string()
+            }
+            FunctionAttributesType::InlineHint => "inlinehint".to_string(),
+            FunctionAttributesType::JumpTable => "jumptable".to_string(),
+            FunctionAttributesType::MinSize => "minsize".to_string(),
+            FunctionAttributesType::Naked => "naked".to_string(),
+            FunctionAttributesType::NoInlineLineTables => "\"no-inline-line-tables\"".to_string(),
+            FunctionAttributesType::NoJumpTables => "no-jump-tables".to_string(),
+            FunctionAttributesType::NoBuiltin => "nobuiltin".to_string(),
+            FunctionAttributesType::NoDuplicate => "noduplicate".to_string(),
+            FunctionAttributesType::NoFree => "nofree".to_string(),
+            FunctionAttributesType::NoImplicitFloat => "noimplicitfloat".to_string(),
+            FunctionAttributesType::NoInline => "noinline".to_string(),
+            FunctionAttributesType::NoMerge => "nomerge".to_string(),
+            FunctionAttributesType::NonLazyBind => "nonlazybind".to_string(),
+            FunctionAttributesType::NoRedZone => "noredzone".to_string(),
+            FunctionAttributesType::IndirectTlsSegRefs => "indirect-tls-seg-refs".to_string(),
+            FunctionAttributesType::NoReturn => "noreturn".to_string(),
         };
+        write!(f, "\"{}\"", s)
+    }
+}
+
+impl std::fmt::Display for FunctionAttributes {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        let s = self
+            .0
+            .iter()
+            .fold("".to_string(), |s, v| format!("{} {}", s, v));
         write!(f, "\"{}\"", s)
     }
 }
