@@ -42,29 +42,29 @@ pub enum FunctionAttributesType {
     NoRedZone,
     IndirectTlsSegRefs,
     NoReturn,
+    NoRecurse,
+    WillReturn,
+    NoSync,
+    NoUnwind,
+    NullPointerIsValid,
+    OptForFuzzing,
+    OptNone,
+    OptSize,
+    PatchableFunction,
+    ProbeStack,
+    ReadNone,
+    ReadOnly,
+    StackProbeSize,
+    NoStackArgProbe,
+    WriteOnly,
+    ArgMemOnly,
+    ReturnsTwice,
+    SafeStack,
+    SanitizeAddress,
+    SanitizeMemory,
 }
 
 /*
-norecurse
-willreturn
-nosync
-nounwind
-null_pointer_is_valid
-optforfuzzing
-optnone
-optsize
-patchable-function
-probe-stack
-readnone
-readonly
-stack-probe-size
-no-stack-arg-probe
-writeonly
-argmemonly
-returns_twice
-safestack
-sanitize_address
-sanitize_memory
 sanitize_thread
 sanitize_hwaddress
 sanitize_memtag
@@ -118,6 +118,27 @@ impl std::fmt::Display for FunctionAttributesType {
             FunctionAttributesType::NoRedZone => "noredzone".to_string(),
             FunctionAttributesType::IndirectTlsSegRefs => "indirect-tls-seg-refs".to_string(),
             FunctionAttributesType::NoReturn => "noreturn".to_string(),
+
+            FunctionAttributesType::NoRecurse => "norecurse".to_string(),
+            FunctionAttributesType::WillReturn => "willreturn".to_string(),
+            FunctionAttributesType::NoSync => "nosync".to_string(),
+            FunctionAttributesType::NoUnwind => "nounwind".to_string(),
+            FunctionAttributesType::NullPointerIsValid => "null_pointer_is_valid".to_string(),
+            FunctionAttributesType::OptForFuzzing => "optforfuzzing".to_string(),
+            FunctionAttributesType::OptNone => "optnone".to_string(),
+            FunctionAttributesType::OptSize => "optsize".to_string(),
+            FunctionAttributesType::PatchableFunction => "patchable-function".to_string(),
+            FunctionAttributesType::ProbeStack => "probe-stack".to_string(),
+            FunctionAttributesType::ReadNone => "readnone".to_string(),
+            FunctionAttributesType::ReadOnly => "readonly".to_string(),
+            FunctionAttributesType::StackProbeSize => "stack-probe-size".to_string(),
+            FunctionAttributesType::NoStackArgProbe => "no-stack-arg-probe".to_string(),
+            FunctionAttributesType::WriteOnly => "writeonly".to_string(),
+            FunctionAttributesType::ArgMemOnly => "argmemonly".to_string(),
+            FunctionAttributesType::ReturnsTwice => "returns_twice".to_string(),
+            FunctionAttributesType::SafeStack => "safestack".to_string(),
+            FunctionAttributesType::SanitizeAddress => "sanitize_address".to_string(),
+            FunctionAttributesType::SanitizeMemory => "sanitize_memory".to_string(),
         };
         write!(f, "\"{}\"", s)
     }
