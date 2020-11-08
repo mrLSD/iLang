@@ -62,24 +62,22 @@ pub enum FunctionAttributesType {
     SafeStack,
     SanitizeAddress,
     SanitizeMemory,
+    SanitizeThread,
+    SanitizeNwAddress,
+    SanitizeMemTag,
+    SpeculativeLoadNardening,
+    Speculatable,
+    Ssp,
+    SspReq,
+    SspStrong,
+    StrictFp,
+    DenormalFpMathF32,
+    Thunk,
+    UwTable,
+    NocfCheck,
+    ShadowCallStack,
 }
 
-/*
-sanitize_thread
-sanitize_hwaddress
-sanitize_memtag
-speculative_load_hardening
-speculatable
-ssp
-sspreq
-sspstrong
-strictfp
-denormal-fp-math-f32
-thunk
-uwtable
-nocf_check
-shadowcallstack
-*/
 impl std::fmt::Display for FunctionAttributesType {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         let s = match self {
@@ -139,6 +137,22 @@ impl std::fmt::Display for FunctionAttributesType {
             FunctionAttributesType::SafeStack => "safestack".to_string(),
             FunctionAttributesType::SanitizeAddress => "sanitize_address".to_string(),
             FunctionAttributesType::SanitizeMemory => "sanitize_memory".to_string(),
+            FunctionAttributesType::SanitizeThread => "sanitize_thread".to_string(),
+            FunctionAttributesType::SanitizeNwAddress => "sanitize_hwaddress".to_string(),
+            FunctionAttributesType::SanitizeMemTag => "sanitize_memtag".to_string(),
+            FunctionAttributesType::SpeculativeLoadNardening => {
+                "speculative_load_hardening".to_string()
+            }
+            FunctionAttributesType::Speculatable => "speculatable".to_string(),
+            FunctionAttributesType::Ssp => "ssp".to_string(),
+            FunctionAttributesType::SspReq => "sspreq".to_string(),
+            FunctionAttributesType::SspStrong => "sspstrong".to_string(),
+            FunctionAttributesType::StrictFp => "strictfp".to_string(),
+            FunctionAttributesType::DenormalFpMathF32 => "denormal-fp-math-f32".to_string(),
+            FunctionAttributesType::Thunk => "thunk".to_string(),
+            FunctionAttributesType::UwTable => "uwtable".to_string(),
+            FunctionAttributesType::NocfCheck => "nocf_check".to_string(),
+            FunctionAttributesType::ShadowCallStack => "shadowcallstack".to_string(),
         };
         write!(f, "\"{}\"", s)
     }
