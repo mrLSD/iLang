@@ -88,6 +88,22 @@ pub struct And {
     pub op2: String,
 }
 
+/// The ‘or’ instruction returns the bitwise logical inclusive or of
+/// its two operands.
+///
+/// The two arguments to the ‘or’ instruction must be integer or
+/// vector of integer values. Both arguments must have identical
+/// types.
+///
+/// https://llvm.org/docs/LangRef.html#or-instruction
+#[derive(Debug, Eq, PartialEq, Clone)]
+pub struct Or {
+    pub result: String,
+    pub ty: Type,
+    pub op1: String,
+    pub op2: String,
+}
+
 impl std::fmt::Display for Shl {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         let mut s = "shl".to_string();
@@ -127,6 +143,14 @@ impl std::fmt::Display for AShr {
 impl std::fmt::Display for And {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         let mut s = "and".to_string();
+        s = format!("{} {} {}, {}", s, self.ty, self.op1, self.op2);
+        write!(f, "{}", s)
+    }
+}
+
+impl std::fmt::Display for Or {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        let mut s = "or".to_string();
         s = format!("{} {} {}, {}", s, self.ty, self.op1, self.op2);
         write!(f, "{}", s)
     }
