@@ -63,6 +63,47 @@ pub struct IndirectBr {
     pub choices: Vec<(String, String)>,
 }
 
+#[derive(Debug, Eq, PartialEq, Clone)]
+pub struct Invoke();
+
+#[derive(Debug, Eq, PartialEq, Clone)]
+pub struct CallBr();
+
+#[derive(Debug, Eq, PartialEq, Clone)]
+pub struct Resume();
+
+#[derive(Debug, Eq, PartialEq, Clone)]
+pub struct CatchSwitch();
+
+#[derive(Debug, Eq, PartialEq, Clone)]
+pub struct CatchRet();
+
+/// The ‘cleanupret’ instruction is a terminator instruction that has
+/// an optional successor.
+///
+/// The ‘cleanupret’ instruction requires one argument, which indicates
+/// which cleanuppad it exits, and must be a cleanuppad. If the specified
+/// cleanuppad is not the most-recently-entered not-yet-exited funclet
+/// pad (as described in the EH documentation), the cleanupret’s
+/// behavior is undefined.
+///
+/// https://llvm.org/docs/LangRef.html#cleanupret-instruction
+#[derive(Debug, Eq, PartialEq, Clone)]
+pub struct CleanupRet {
+    pub values: String,
+    pub continue_label: Option<String>,
+}
+
+/// The ‘unreachable’ instruction has no defined semantics. This
+/// instruction is used to inform the optimizer that a particular
+/// portion of the code is not reachable. This can be used to indicate
+/// that the code after a no-return function cannot be reached, and
+/// other facts.
+///
+/// https://llvm.org/docs/LangRef.html#unreachable-instruction
+#[derive(Debug, Eq, PartialEq, Clone)]
+pub struct Unreachable();
+
 impl<T: std::fmt::Display> std::fmt::Display for Ret<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         if let Some(v) = &self.1 {
@@ -128,5 +169,57 @@ impl std::fmt::Display for IndirectBr {
                 }
             });
         write!(f, "switch {}", s)
+    }
+}
+
+impl std::fmt::Display for Invoke {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        let s = "";
+        write!(f, "switch {}", s)
+    }
+}
+
+impl std::fmt::Display for CallBr {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        let s = "";
+        write!(f, "switch {}", s)
+    }
+}
+
+impl std::fmt::Display for Resume {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        let s = "";
+        write!(f, "switch {}", s)
+    }
+}
+
+impl std::fmt::Display for CatchSwitch {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        let s = "";
+        write!(f, "switch {}", s)
+    }
+}
+
+impl std::fmt::Display for CatchRet {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        let s = "";
+        write!(f, "switch {}", s)
+    }
+}
+
+impl std::fmt::Display for CleanupRet {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        let s = if let Some(v) = &self.continue_label {
+            format!("%{} unwind label %{}", self.values, v)
+        } else {
+            format!("%{} unwind to caller", self.values)
+        };
+        write!(f, "cleanupret from {}", s)
+    }
+}
+
+impl std::fmt::Display for Unreachable {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "unreachable")
     }
 }
