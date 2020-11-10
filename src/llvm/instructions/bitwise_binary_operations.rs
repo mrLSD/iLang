@@ -72,6 +72,22 @@ pub struct AShr {
     pub op2: String,
 }
 
+/// The ‘and’ instruction returns the bitwise logical and of its two
+/// operands.
+///
+/// The two arguments to the ‘and’ instruction must be integer or
+/// vector of integer values. Both arguments must have identical
+/// types.
+///
+/// https://llvm.org/docs/LangRef.html#and-instruction
+#[derive(Debug, Eq, PartialEq, Clone)]
+pub struct And {
+    pub result: String,
+    pub ty: Type,
+    pub op1: String,
+    pub op2: String,
+}
+
 impl std::fmt::Display for Shl {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         let mut s = "shl".to_string();
@@ -103,6 +119,14 @@ impl std::fmt::Display for AShr {
         if self.exact.is_some() {
             s = format!("{} exact", s)
         }
+        s = format!("{} {} {}, {}", s, self.ty, self.op1, self.op2);
+        write!(f, "{}", s)
+    }
+}
+
+impl std::fmt::Display for And {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        let mut s = "and".to_string();
         s = format!("{} {} {}, {}", s, self.ty, self.op1, self.op2);
         write!(f, "{}", s)
     }
