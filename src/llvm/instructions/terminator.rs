@@ -75,8 +75,19 @@ pub struct Resume();
 #[derive(Debug, Eq, PartialEq, Clone)]
 pub struct CatchSwitch();
 
+/// The ‘catchret’ instruction is a terminator instruction that has a
+/// single successor.
+///
+/// The first argument to a ‘catchret’ indicates which catchpad it
+/// exits. It must be a catchpad. The second argument to a ‘catchret’
+/// specifies where control will transfer to next.
+///
+/// https://llvm.org/docs/LangRef.html#catchret-instruction
 #[derive(Debug, Eq, PartialEq, Clone)]
-pub struct CatchRet();
+pub struct CatchRet {
+    pub catch: String,
+    pub continue_label: String,
+}
 
 /// The ‘cleanupret’ instruction is a terminator instruction that has
 /// an optional successor.
@@ -202,8 +213,11 @@ impl std::fmt::Display for CatchSwitch {
 
 impl std::fmt::Display for CatchRet {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        let s = "";
-        write!(f, "switch {}", s)
+        write!(
+            f,
+            "catchret from %{} label %{}",
+            self.catch, self.continue_label
+        )
     }
 }
 
