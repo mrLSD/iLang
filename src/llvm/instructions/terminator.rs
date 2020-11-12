@@ -72,8 +72,30 @@ pub struct CallBr();
 #[derive(Debug, Eq, PartialEq, Clone)]
 pub struct Resume();
 
+/// The ‘catchswitch’ instruction is used by LLVM’s exception handling
+/// system to describe the set of possible catch handlers that may be
+/// executed by the EH personality routine.
+///
+/// The parent argument is the token of the funclet that contains the
+/// catchswitch instruction. If the catchswitch is not inside a
+/// funclet, this operand may be the token none.
+///
+/// The default argument is the label of another basic block beginning
+/// with either a cleanuppad or catchswitch instruction. This unwind
+/// destination must be a legal target with respect to the parent
+/// links, as described in the exception handling documentation.
+///
+/// The handlers are a nonempty list of successor blocks that each
+/// begin with a catchpad instruction.
+///
+/// https://llvm.org/docs/LangRef.html#catchswitch-instruction
 #[derive(Debug, Eq, PartialEq, Clone)]
-pub struct CatchSwitch();
+pub struct CatchSwitch {
+    pub result_val: String,
+    pub parent: String,
+    pub handler_labels: Vec<String>,
+    pub default_label: Option<String>,
+}
 
 /// The ‘catchret’ instruction is a terminator instruction that has a
 /// single successor.
@@ -206,8 +228,27 @@ impl std::fmt::Display for Resume {
 
 impl std::fmt::Display for CatchSwitch {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        let s = "";
-        write!(f, "switch {}", s)
+        let labels = self
+            .handler_labels
+            .iter()
+            .enumerate()
+            .fold("".to_string(), |s, (i, v)| {
+                if i > 1 {
+                    format!("{}, label %{}", s, v)
+                } else {
+                    format!("label %{}", v)
+                }
+            });
+        let default = if let Some(x) = &self.default_label {
+            format!("unwind label %{}", x)
+        } else {
+            "unwind to caller".to_string()
+        };
+        write!(
+            f,
+            "%{} = catchswitch within %{} [{}] {}",
+            self.result_val, self.parent, labels, default
+        )
     }
 }
 
