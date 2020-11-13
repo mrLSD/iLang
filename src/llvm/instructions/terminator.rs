@@ -69,8 +69,19 @@ pub struct Invoke();
 #[derive(Debug, Eq, PartialEq, Clone)]
 pub struct CallBr();
 
+/// The ‘resume’ instruction is a terminator instruction that has no
+/// successors.
+///
+/// The ‘resume’ instruction requires one argument, which must have
+/// the same type as the result of any ‘landingpad’ instruction in
+/// the same function.
+///
+/// https://llvm.org/docs/LangRef.html#resume-instruction
 #[derive(Debug, Eq, PartialEq, Clone)]
-pub struct Resume();
+pub struct Resume {
+    pub resume_type: Type,
+    pub value: String,
+}
 
 /// The ‘catchswitch’ instruction is used by LLVM’s exception handling
 /// system to describe the set of possible catch handlers that may be
@@ -221,8 +232,7 @@ impl std::fmt::Display for CallBr {
 
 impl std::fmt::Display for Resume {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        let s = "";
-        write!(f, "switch {}", s)
+        write!(f, "resume {} %{}", self.resume_type, self.value)
     }
 }
 
