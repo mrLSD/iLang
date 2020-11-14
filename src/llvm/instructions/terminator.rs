@@ -7,6 +7,10 @@
 //! the ‘invoke’ instruction).
 //!
 //! https://llvm.org/docs/LangRef.html#terminator-instructions
+use crate::llvm::addrspace::AddrSpace;
+use crate::llvm::calling_convention::CallingConvention;
+use crate::llvm::function_attributes::FunctionAttributes;
+use crate::llvm::parameter_attributes::ParameterAttributes;
 use crate::llvm::types::Type;
 
 /// The ‘ret’ instruction is used to return control flow (and optionally
@@ -63,9 +67,131 @@ pub struct IndirectBr {
     pub choices: Vec<(String, String)>,
 }
 
+/// The ‘invoke’ instruction causes control to transfer to a specified
+/// function, with the possibility of control flow transfer to either
+/// the ‘normal’ label or the ‘exception’ label. If the callee
+/// function returns with the “ret” instruction, control flow will
+/// return to the “normal” label. If the callee (or any indirect
+/// callees) returns via the “resume” instruction or other exception
+/// handling mechanism, control is interrupted and continued at the
+/// dynamically nearest “exception” label.
+///
+/// The ‘exception’ label is a landing pad for the exception. As
+/// such, ‘exception’ label is required to have the “landingpad”
+/// instruction, which contains the information about the behavior of the
+/// program after unwinding happens, as its first non-PHI instruction.
+/// The restrictions on the “landingpad” instruction’s tightly couples
+/// it to the “invoke” instruction, so that the important information
+/// contained within the “landingpad” instruction can’t be lost through
+/// normal code motion.
+///
+/// This instruction requires several arguments:
+///
+/// 1.  The optional “cconv” marker indicates which calling convention
+///     the call should use. If none is specified, the call defaults to
+///     using C calling conventions.
+/// 2.  The optional Parameter Attributes list for return values.
+///     Only
+///     ‘zeroext’, ‘signext’, and ‘inreg’ attributes are valid here.
+/// 3.  The optional addrspace attribute can be used to indicate the
+///     address space of the called function. If it is not specified,
+///     the program address space from the datalayout string will be
+///     used.
+/// 4.  ‘ty’: the type of the call instruction itself which is also
+///     the type of the return value. Functions that return no value
+///     are marked void.
+/// 5.  ‘fnty’: shall be the signature of the function being invoked.
+///     The argument types must match the types implied by this
+///     signature. This type can be omitted if the function is not
+///     varargs.
+/// 6.  ‘fnptrval’: An LLVM value containing a pointer to a function
+///     to be invoked. In most cases, this is a direct function
+///     invocation, but indirect invoke’s are just as possible,
+///     calling an arbitrary pointer to function value.
+/// 7.  ‘function args’: argument list whose types match the function
+///     signature argument types and parameter attributes. All
+///     arguments must be of first class type. If the function
+///     signature indicates the function accepts a variable number of
+///     arguments, the extra arguments can be specified.
+/// 8.  ‘normal label’: the label reached when the called function
+///     executes a ‘ret’ instruction.
+/// 9.  ‘exception label’: the label reached when a callee returns via
+///     the resume instruction or other exception handling mechanism.
+/// 10. The optional function attributes list.
+/// 12. The optional operand bundles list.
+///
+/// Syntax:
+/// ```html
+/// <result> = invoke [cconv] [ret attrs] [addrspace(<num>)] <ty>|<fnty> <fnptrval>(<function args>) [fn attrs]
+/// [operand bundles] to label <normal label> unwind label <exception label>
+/// ```
+///
+/// https://llvm.org/docs/LangRef.html#invoke-instruction
 #[derive(Debug, Eq, PartialEq, Clone)]
-pub struct Invoke();
+pub struct Invoke<P> {
+    pub ret_val: String,
+    pub cconv: Option<CallingConvention>,
+    pub ret_attr: Option<ParameterAttributes<P>>,
+    pub addrspace: Option<AddrSpace>,
+    pub ty: Type,
+    pub fnty: Option<Type>,
+    pub fnptrval: (bool, String), // first param indicate is it ptr
+    pub function_args: Vec<FunctionArg>,
+    pub function_attrs: Option<FunctionAttributes>,
+    pub operand_bundles: String,
+    pub normal_label: String,
+    pub exception_label: String,
+}
 
+/// Fucntion argument contain type and their value
+#[derive(Debug, Eq, PartialEq, Clone)]
+pub struct FunctionArg(Type, String);
+
+/// The ‘callbr’ instruction causes control to transfer to a specified
+/// function, with the possibility of control flow transfer to either
+/// the ‘fallthrough’ label or one of the ‘indirect’ labels.
+///
+/// This instruction should only be used to implement the “goto”
+/// feature of gcc style inline assembly. Any other usage is an
+/// error in the IR verifier.
+///
+/// This instruction requires several arguments:
+///
+/// 1.  The optional “cconv” marker indicates which calling convention
+///     the call should use. If none is specified, the call defaults to
+///     using C calling conventions.
+/// 2.  The optional Parameter Attributes list for return values. Only
+///     ‘zeroext’, ‘signext’, and ‘inreg’ attributes are valid here.
+/// 3.  The optional addrspace attribute can be used to indicate the
+///     address space of the called function. If it is not specified,
+///     the program address space from the datalayout string will be used.
+/// 4.  ‘ty’: the type of the call instruction itself which is also
+///     the type of the return value. Functions that return no value
+///     are marked void.
+/// 5.  ‘fnty’: shall be the signature of the function being called.
+///     The argument types must match the types implied by this
+///     signature. This type can be omitted if the function is not
+///     varargs.
+/// 6.  ‘fnptrval’: An LLVM value containing a pointer to a function
+///     to be called. In most cases, this is a direct function call,
+///     but other callbr’s are just as possible, calling an arbitrary
+///     pointer to function value.
+/// 7.  ‘function args’: argument list whose types match the function
+///     signature argument types and parameter attributes. All
+///     arguments must be of first class type. If the function
+///     signature indicates the function accepts a variable number of
+///     arguments, the extra arguments can be specified.
+/// 8.  ‘fallthrough label’: the label reached when the inline
+///     assembly’s execution exits the bottom.
+/// 9.  ‘indirect labels’: the labels reached when a callee transfers
+///     control to a location other than the ‘fallthrough label’. The
+///     blockaddress constant for these should also be in the list of
+///     ‘function args’.
+/// 10. The optional function attributes list.
+/// 11. The optional operand bundles list.
+///
+/// https://llvm.org/docs/LangRef.html#callbr-instruction
+/// TODO: implement Syntax.
 #[derive(Debug, Eq, PartialEq, Clone)]
 pub struct CallBr();
 
@@ -216,10 +342,13 @@ impl std::fmt::Display for IndirectBr {
     }
 }
 
-impl std::fmt::Display for Invoke {
+impl<P: std::fmt::Display> std::fmt::Display for Invoke<P> {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        let s = "";
-        write!(f, "switch {}", s)
+        let mut s = format!("%{} = invoke", self.ret_val);
+        if let Some(v) = &self.cconv {
+            s = format!("{} {}", s, v)
+        }
+        write!(f, "{}", s)
     }
 }
 
