@@ -135,10 +135,11 @@ pub struct Invoke<P> {
     pub addrspace: Option<AddrSpace>,
     pub ty: Type,
     pub fnty: Option<Type>,
-    pub fnptrval: (bool, String), // first param indicate is it ptr
+    pub fnptrval: (bool, String),
+    // first param indicate is it ptr
     pub function_args: Vec<FunctionArg>,
     pub function_attrs: Option<FunctionAttributes>,
-    pub operand_bundles: String,
+    pub operand_bundles: Option<String>,
     pub normal_label: String,
     pub exception_label: String,
 }
@@ -348,6 +349,46 @@ impl<P: std::fmt::Display> std::fmt::Display for Invoke<P> {
         if let Some(v) = &self.cconv {
             s = format!("{} {}", s, v)
         }
+        if let Some(v) = &self.ret_attr {
+            s = format!("{} {}", s, v)
+        }
+        if let Some(v) = &self.addrspace {
+            s = format!("{} {}", s, v)
+        }
+        s = format!("{} {}", s, &self.ty);
+        if let Some(v) = &self.fnty {
+            s = format!("{} {}", s, v)
+        }
+        // Check is it Ptr
+        if self.fnptrval.0 {
+            s = format!("{} %{}", s, self.fnptrval.1)
+        } else {
+            s = format!("{} @{}", s, self.fnptrval.1)
+        }
+        let args = self
+            .function_args
+            .iter()
+            .enumerate()
+            .fold("".to_string(), |s, (i, v)| {
+                if i > 0 {
+                    format!("{}, {} {}", s, v.0, v.1)
+                } else {
+                    format!("{} {} {}", s, v.0, v.1)
+                }
+            });
+        s = format!("{} ({})", s, args);
+        if let Some(v) = &self.function_attrs {
+            s = format!("{} {}", s, v)
+        }
+        if let Some(v) = &self.operand_bundles {
+            s = format!("{} {}", s, v)
+        }
+
+        let s = format!(
+            "{} to label {} unwind label {}",
+            s, self.normal_label, self.exception_label
+        );
+
         write!(f, "{}", s)
     }
 }
