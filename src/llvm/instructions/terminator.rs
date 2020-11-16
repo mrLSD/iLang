@@ -396,7 +396,7 @@ impl<P: std::fmt::Display> std::fmt::Display for Invoke<P> {
 impl std::fmt::Display for CallBr {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         let s = "";
-        write!(f, "switch {}", s)
+        write!(f, "{}", s)
     }
 }
 
