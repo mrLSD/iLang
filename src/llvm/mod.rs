@@ -6,6 +6,7 @@ pub mod calling_convention;
 pub mod comdat;
 pub mod data_layout;
 pub mod dll_storage_classes;
+pub mod fast_math_flags;
 pub mod function_attributes;
 pub mod functions;
 pub mod gc_stratagy_name;
