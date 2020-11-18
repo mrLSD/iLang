@@ -44,6 +44,20 @@ pub struct Icmp {
     pub op2: String,
 }
 
+/// The ‘icmp’ compares op1 and op2 according to the condition code
+/// given as cond. The comparison performed always yields either an
+/// i1 or vector of i1 result, as follows:
+///
+/// eq: yields true if the operands are equal, false otherwise. No sign interpretation is necessary or performed.
+/// ne: yields true if the operands are unequal, false otherwise. No sign interpretation is necessary or performed.
+/// ugt: interprets the operands as unsigned values and yields true if op1 is greater than op2.
+/// uge: interprets the operands as unsigned values and yields true if op1 is greater than or equal to op2.
+/// ult: interprets the operands as unsigned values and yields true if op1 is less than op2.
+/// ule: interprets the operands as unsigned values and yields true if op1 is less than or equal to op2.
+/// sgt: interprets the operands as signed values and yields true if op1 is greater than op2.
+/// sge: interprets the operands as signed values and yields true if op1 is greater than or equal to op2.
+/// slt: interprets the operands as signed values and yields true if op1 is less than op2.
+/// sle: interprets the operands as signed values and yields true if op1 is less than or equal to op2.
 #[derive(Debug, Eq, PartialEq, Clone)]
 pub enum IcmpCondition {
     Eq,
@@ -90,6 +104,27 @@ pub struct Fcmp {
     pub op2: String,
 }
 
+/// The ‘fcmp’ instruction compares op1 and op2 according to the
+/// condition code given as cond. If the operands are vectors, then
+/// the vectors are compared element by element. Each comparison
+/// performed always yields an i1 result, as follows:
+///
+/// false: always yields false, regardless of operands.
+/// oeq: yields true if both operands are not a QNAN and op1 is equal to op2.
+/// ogt: yields true if both operands are not a QNAN and op1 is greater than op2.
+/// oge: yields true if both operands are not a QNAN and op1 is greater than or equal to op2.
+/// olt: yields true if both operands are not a QNAN and op1 is less than op2.
+/// ole: yields true if both operands are not a QNAN and op1 is less than or equal to op2.
+/// one: yields true if both operands are not a QNAN and op1 is not equal to op2.
+/// ord: yields true if both operands are not a QNAN.
+/// ueq: yields true if either operand is a QNAN or op1 is equal to op2.
+/// ugt: yields true if either operand is a QNAN or op1 is greater than op2.
+/// uge: yields true if either operand is a QNAN or op1 is greater than or equal to op2.
+/// ult: yields true if either operand is a QNAN or op1 is less than op2.
+/// ule: yields true if either operand is a QNAN or op1 is less than or equal to op2.
+/// une: yields true if either operand is a QNAN or op1 is not equal to op2.
+/// uno: yields true if either operand is a QNAN.
+/// true: always yields true, regardless of operands.
 #[derive(Debug, Eq, PartialEq, Clone)]
 pub enum FcmpCondition {
     False,
@@ -108,6 +143,41 @@ pub enum FcmpCondition {
     Une,
     Uno,
     True,
+}
+
+/// The ‘phi’ instruction is used to implement the φ node in the SSA
+/// graph representing the function.
+///
+/// The type of the incoming values is specified with the first type
+/// field. After this, the ‘phi’ instruction takes a list of pairs as
+/// arguments, with one pair for each predecessor basic block of the
+/// current block. Only values of first class type may be used as the
+/// value arguments to the PHI node. Only labels may be used as the
+/// label arguments.
+///
+/// There must be no non-phi instructions between the start of a
+/// basic block and the PHI instructions: i.e. PHI instructions must
+/// be first in a basic block.
+///
+/// For the purposes of the SSA form, the use of each incoming value
+/// is deemed to occur on the edge from the corresponding predecessor
+/// block to the current block (but after any definition of an
+/// ‘invoke’ instruction’s return value on the same edge).
+///
+/// The optional fast-math-flags marker indicates that the phi has
+/// one or more fast-math-flags. These are optimization hints to
+/// enable otherwise unsafe floating-point optimizations. Fast-math-flags
+/// are only valid for phis that return a floating-point scalar or
+/// vector type, or an array (nested to any depth) of floating-point
+/// scalar or vector types.
+///
+/// https://llvm.org/docs/LangRef.html#phi-instruction
+#[derive(Debug, Eq, PartialEq, Clone)]
+pub struct Phi {
+    pub res_val: String,
+    pub fast_math_flags: Option<FastMathFlags>,
+    pub ty: Type,
+    pub params: Vec<(String, String)>,
 }
 
 impl std::fmt::Display for Icmp {
@@ -173,6 +243,33 @@ impl std::fmt::Display for FcmpCondition {
             FcmpCondition::Uno => "uno",
             FcmpCondition::True => "true",
         };
+        write!(f, "{}", s)
+    }
+}
+
+impl std::fmt::Display for Phi {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        let fast_math = if let Some(v) = &self.fast_math_flags {
+            format!("{}", v)
+        } else {
+            "".to_string()
+        };
+        let params = self
+            .params
+            .iter()
+            .enumerate()
+            .fold("".to_string(), |s, (i, v)| {
+                if i > 0 {
+                    format!("{}, [{}, {}]", s, v.0, v.1)
+                } else {
+                    format!("{} [{}, {}]", s, v.0, v.1)
+                }
+            });
+
+        let s = format!(
+            "%{} = phi {} {} {}",
+            self.res_val, fast_math, self.ty, params
+        );
         write!(f, "{}", s)
     }
 }
