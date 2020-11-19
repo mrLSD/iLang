@@ -180,6 +180,44 @@ pub struct Phi {
     pub params: Vec<(String, String)>,
 }
 
+/// The ‘select’ instruction is used to choose one value based on a
+/// condition, without IR-level branching.
+///
+/// The ‘select’ instruction requires an ‘i1’ value or a vector of
+/// ‘i1’ values indicating the condition, and two values of the same
+/// first class type.
+///
+///     The optional fast-math flags marker indicates that the select
+/// has one or more fast-math flags. These are optimization hints to
+/// enable otherwise unsafe floating-point optimizations. Fast-math
+/// flags are only valid for selects that return a floating-point
+/// scalar or vector type, or an array (nested to any depth) of
+/// floating-point scalar or vector types.
+///
+/// If the condition is an i1 and it evaluates to 1, the instruction
+/// returns the first value argument; otherwise, it returns the second
+/// value argument.
+///
+/// If the condition is a vector of i1, then the value arguments must
+/// be vectors of the same size, and the selection is done element by
+/// element.
+///
+/// If the condition is an i1 and the value arguments are vectors of
+/// the same size, then an entire vector is selected.
+///
+/// https://llvm.org/docs/LangRef.html#select-instruction
+#[derive(Debug, Eq, PartialEq, Clone)]
+pub struct Select {
+    pub res_val: String,
+    pub fast_math_flags: Option<FastMathFlags>,
+    pub selty: Type,
+    pub cond: String,
+    pub ty1: Type,
+    pub val1: String,
+    pub ty2: Type,
+    pub val2: String,
+}
+
 impl std::fmt::Display for Icmp {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         let s = format!(
@@ -269,6 +307,28 @@ impl std::fmt::Display for Phi {
         let s = format!(
             "%{} = phi {} {} {}",
             self.res_val, fast_math, self.ty, params
+        );
+        write!(f, "{}", s)
+    }
+}
+
+impl std::fmt::Display for Select {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        let fast_math = if let Some(v) = &self.fast_math_flags {
+            format!("{}", v)
+        } else {
+            "".to_string()
+        };
+        let s = format!(
+            "%{} = select {} {} {}, {} {}, {} {}",
+            self.res_val,
+            fast_math,
+            self.selty,
+            self.cond,
+            self.ty1,
+            self.val1,
+            self.ty2,
+            self.val2,
         );
         write!(f, "{}", s)
     }
