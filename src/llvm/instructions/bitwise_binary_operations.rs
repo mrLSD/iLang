@@ -45,6 +45,33 @@ pub struct LShl {
     pub op2: String,
 }
 
+/// The ‘ashr’ instruction (arithmetic shift right) returns the first
+/// operand shifted to the right a specified number of bits with sign
+/// extension.
+///
+/// Both arguments to the ‘ashr’ instruction must be the same integer
+/// or vector of integer type. ‘op2’ is treated as an unsigned value.
+///
+/// This instruction always performs an arithmetic shift right
+/// operation, The most significant bits of the result will be filled
+/// with the sign bit of op1. If op2 is (statically or dynamically)
+/// equal to or larger than the number of bits in op1, this instruction
+/// returns a poison value. If the arguments are vectors, each vector
+/// element of op1 is shifted by the corresponding shift amount in op2.
+///
+/// If the exact keyword is present, the result value of the ashr is a
+/// poison value if any of the bits shifted out are non-zero.
+///
+/// https://llvm.org/docs/LangRef.html#ashr-instruction
+#[derive(Debug, Eq, PartialEq, Clone)]
+pub struct AShr {
+    pub result: String,
+    pub exact: Option<()>,
+    pub ty: Type,
+    pub op1: String,
+    pub op2: String,
+}
+
 impl std::fmt::Display for Shl {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         let mut s = "shl".to_string();
@@ -62,6 +89,17 @@ impl std::fmt::Display for Shl {
 impl std::fmt::Display for LShl {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         let mut s = "lshl".to_string();
+        if self.exact.is_some() {
+            s = format!("{} exact", s)
+        }
+        s = format!("{} {} {}, {}", s, self.ty, self.op1, self.op2);
+        write!(f, "{}", s)
+    }
+}
+
+impl std::fmt::Display for AShr {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        let mut s = "ashr".to_string();
         if self.exact.is_some() {
             s = format!("{} exact", s)
         }
