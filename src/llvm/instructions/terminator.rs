@@ -21,7 +21,7 @@ use crate::llvm::types::Type;
 /// occur.
 /// https://llvm.org/docs/LangRef.html#id1437
 #[derive(Debug, Eq, PartialEq, Clone)]
-pub struct Ret<T>(Type, Option<T>);
+pub struct Ret(Type, Option<String>);
 
 /// The ‘br’ instruction is used to cause control flow to transfer to a
 /// different basic block in the current function. There are two forms of
@@ -128,10 +128,10 @@ pub struct IndirectBr {
 ///
 /// https://llvm.org/docs/LangRef.html#invoke-instruction
 #[derive(Debug, Eq, PartialEq, Clone)]
-pub struct Invoke<P> {
+pub struct Invoke {
     pub ret_val: String,
     pub cconv: Option<CallingConvention>,
-    pub ret_attr: Option<ParameterAttributes<P>>,
+    pub ret_attr: Option<ParameterAttributes>,
     pub addrspace: Option<AddrSpace>,
     pub ty: Type,
     pub fnty: Option<Type>,
@@ -275,7 +275,7 @@ pub struct CleanupRet {
 #[derive(Debug, Eq, PartialEq, Clone)]
 pub struct Unreachable();
 
-impl<T: std::fmt::Display> std::fmt::Display for Ret<T> {
+impl std::fmt::Display for Ret {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         if let Some(v) = &self.1 {
             write!(f, "ret {} {}", self.0, v)
@@ -343,7 +343,7 @@ impl std::fmt::Display for IndirectBr {
     }
 }
 
-impl<P: std::fmt::Display> std::fmt::Display for Invoke<P> {
+impl std::fmt::Display for Invoke {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         let mut s = format!("%{} = invoke", self.ret_val);
         if let Some(v) = &self.cconv {

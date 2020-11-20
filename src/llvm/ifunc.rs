@@ -24,16 +24,16 @@ use super::{
 };
 
 #[derive(Debug, Eq, PartialEq, Clone)]
-pub struct IFunc<T> {
+pub struct IFunc {
     name: String,
     linkage: Option<LinkageTypes>,
     visibility: Option<VisibilityStyles>,
     ifunc_type: Type,
     resolver_type: Vec<Type>,
-    resolver: T,
+    resolver: String,
 }
 
-impl<T: std::fmt::Display> std::fmt::Display for IFunc<T> {
+impl std::fmt::Display for IFunc {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         let mut s = format!("@{} =", self.name);
         if self.linkage.is_some() {

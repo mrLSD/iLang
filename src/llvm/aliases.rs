@@ -31,7 +31,7 @@ use super::{
 };
 
 #[derive(Debug, Eq, PartialEq, Clone)]
-pub struct Alias<T> {
+pub struct Alias {
     name: String,
     linkage: Option<LinkageTypes>,
     preemption_specifier: Option<RuntimePreemptionSpecifier>,
@@ -40,10 +40,10 @@ pub struct Alias<T> {
     thread_local: Option<ThreadLocalStorage>,
     unnamed_addr: Option<UnnamedAddr>,
     aliasee_type: Vec<Type>,
-    aleasee: T,
+    aleasee: String,
 }
 
-impl<T: std::fmt::Display> std::fmt::Display for Alias<T> {
+impl std::fmt::Display for Alias {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         let mut s = format!("@{} =", self.name);
         if self.linkage.is_some() {

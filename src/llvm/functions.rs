@@ -70,9 +70,9 @@ use crate::llvm::{
 /// <type> [parameter Attrs] [name]
 /// ```
 #[derive(Debug, Eq, PartialEq, Clone)]
-pub struct ArgumentList<T> {
+pub struct ArgumentList {
     pub parameter_type: Type,
-    pub attributes: Option<ParameterAttributes<T>>,
+    pub attributes: Option<ParameterAttributes>,
     pub name: Option<String>,
 }
 
@@ -86,17 +86,17 @@ pub enum FunctionDefinitionType {
 /// NOTE: prologue, metadata is simple strings without specific Rust types
 /// personality field is not clear is it right or not
 #[derive(Debug, Eq, PartialEq, Clone)]
-pub struct Function<T> {
+pub struct Function {
     pub definition_type: FunctionDefinitionType,
     pub linkage: Option<LinkageTypes>,
     pub preemption_specifier: Option<RuntimePreemptionSpecifier>,
     pub visibility: Option<VisibilityStyles>,
     pub dll_storage_class: Option<DLLStorageClasses>,
     pub cconv: Option<CallingConvention>,
-    pub ret_attrs: Option<ParameterAttributes<T>>,
+    pub ret_attrs: Option<ParameterAttributes>,
     pub result_type: Type,
     pub function_name: String,
-    pub argument_list: Vec<ArgumentList<T>>,
+    pub argument_list: Vec<ArgumentList>,
     pub unnamed_addr: Option<UnnamedAddr>,
     pub addr_sapce: Option<AddrSpace>,
     pub fn_attrs: Vec<FunctionAttributes>,
@@ -104,13 +104,13 @@ pub struct Function<T> {
     pub comdat: Option<ComDat>,
     pub align: Option<Alignment>,
     pub gc: Option<GCStrategyName>,
-    pub prefix: Option<Prefix<T>>,
+    pub prefix: Option<Prefix>,
     pub prologue: Option<String>,
     pub personality: Option<Personality>,
     pub metadata: Option<String>,
 }
 
-impl<T: std::fmt::Display> std::fmt::Display for Function<T> {
+impl std::fmt::Display for Function {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         let mut s = match self.definition_type {
             FunctionDefinitionType::Declare => "declare".to_string(),
@@ -192,7 +192,7 @@ impl<T: std::fmt::Display> std::fmt::Display for Function<T> {
     }
 }
 
-impl<T: std::fmt::Display> std::fmt::Display for ArgumentList<T> {
+impl std::fmt::Display for ArgumentList {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         let mut s = format!("{}", self.parameter_type);
         if let Some(x) = &self.attributes {

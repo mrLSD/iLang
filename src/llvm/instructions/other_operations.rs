@@ -187,7 +187,7 @@ pub struct Phi {
 /// ‘i1’ values indicating the condition, and two values of the same
 /// first class type.
 ///
-///     The optional fast-math flags marker indicates that the select
+/// The optional fast-math flags marker indicates that the select
 /// has one or more fast-math flags. These are optimization hints to
 /// enable otherwise unsafe floating-point optimizations. Fast-math
 /// flags are only valid for selects that return a floating-point

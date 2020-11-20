@@ -15,31 +15,31 @@
 //! ## Documentation
 //! https://llvm.org/docs/LangRef.html#parameter-attributes
 #[derive(Debug, Eq, PartialEq, Clone)]
-pub enum ParameterAttributes<T> {
+pub enum ParameterAttributes {
     ZeroExt,
     SignExt,
     InReg,
     ByVal,
-    ByRef(T),
-    PreAllocated(T),
+    ByRef(String),
+    PreAllocated(String),
     InAlloca,
     Sret,
-    Allign(T),
+    Allign(String),
     NoAlias,
     NoCapture,
     NoFree,
     Nest,
     Returned,
     NonNull,
-    Dereferenceable(T),
-    DereferenceableOrNull(T),
+    Dereferenceable(String),
+    DereferenceableOrNull(String),
     SwiftSelf,
     SwiftError,
     ImmArg,
     NoUndef,
 }
 
-impl<T: std::fmt::Display> std::fmt::Display for ParameterAttributes<T> {
+impl std::fmt::Display for ParameterAttributes {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         let s = match self {
             ParameterAttributes::ZeroExt => "zeroext".to_string(),
