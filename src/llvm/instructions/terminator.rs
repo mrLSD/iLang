@@ -134,7 +134,7 @@ pub struct Invoke {
     pub ret_attr: Option<ParameterAttributes>,
     pub addrspace: Option<AddrSpace>,
     pub ty: Type,
-    pub fnty: Option<Type>,
+    pub fnty: Option<String>,
     pub fnptrval: (bool, String),
     // first param indicate is it ptr
     pub function_args: Vec<FunctionArg>,
@@ -146,7 +146,7 @@ pub struct Invoke {
 
 /// Fucntion argument contain type and their value
 #[derive(Debug, Eq, PartialEq, Clone)]
-pub struct FunctionArg(Type, String);
+pub struct FunctionArg(pub Type, pub String);
 
 /// The ‘callbr’ instruction causes control to transfer to a specified
 /// function, with the possibility of control flow transfer to either

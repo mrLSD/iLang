@@ -5,7 +5,12 @@
 //!
 //! https://llvm.org/docs/LangRef.html#other-operations
 
+use crate::llvm::addrspace::AddrSpace;
+use crate::llvm::calling_convention::CallingConvention;
 use crate::llvm::fast_math_flags::FastMathFlags;
+use crate::llvm::function_attributes::FunctionAttributes;
+use crate::llvm::instructions::terminator::FunctionArg;
+use crate::llvm::parameter_attributes::ParameterAttributes;
 use crate::llvm::types::Type;
 
 /// The ‘icmp’ instruction returns a boolean value or a vector of
@@ -218,6 +223,31 @@ pub struct Select {
     pub val2: String,
 }
 
+///  https://llvm.org/docs/LangRef.html#call-instruction
+#[derive(Debug, Eq, PartialEq, Clone)]
+pub struct Call {
+    pub ret_val: String,
+    pub tail: Option<TailCall>,
+    pub fast_math_flags: Option<FastMathFlags>,
+    pub cconv: Option<CallingConvention>,
+    pub ret_attr: Option<ParameterAttributes>,
+    pub addrspace: Option<AddrSpace>,
+    pub ty: Type,
+    pub fnty: Option<String>,
+    pub fnptrval: (bool, String),
+    // first param indicate is it ptr
+    pub function_args: Vec<FunctionArg>,
+    pub function_attrs: Option<FunctionAttributes>,
+    pub operand_bundles: Option<String>,
+}
+
+#[derive(Debug, Eq, PartialEq, Clone)]
+pub enum TailCall {
+    Tail,
+    MustTail,
+    NoTail,
+}
+
 impl std::fmt::Display for Icmp {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         let s = format!(
@@ -330,6 +360,73 @@ impl std::fmt::Display for Select {
             self.ty2,
             self.val2,
         );
+        write!(f, "{}", s)
+    }
+}
+
+impl std::fmt::Display for TailCall {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        let s = match self {
+            TailCall::Tail => "tail",
+            TailCall::MustTail => "musttail",
+            TailCall::NoTail => "notail",
+        };
+        write!(f, "{}", s)
+    }
+}
+
+impl std::fmt::Display for Call {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        let tail = if let Some(v) = &self.tail {
+            format!("{}", v)
+        } else {
+            "".to_string()
+        };
+        let fast_math = if let Some(v) = &self.fast_math_flags {
+            format!("{}", v)
+        } else {
+            "".to_string()
+        };
+
+        let mut s = format!("%{} = {} call {}", tail, self.ret_val, fast_math);
+        if let Some(v) = &self.cconv {
+            s = format!("{} {}", s, v)
+        }
+        if let Some(v) = &self.ret_attr {
+            s = format!("{} {}", s, v)
+        }
+        if let Some(v) = &self.addrspace {
+            s = format!("{} {}", s, v)
+        }
+        s = format!("{} {}", s, &self.ty);
+        if let Some(v) = &self.fnty {
+            s = format!("{} {}", s, v)
+        }
+        // Check is it Ptr
+        if self.fnptrval.0 {
+            s = format!("{} %{}", s, self.fnptrval.1)
+        } else {
+            s = format!("{} @{}", s, self.fnptrval.1)
+        }
+        let args = self
+            .function_args
+            .iter()
+            .enumerate()
+            .fold("".to_string(), |s, (i, v)| {
+                if i > 0 {
+                    format!("{}, {} {}", s, v.0, v.1)
+                } else {
+                    format!("{} {} {}", s, v.0, v.1)
+                }
+            });
+        s = format!("{} ({})", s, args);
+        if let Some(v) = &self.function_attrs {
+            s = format!("{} {}", s, v)
+        }
+        if let Some(v) = &self.operand_bundles {
+            s = format!("{} {}", s, v)
+        }
+
         write!(f, "{}", s)
     }
 }
