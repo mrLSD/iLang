@@ -248,6 +248,20 @@ pub enum TailCall {
     NoTail,
 }
 
+#[derive(Debug, Eq, PartialEq, Clone)]
+pub struct Landingpad {
+    pub resultval: String,
+    pub resultty: Type,
+    pub cleanup: Option<()>,
+    pub clause: Vec<Clause>,
+}
+
+#[derive(Debug, Eq, PartialEq, Clone)]
+pub struct Clause {
+    pub clause_type: Type,
+    pub value: String,
+}
+
 impl std::fmt::Display for Icmp {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         let s = format!(
@@ -428,5 +442,28 @@ impl std::fmt::Display for Call {
         }
 
         write!(f, "{}", s)
+    }
+}
+
+impl std::fmt::Display for Landingpad {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        let mut s = format!("{} = landingpad {} ", self.resultval, self.resultty);
+        if self.cleanup.is_some() {
+            s = format!("{} cleanup", s);
+        }
+        let clause = self
+            .clause
+            .iter()
+            .fold("".to_string(), |s, v| format!("{} {}", s, v));
+        
+        s = format!("{} {}", s ,clause);
+
+        write!(f, "{}", s)
+    }
+}
+
+impl std::fmt::Display for Clause {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "catch {} {}", self.clause_type, self.value)
     }
 }
