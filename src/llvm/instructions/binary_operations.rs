@@ -7,3 +7,38 @@
 //! the same type as its operands.
 //!
 //! https://llvm.org/docs/LangRef.html#binary-operations
+
+use crate::llvm::types::Type;
+
+/// The ‘add’ instruction returns the sum of its two operands.
+///
+/// The two arguments to the ‘add’ instruction must be integer or
+/// vector of integer values. Both arguments must have identical
+/// types.
+///
+/// The value produced is the integer sum of the two operands.
+///
+/// https://llvm.org/docs/LangRef.html#add-instruction
+#[derive(Debug, Eq, PartialEq, Clone)]
+pub struct Add {
+    pub result: String,
+    pub nuw: Option<()>,
+    pub nsw: Option<()>,
+    pub ty: Type,
+    pub op1: String,
+    pub op2: String,
+}
+
+impl std::fmt::Display for Add {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        let mut s = "add".to_string();
+        if self.nuw.is_some() {
+            s = format!("{} nuw", s)
+        }
+        if self.nsw.is_some() {
+            s = format!("{} nsw", s)
+        }
+        s = format!("{} {} {}, {}", s, self.ty, self.op1, self.op2);
+        write!(f, "{}", s)
+    }
+}

@@ -7,6 +7,7 @@
 //!
 //! https://llvm.org/docs/LangRef.html#unary-operations
 
+use crate::llvm::fast_math_flags::FastMathFlags;
 use crate::llvm::types::Type;
 
 /// The ‘fneg’ instruction returns the negation of its operand.
@@ -17,7 +18,7 @@ use crate::llvm::types::Type;
 /// https://llvm.org/docs/LangRef.html#fneg-instruction
 #[derive(Debug, Eq, PartialEq, Clone)]
 pub struct FNeg {
-    pub fast_math_flags: Vec<String>,
+    pub fast_math_flags: Vec<FastMathFlags>,
     pub ty: Type,
     pub operand: String,
 }

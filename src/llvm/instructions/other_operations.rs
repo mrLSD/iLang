@@ -455,8 +455,8 @@ impl std::fmt::Display for Landingpad {
             .clause
             .iter()
             .fold("".to_string(), |s, v| format!("{} {}", s, v));
-        
-        s = format!("{} {}", s ,clause);
+
+        s = format!("{} {}", s, clause);
 
         write!(f, "{}", s)
     }
