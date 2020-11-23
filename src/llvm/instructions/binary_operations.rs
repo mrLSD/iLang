@@ -129,6 +129,7 @@ pub struct UDiv {
 /// a poison value if the result would be rounded.
 ///
 /// https://llvm.org/docs/LangRef.html#sdiv-instruction
+#[derive(Debug, Eq, PartialEq, Clone)]
 pub struct SDiv {
     pub result: String,
     pub exact: Option<()>,
@@ -148,6 +149,21 @@ pub struct SDiv {
 pub struct FDiv {
     pub result: String,
     pub fast_math_flags: Option<FastMathFlags>,
+    pub ty: Type,
+    pub op1: String,
+    pub op2: String,
+}
+
+/// The ‘urem’ instruction returns the remainder from the unsigned
+/// division of its two arguments.
+///
+/// The two arguments to the ‘urem’ instruction must be integer or
+/// vector of integer values. Both arguments must have identical
+/// types.
+///
+/// https://llvm.org/docs/LangRef.html#urem-instruction
+pub struct URem {
+    pub result: String,
     pub ty: Type,
     pub op1: String,
     pub op2: String,
@@ -245,6 +261,14 @@ impl std::fmt::Display for FDiv {
         if let Some(v) = &self.fast_math_flags {
             s = format!("{} {}", s, v)
         }
+        s = format!("{} {} {}, {}", s, self.ty, self.op1, self.op2);
+        write!(f, "{}", s)
+    }
+}
+
+impl std::fmt::Display for URem {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        let mut s = "urem".to_string();
         s = format!("{} {} {}, {}", s, self.ty, self.op1, self.op2);
         write!(f, "{}", s)
     }
