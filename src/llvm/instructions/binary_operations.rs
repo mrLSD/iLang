@@ -169,6 +169,23 @@ pub struct URem {
     pub op2: String,
 }
 
+/// The ‘srem’ instruction returns the remainder from the signed
+/// division of its two operands. This instruction can also take
+/// vector versions of the values in which case the elements must be
+/// integers.
+///
+/// The two arguments to the ‘srem’ instruction must be integer or
+/// vector of integer values. Both arguments must have identical
+/// types.
+///
+/// https://llvm.org/docs/LangRef.html#srem-instruction
+pub struct SRem {
+    pub result: String,
+    pub ty: Type,
+    pub op1: String,
+    pub op2: String,
+}
+
 impl std::fmt::Display for Add {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         let mut s = "add".to_string();
@@ -269,6 +286,14 @@ impl std::fmt::Display for FDiv {
 impl std::fmt::Display for URem {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         let mut s = "urem".to_string();
+        s = format!("{} {} {}, {}", s, self.ty, self.op1, self.op2);
+        write!(f, "{}", s)
+    }
+}
+
+impl std::fmt::Display for SRem {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        let mut s = "srem".to_string();
         s = format!("{} {} {}, {}", s, self.ty, self.op1, self.op2);
         write!(f, "{}", s)
     }
