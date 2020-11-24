@@ -8,8 +8,10 @@
 //!
 //! https://llvm.org/docs/LangRef.html#binary-operations
 
-use crate::llvm::fast_math_flags::FastMathFlags;
-use crate::llvm::types::Type;
+use crate::llvm::{
+    fast_math_flags::FastMathFlags,
+    types::Type,
+};
 
 /// The ‘add’ instruction returns the sum of its two operands.
 ///

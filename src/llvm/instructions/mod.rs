@@ -1,5 +1,6 @@
 pub mod aggregate_operations;
 pub mod binary_operations;
+pub mod bitwise_binary_operations;
 pub mod conversion_operations;
 pub mod memory_access_addressing_operations;
 pub mod other_operations;
