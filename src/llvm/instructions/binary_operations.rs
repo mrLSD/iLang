@@ -162,6 +162,7 @@ pub struct FDiv {
 /// types.
 ///
 /// https://llvm.org/docs/LangRef.html#urem-instruction
+#[derive(Debug, Eq, PartialEq, Clone)]
 pub struct URem {
     pub result: String,
     pub ty: Type,
@@ -179,8 +180,26 @@ pub struct URem {
 /// types.
 ///
 /// https://llvm.org/docs/LangRef.html#srem-instruction
+#[derive(Debug, Eq, PartialEq, Clone)]
 pub struct SRem {
     pub result: String,
+    pub ty: Type,
+    pub op1: String,
+    pub op2: String,
+}
+
+/// The ‘frem’ instruction returns the remainder from the division of
+/// its two operands.
+///
+/// The two arguments to the ‘frem’ instruction must be floating-point
+/// or vector of floating-point values. Both arguments must have
+/// identical types.
+///
+/// https://llvm.org/docs/LangRef.html#frem-instruction
+#[derive(Debug, Eq, PartialEq, Clone)]
+pub struct FRem {
+    pub result: String,
+    pub fast_math_flags: Option<FastMathFlags>,
     pub ty: Type,
     pub op1: String,
     pub op2: String,
@@ -294,6 +313,17 @@ impl std::fmt::Display for URem {
 impl std::fmt::Display for SRem {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         let mut s = "srem".to_string();
+        s = format!("{} {} {}, {}", s, self.ty, self.op1, self.op2);
+        write!(f, "{}", s)
+    }
+}
+
+impl std::fmt::Display for FRem {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        let mut s = "frem".to_string();
+        if let Some(v) = &self.fast_math_flags {
+            s = format!("{} {}", s, v)
+        }
         s = format!("{} {} {}, {}", s, self.ty, self.op1, self.op2);
         write!(f, "{}", s)
     }
