@@ -8,6 +8,7 @@
 //!
 //! https://llvm.org/docs/LangRef.html#binary-operations
 
+use crate::llvm::fast_math_flags::FastMathFlags;
 use crate::llvm::types::Type;
 
 /// The ‘add’ instruction returns the sum of its two operands.
@@ -29,6 +30,24 @@ pub struct Add {
     pub op2: String,
 }
 
+/// The ‘fadd’ instruction returns the sum of its two operands.
+///
+/// The two arguments to the ‘fadd’ instruction must be floating-point or vector of floating-point values. Both arguments must have identical types.
+///
+/// https://llvm.org/docs/LangRef.html#fadd-instruction
+#[derive(Debug, Eq, PartialEq, Clone)]
+pub struct FAdd {
+    pub result: String,
+    pub fast_math_flags: Option<FastMathFlags>,
+    pub ty: Type,
+    pub op1: String,
+    pub op2: String,
+}
+
+/// https://llvm.org/docs/LangRef.html#sub-instruction
+#[derive(Debug, Eq, PartialEq, Clone)]
+pub struct Sub();
+
 impl std::fmt::Display for Add {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         let mut s = "add".to_string();
@@ -37,6 +56,17 @@ impl std::fmt::Display for Add {
         }
         if self.nsw.is_some() {
             s = format!("{} nsw", s)
+        }
+        s = format!("{} {} {}, {}", s, self.ty, self.op1, self.op2);
+        write!(f, "{}", s)
+    }
+}
+
+impl std::fmt::Display for FAdd {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        let mut s = "fadd".to_string();
+        if let Some(v) = &self.fast_math_flags {
+            s = format!("{} {}", s, v)
         }
         s = format!("{} {} {}, {}", s, self.ty, self.op1, self.op2);
         write!(f, "{}", s)
