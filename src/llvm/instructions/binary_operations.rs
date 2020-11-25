@@ -32,7 +32,9 @@ pub struct Add {
 
 /// The ‘fadd’ instruction returns the sum of its two operands.
 ///
-/// The two arguments to the ‘fadd’ instruction must be floating-point or vector of floating-point values. Both arguments must have identical types.
+/// The two arguments to the ‘fadd’ instruction must be floating-point
+/// or vector of floating-point values. Both arguments must have
+/// identical types.
 ///
 /// https://llvm.org/docs/LangRef.html#fadd-instruction
 #[derive(Debug, Eq, PartialEq, Clone)]
@@ -44,9 +46,22 @@ pub struct FAdd {
     pub op2: String,
 }
 
+/// Note that the ‘sub’ instruction is used to represent the ‘neg’
+/// instruction present in most other intermediate representations.
+///
+/// The two arguments to the ‘sub’ instruction must be integer or
+/// vector of integer values. Both arguments must have identical
+/// types.
 /// https://llvm.org/docs/LangRef.html#sub-instruction
 #[derive(Debug, Eq, PartialEq, Clone)]
-pub struct Sub();
+pub struct Sub {
+    pub result: String,
+    pub nuw: Option<()>,
+    pub nsw: Option<()>,
+    pub ty: Type,
+    pub op1: String,
+    pub op2: String,
+}
 
 impl std::fmt::Display for Add {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
@@ -67,6 +82,20 @@ impl std::fmt::Display for FAdd {
         let mut s = "fadd".to_string();
         if let Some(v) = &self.fast_math_flags {
             s = format!("{} {}", s, v)
+        }
+        s = format!("{} {} {}, {}", s, self.ty, self.op1, self.op2);
+        write!(f, "{}", s)
+    }
+}
+
+impl std::fmt::Display for Sub {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        let mut s = "sub".to_string();
+        if self.nuw.is_some() {
+            s = format!("{} nuw", s)
+        }
+        if self.nsw.is_some() {
+            s = format!("{} nsw", s)
         }
         s = format!("{} {} {}, {}", s, self.ty, self.op1, self.op2);
         write!(f, "{}", s)
