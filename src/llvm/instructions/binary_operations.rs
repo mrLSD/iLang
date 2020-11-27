@@ -79,6 +79,22 @@ pub struct Mul {
     pub op2: String,
 }
 
+/// The ‘fmul’ instruction returns the product of its two operands.
+///
+/// The two arguments to the ‘fmul’ instruction must be floating-point
+/// or vector of floating-point values. Both arguments must have
+/// identical types.
+///
+/// https://llvm.org/docs/LangRef.html#fmul-instruction
+#[derive(Debug, Eq, PartialEq, Clone)]
+pub struct FMul {
+    pub result: String,
+    pub fast_math_flags: Option<FastMathFlags>,
+    pub ty: Type,
+    pub op1: String,
+    pub op2: String,
+}
+
 impl std::fmt::Display for Add {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         let mut s = "add".to_string();
@@ -126,6 +142,17 @@ impl std::fmt::Display for Mul {
         }
         if self.nsw.is_some() {
             s = format!("{} nsw", s)
+        }
+        s = format!("{} {} {}, {}", s, self.ty, self.op1, self.op2);
+        write!(f, "{}", s)
+    }
+}
+
+impl std::fmt::Display for FMul {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        let mut s = "fmul".to_string();
+        if let Some(v) = &self.fast_math_flags {
+            s = format!("{} {}", s, v)
         }
         s = format!("{} {} {}, {}", s, self.ty, self.op1, self.op2);
         write!(f, "{}", s)
