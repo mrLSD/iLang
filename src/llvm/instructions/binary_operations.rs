@@ -95,6 +95,22 @@ pub struct FMul {
     pub op2: String,
 }
 
+/// The ‘udiv’ instruction returns the quotient of its two operands.
+///
+/// The two arguments to the ‘udiv’ instruction must be integer or
+/// vector of integer values. Both arguments must have identical
+/// types.
+///
+/// https://llvm.org/docs/LangRef.html#udiv-instruction
+#[derive(Debug, Eq, PartialEq, Clone)]
+pub struct UDiv {
+    pub result: String,
+    pub exact: Option<()>,
+    pub ty: Type,
+    pub op1: String,
+    pub op2: String,
+}
+
 impl std::fmt::Display for Add {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         let mut s = "add".to_string();
@@ -153,6 +169,17 @@ impl std::fmt::Display for FMul {
         let mut s = "fmul".to_string();
         if let Some(v) = &self.fast_math_flags {
             s = format!("{} {}", s, v)
+        }
+        s = format!("{} {} {}, {}", s, self.ty, self.op1, self.op2);
+        write!(f, "{}", s)
+    }
+}
+
+impl std::fmt::Display for UDiv {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        let mut s = "udiv".to_string();
+        if self.exact.is_some() {
+            s = format!("{} exact", s)
         }
         s = format!("{} {} {}, {}", s, self.ty, self.op1, self.op2);
         write!(f, "{}", s)
