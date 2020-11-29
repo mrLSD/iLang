@@ -111,6 +111,32 @@ pub struct UDiv {
     pub op2: String,
 }
 
+/// The ‘sdiv’ instruction returns the quotient of its two operands.
+///
+/// The two arguments to the ‘sdiv’ instruction must be integer or
+/// vector of integer values. Both arguments must have identical
+/// types.
+/// The value produced is the signed integer quotient of the two
+/// operands rounded towards zero.
+/// Note that signed integer division and unsigned integer division
+/// are distinct operations; for unsigned integer division, use ‘udiv’.
+/// Division by zero is undefined behavior. For vectors, if any
+/// element of the divisor is zero, the operation has undefined
+/// behavior. Overflow also leads to undefined behavior; this is a
+/// rare case, but can occur, for example, by doing a 32-bit division
+/// of -2147483648 by -1.
+/// If the exact keyword is present, the result value of the sdiv is
+/// a poison value if the result would be rounded.
+///
+/// https://llvm.org/docs/LangRef.html#sdiv-instruction
+pub struct SDiv {
+    pub result: String,
+    pub exact: Option<()>,
+    pub ty: Type,
+    pub op1: String,
+    pub op2: String,
+}
+
 impl std::fmt::Display for Add {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         let mut s = "add".to_string();
@@ -178,6 +204,17 @@ impl std::fmt::Display for FMul {
 impl std::fmt::Display for UDiv {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         let mut s = "udiv".to_string();
+        if self.exact.is_some() {
+            s = format!("{} exact", s)
+        }
+        s = format!("{} {} {}, {}", s, self.ty, self.op1, self.op2);
+        write!(f, "{}", s)
+    }
+}
+
+impl std::fmt::Display for SDiv {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        let mut s = "sdiv".to_string();
         if self.exact.is_some() {
             s = format!("{} exact", s)
         }
