@@ -4,6 +4,8 @@
 //!
 //! https://llvm.org/docs/LangRef.html#aggregate-operations
 
+use crate::llvm::types::Type;
+
 /// The ‘extractvalue’ instruction extracts the value of a member
 /// field from an aggregate value.
 ///
@@ -28,6 +30,30 @@ pub struct Extractvalue {
     pub idx: Vec<u64>,
 }
 
+/// The ‘insertvalue’ instruction inserts a value into a member field
+/// in an aggregate value.
+///
+/// The first operand of an ‘insertvalue’ instruction is a value of
+/// struct or array type. The second operand is a first-class value
+/// to insert. The following operands are constant indices indicating
+/// the position at which to insert the value in a similar manner as
+/// indices in a ‘extractvalue’ instruction. The value to insert must
+/// have the same type as the value identified by the indices.
+///
+/// The result is an aggregate of the same type as val. Its value is
+/// that of val except that the value at the position specified by
+/// the indices is that of elt.
+///
+/// https://llvm.org/docs/LangRef.html#insertvalue-instruction
+#[derive(Debug, Eq, PartialEq, Clone)]
+pub struct Insertvalue {
+    pub aggregate_type: String,
+    pub val: String,
+    pub ty: Type,
+    pub elt: String,
+    pub idx: Vec<u64>,
+}
+
 impl std::fmt::Display for Extractvalue {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         let idx = self
@@ -35,6 +61,20 @@ impl std::fmt::Display for Extractvalue {
             .iter()
             .fold("".to_string(), |s, v| format!("{}, {}", s, v));
         let s = format!("extractvalue {} {} {}", self.aggregate_type, self.val, idx);
+        write!(f, "{}", s)
+    }
+}
+
+impl std::fmt::Display for Insertvalue {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        let idx = self
+            .idx
+            .iter()
+            .fold("".to_string(), |s, v| format!("{}, {}", s, v));
+        let s = format!(
+            "insertvalue {} {}, {} {} {}",
+            self.aggregate_type, self.val, self.ty, self.elt, idx
+        );
         write!(f, "{}", s)
     }
 }
