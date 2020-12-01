@@ -130,7 +130,10 @@ impl std::fmt::Display for Shl {
         if self.nsw.is_some() {
             s = format!("{} nsw", s)
         }
-        s = format!("{} {} {}, {}", s, self.ty, self.op1, self.op2);
+        s = format!(
+            "{} = {} {} {}, {}",
+            self.result, s, self.ty, self.op1, self.op2
+        );
         write!(f, "{}", s)
     }
 }
@@ -141,7 +144,10 @@ impl std::fmt::Display for LShl {
         if self.exact.is_some() {
             s = format!("{} exact", s)
         }
-        s = format!("{} {} {}, {}", s, self.ty, self.op1, self.op2);
+        s = format!(
+            "{} = {} {} {}, {}",
+            self.result, s, self.ty, self.op1, self.op2
+        );
         write!(f, "{}", s)
     }
 }
@@ -152,7 +158,10 @@ impl std::fmt::Display for AShr {
         if self.exact.is_some() {
             s = format!("{} exact", s)
         }
-        s = format!("{} {} {}, {}", s, self.ty, self.op1, self.op2);
+        s = format!(
+            "{} = {} {} {}, {}",
+            self.result, s, self.ty, self.op1, self.op2
+        );
         write!(f, "{}", s)
     }
 }
@@ -160,7 +169,10 @@ impl std::fmt::Display for AShr {
 impl std::fmt::Display for And {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         let mut s = "and".to_string();
-        s = format!("{} {} {}, {}", s, self.ty, self.op1, self.op2);
+        s = format!(
+            "{} = {} {} {}, {}",
+            self.result, s, self.ty, self.op1, self.op2
+        );
         write!(f, "{}", s)
     }
 }
@@ -168,7 +180,10 @@ impl std::fmt::Display for And {
 impl std::fmt::Display for Or {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         let mut s = "or".to_string();
-        s = format!("{} {} {}, {}", s, self.ty, self.op1, self.op2);
+        s = format!(
+            "{} = {} {} {}, {}",
+            self.result, s, self.ty, self.op1, self.op2
+        );
         write!(f, "{}", s)
     }
 }
@@ -176,7 +191,10 @@ impl std::fmt::Display for Or {
 impl std::fmt::Display for Xor {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         let mut s = "xor".to_string();
-        s = format!("{} {} {}, {}", s, self.ty, self.op1, self.op2);
+        s = format!(
+            "{} = {} {} {}, {}",
+            self.result, s, self.ty, self.op1, self.op2
+        );
         write!(f, "{}", s)
     }
 }

@@ -5,13 +5,15 @@
 //!
 //! https://llvm.org/docs/LangRef.html#other-operations
 
-use crate::llvm::addrspace::AddrSpace;
-use crate::llvm::calling_convention::CallingConvention;
-use crate::llvm::fast_math_flags::FastMathFlags;
-use crate::llvm::function_attributes::FunctionAttributes;
-use crate::llvm::instructions::terminator::FunctionArg;
-use crate::llvm::parameter_attributes::ParameterAttributes;
-use crate::llvm::types::Type;
+use crate::llvm::{
+    addrspace::AddrSpace,
+    calling_convention::CallingConvention,
+    fast_math_flags::FastMathFlags,
+    function_attributes::FunctionAttributes,
+    instructions::terminator::FunctionArg,
+    parameter_attributes::ParameterAttributes,
+    types::Type,
+};
 
 /// The ‘icmp’ instruction returns a boolean value or a vector of
 /// boolean values based on comparison of its two integer, integer

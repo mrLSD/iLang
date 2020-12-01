@@ -216,7 +216,10 @@ impl std::fmt::Display for Add {
         if self.nsw.is_some() {
             s = format!("{} nsw", s)
         }
-        s = format!("{} {} {}, {}", s, self.ty, self.op1, self.op2);
+        s = format!(
+            "{} = {} {} {}, {}",
+            self.result, s, self.ty, self.op1, self.op2
+        );
         write!(f, "{}", s)
     }
 }
@@ -227,7 +230,10 @@ impl std::fmt::Display for FAdd {
         if let Some(v) = &self.fast_math_flags {
             s = format!("{} {}", s, v)
         }
-        s = format!("{} {} {}, {}", s, self.ty, self.op1, self.op2);
+        s = format!(
+            "{} = {} {} {}, {}",
+            self.result, s, self.ty, self.op1, self.op2
+        );
         write!(f, "{}", s)
     }
 }
@@ -241,7 +247,10 @@ impl std::fmt::Display for Sub {
         if self.nsw.is_some() {
             s = format!("{} nsw", s)
         }
-        s = format!("{} {} {}, {}", s, self.ty, self.op1, self.op2);
+        s = format!(
+            "{} = {} {} {}, {}",
+            self.result, s, self.ty, self.op1, self.op2
+        );
         write!(f, "{}", s)
     }
 }
@@ -255,7 +264,10 @@ impl std::fmt::Display for Mul {
         if self.nsw.is_some() {
             s = format!("{} nsw", s)
         }
-        s = format!("{} {} {}, {}", s, self.ty, self.op1, self.op2);
+        s = format!(
+            "{} = {} {} {}, {}",
+            self.result, s, self.ty, self.op1, self.op2
+        );
         write!(f, "{}", s)
     }
 }
@@ -266,7 +278,10 @@ impl std::fmt::Display for FMul {
         if let Some(v) = &self.fast_math_flags {
             s = format!("{} {}", s, v)
         }
-        s = format!("{} {} {}, {}", s, self.ty, self.op1, self.op2);
+        s = format!(
+            "{} = {} {} {}, {}",
+            self.result, s, self.ty, self.op1, self.op2
+        );
         write!(f, "{}", s)
     }
 }
@@ -277,7 +292,10 @@ impl std::fmt::Display for UDiv {
         if self.exact.is_some() {
             s = format!("{} exact", s)
         }
-        s = format!("{} {} {}, {}", s, self.ty, self.op1, self.op2);
+        s = format!(
+            "{} = {} {} {}, {}",
+            self.result, s, self.ty, self.op1, self.op2
+        );
         write!(f, "{}", s)
     }
 }
@@ -288,7 +306,10 @@ impl std::fmt::Display for SDiv {
         if self.exact.is_some() {
             s = format!("{} exact", s)
         }
-        s = format!("{} {} {}, {}", s, self.ty, self.op1, self.op2);
+        s = format!(
+            "{} = {} {} {}, {}",
+            self.result, s, self.ty, self.op1, self.op2
+        );
         write!(f, "{}", s)
     }
 }
@@ -299,7 +320,10 @@ impl std::fmt::Display for FDiv {
         if let Some(v) = &self.fast_math_flags {
             s = format!("{} {}", s, v)
         }
-        s = format!("{} {} {}, {}", s, self.ty, self.op1, self.op2);
+        s = format!(
+            "{} = {} {} {}, {}",
+            self.result, s, self.ty, self.op1, self.op2
+        );
         write!(f, "{}", s)
     }
 }
@@ -307,7 +331,10 @@ impl std::fmt::Display for FDiv {
 impl std::fmt::Display for URem {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         let mut s = "urem".to_string();
-        s = format!("{} {} {}, {}", s, self.ty, self.op1, self.op2);
+        s = format!(
+            "{} = {} {} {}, {}",
+            self.result, s, self.ty, self.op1, self.op2
+        );
         write!(f, "{}", s)
     }
 }
@@ -315,7 +342,10 @@ impl std::fmt::Display for URem {
 impl std::fmt::Display for SRem {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         let mut s = "srem".to_string();
-        s = format!("{} {} {}, {}", s, self.ty, self.op1, self.op2);
+        s = format!(
+            "{} = {} {} {}, {}",
+            self.result, s, self.ty, self.op1, self.op2
+        );
         write!(f, "{}", s)
     }
 }
@@ -326,7 +356,10 @@ impl std::fmt::Display for FRem {
         if let Some(v) = &self.fast_math_flags {
             s = format!("{} {}", s, v)
         }
-        s = format!("{} {} {}, {}", s, self.ty, self.op1, self.op2);
+        s = format!(
+            "{} = {} {} {}, {}",
+            self.result, s, self.ty, self.op1, self.op2
+        );
         write!(f, "{}", s)
     }
 }

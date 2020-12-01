@@ -18,6 +18,7 @@ use crate::llvm::types::Type;
 /// https://llvm.org/docs/LangRef.html#fneg-instruction
 #[derive(Debug, Eq, PartialEq, Clone)]
 pub struct FNeg {
+    pub result: String,
     pub fast_math_flags: Vec<FastMathFlags>,
     pub ty: Type,
     pub operand: String,
@@ -29,6 +30,10 @@ impl std::fmt::Display for FNeg {
             .fast_math_flags
             .iter()
             .fold("".to_string(), |s, x| format!("{} {}", s, x));
-        write!(f, "fneg {} {} %{}", s, self.ty, self.operand)
+        write!(
+            f,
+            "{} = fneg {} {} %{}",
+            self.result, s, self.ty, self.operand
+        )
     }
 }

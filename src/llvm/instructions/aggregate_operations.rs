@@ -25,6 +25,7 @@ use crate::llvm::types::Type;
 /// https://llvm.org/docs/LangRef.html#extractvalue-instruction
 #[derive(Debug, Eq, PartialEq, Clone)]
 pub struct Extractvalue {
+    pub result: String,
     pub aggregate_type: String,
     pub val: String,
     pub idx: Vec<u64>,
@@ -47,6 +48,7 @@ pub struct Extractvalue {
 /// https://llvm.org/docs/LangRef.html#insertvalue-instruction
 #[derive(Debug, Eq, PartialEq, Clone)]
 pub struct Insertvalue {
+    pub result: String,
     pub aggregate_type: String,
     pub val: String,
     pub ty: Type,
@@ -60,7 +62,10 @@ impl std::fmt::Display for Extractvalue {
             .idx
             .iter()
             .fold("".to_string(), |s, v| format!("{}, {}", s, v));
-        let s = format!("extractvalue {} {} {}", self.aggregate_type, self.val, idx);
+        let s = format!(
+            "{} = extractvalue {} {} {}",
+            self.result, self.aggregate_type, self.val, idx
+        );
         write!(f, "{}", s)
     }
 }
@@ -72,8 +77,8 @@ impl std::fmt::Display for Insertvalue {
             .iter()
             .fold("".to_string(), |s, v| format!("{}, {}", s, v));
         let s = format!(
-            "insertvalue {} {}, {} {} {}",
-            self.aggregate_type, self.val, self.ty, self.elt, idx
+            "{} = insertvalue {} {}, {} {} {}",
+            self.result, self.aggregate_type, self.val, self.ty, self.elt, idx
         );
         write!(f, "{}", s)
     }
