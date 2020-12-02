@@ -51,6 +51,25 @@ pub struct Alloca {
     pub addrspace: Option<AddrSpace>,
 }
 
+/// The ‘load’ instruction is used to read from memory.
+///
+/// The argument to the load instruction specifies the memory address from
+/// which to load. The type specified must be a first class type of known
+/// size (i.e. not containing an opaque structural type). If the load is
+/// marked as volatile, then the optimizer is not allowed to modify the number
+/// or order of execution of this load with other volatile operations.
+///
+/// https://llvm.org/docs/LangRef.html#load-instruction
+#[derive(Debug, Eq, PartialEq, Clone)]
+pub struct Load {
+    pub result: String,
+    pub volatile: Option<()>,
+    pub ty: Type,
+    pub ty_pointer: Type,
+    pub pointer: String,
+    pub align: Option<Alignment>,
+}
+
 impl std::fmt::Display for Alloca {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         let mut s = format!("{} = alloca {}", self.result, self.alloc_ty);
@@ -64,6 +83,20 @@ impl std::fmt::Display for Alloca {
             s = format!("{}, {}", s, v);
         }
         if let Some(v) = &self.addrspace {
+            s = format!("{}, {}", s, v);
+        }
+        write!(f, "{}", s)
+    }
+}
+
+impl std::fmt::Display for Load {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        let mut s = format!("{} = load", self.result);
+        if self.volatile.is_some() {
+            s = format!("{} volatile", s);
+        }
+        s = format!("{} {}, {}* {}", s, self.ty, self.ty_pointer, self.pointer);
+        if let Some(v) = &self.align {
             s = format!("{}, {}", s, v);
         }
         write!(f, "{}", s)
