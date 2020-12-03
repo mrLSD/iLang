@@ -70,6 +70,33 @@ pub struct Load {
     pub align: Option<Alignment>,
 }
 
+/// The ‘store’ instruction is used to write to memory.
+///
+/// There are two arguments to the store instruction: a value to
+/// store and an address at which to store it. The type of the
+/// <pointer> operand must be a pointer to the first class type of
+/// the <value> operand. If the store is marked as volatile, then
+/// the optimizer is not allowed to modify the number or order of
+/// execution of this store with other volatile operations. Only
+/// values of first class types of known size (i.e. not containing
+/// an opaque structural type) can be stored.
+///
+/// https://llvm.org/docs/LangRef.html#store-instruction
+#[derive(Debug, Eq, PartialEq, Clone)]
+pub struct Store {
+    pub result: String,
+    pub volatile: Option<()>,
+    pub ty: Type,
+    pub value: String,
+    pub ty_pointer: Type,
+    pub pointer: String,
+    pub align: Option<Alignment>,
+}
+
+/// https://llvm.org/docs/LangRef.html#getelementptr-instruction
+#[derive(Debug, Eq, PartialEq, Clone)]
+pub struct GetElementPtr();
+
 impl std::fmt::Display for Alloca {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         let mut s = format!("{} = alloca {}", self.result, self.alloc_ty);
@@ -96,6 +123,23 @@ impl std::fmt::Display for Load {
             s = format!("{} volatile", s);
         }
         s = format!("{} {}, {}* {}", s, self.ty, self.ty_pointer, self.pointer);
+        if let Some(v) = &self.align {
+            s = format!("{}, {}", s, v);
+        }
+        write!(f, "{}", s)
+    }
+}
+
+impl std::fmt::Display for Store {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        let mut s = format!("{} = store", self.result);
+        if self.volatile.is_some() {
+            s = format!("{} volatile", s);
+        }
+        s = format!(
+            "{} {} {}, {}* {}",
+            s, self.ty, self.value, self.ty_pointer, self.pointer
+        );
         if let Some(v) = &self.align {
             s = format!("{}, {}", s, v);
         }
