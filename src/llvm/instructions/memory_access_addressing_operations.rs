@@ -93,9 +93,31 @@ pub struct Store {
     pub align: Option<Alignment>,
 }
 
+/// The ‘getelementptr’ instruction is used to get the address of a
+/// subelement of an aggregate data structure. It performs address
+/// calculation only and does not access memory. The instruction can
+/// also be used to calculate a vector of such addresses.
+///
+/// The first argument is always a type used as the basis for the
+/// calculations. The second argument is always a pointer or a vector
+/// of pointers, and is the base address to start from. The remaining
+/// arguments are indices that indicate which of the elements of the
+/// aggregate object are indexed. The interpretation of each index
+/// is dependent on the type being indexed into. The first index
+/// always indexes the pointer value given as the second argument,
+/// the second index indexes a value of the type pointed to (not necessarily the value directly pointed to, since the first index can be non-zero), etc. The first type indexed into must be a pointer value, subsequent types can be arrays, vectors, and structs. Note that subsequent types being indexed into can never be pointers, since that would require loading the pointer before continuing calculation.
+/// The type of each index argument depends on the type it is indexing into. When indexing into a (optionally packed) structure, only i32 integer constants are allowed (when using a vector of indices they must all be the same i32 integer constant). When indexing into an array, pointer or vector, integers of any width are allowed, and they are not required to be constant. These integers are treated as signed values where relevant.
+///
 /// https://llvm.org/docs/LangRef.html#getelementptr-instruction
 #[derive(Debug, Eq, PartialEq, Clone)]
-pub struct GetElementPtr();
+pub struct GetElementPtr {
+    pub result: String,
+    pub inbounds: Option<()>,
+    pub ty: Type,
+    pub ty_pointer: Type,
+    pub ptr_val: String,
+    pub range_val: Vec<(Option<()>, Type, u64)>,
+}
 
 impl std::fmt::Display for Alloca {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
@@ -144,5 +166,23 @@ impl std::fmt::Display for Store {
             s = format!("{}, {}", s, v);
         }
         write!(f, "{}", s)
+    }
+}
+
+impl std::fmt::Display for GetElementPtr {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        let mut s = format!("{} = getelementptr", self.result);
+        if self.inbounds.is_some() {
+            s = format!("{} inbounds", s);
+        }
+        s = format!("{} {}, {}* {}", s, self.ty, self.ty_pointer, self.ptr_val);
+        let r = self.range_val.iter().fold("".to_string(), |s, v| {
+            if v.0.is_some() {
+                format!("{}, inrange {} {}", s, v.1, v.2)
+            } else {
+                format!("{}, {} {}", s, v.1, v.2)
+            }
+        });
+        write!(f, "{} {}", s, r)
     }
 }
