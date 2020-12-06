@@ -10,6 +10,9 @@ fmt:
 test:
 	@cargo test --tests -- --nocapture
 
+atest:
+	@cargo test --all
+
 cover:
 	@export RUSTFLAGS="-Zprofile -Ccodegen-units=1 -Copt-level=0 -Clink-dead-code -Coverflow-checks=off -Zpanic_abort_tests -Cpanic=abort" \
 		&& export CARGO_INCREMENTAL=0 \

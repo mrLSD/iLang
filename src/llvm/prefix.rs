@@ -17,12 +17,12 @@
 use super::types::Type;
 
 #[derive(Debug, Eq, PartialEq, Clone)]
-pub struct Prefix<T> {
+pub struct Prefix {
     prefix_type: Type,
-    value: T,
+    value: String,
 }
 
-impl<T: std::fmt::Display> std::fmt::Display for Prefix<T> {
+impl std::fmt::Display for Prefix {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         let s = format!("prefix {} {}", self.prefix_type, self.value);
         write!(f, "{}", s)

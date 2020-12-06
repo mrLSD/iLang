@@ -44,7 +44,7 @@ pub enum GlobalVariableKind {
 }
 
 #[derive(Debug, Eq, PartialEq, Clone)]
-pub struct GlobalVariable<T> {
+pub struct GlobalVariable {
     name: String,
     linkage: Option<LinkageTypes>,
     preemption_specifier: Option<RuntimePreemptionSpecifier>,
@@ -55,7 +55,7 @@ pub struct GlobalVariable<T> {
     addrspace: Option<AddrSpace>,
     global_variable_kind: GlobalVariableKind,
     value_type: Type,
-    initializer_constant: Option<T>,
+    initializer_constant: Option<String>,
     section: Option<Section>,
     comdat: Option<ComDat>,
     alignment: Option<Alignment>,
@@ -84,7 +84,7 @@ impl std::fmt::Display for GlobalVariableKind {
     }
 }
 
-impl<T: std::fmt::Display> std::fmt::Display for GlobalVariable<T> {
+impl std::fmt::Display for GlobalVariable {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         let mut s = format!("@{} = ", self.name);
         if self.linkage.is_some() {
