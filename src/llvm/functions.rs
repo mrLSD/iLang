@@ -141,8 +141,8 @@ impl std::fmt::Display for Function {
             .iter()
             .enumerate()
             .fold("".to_string(), |s, (i, x)| {
-                if i > 0 {
-                    format!("{} {}", s, x)
+                if i == 0 {
+                    format!("{}", x)
                 } else {
                     format!("{}, {}", s, x)
                 }

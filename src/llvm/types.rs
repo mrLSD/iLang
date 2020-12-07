@@ -5,14 +5,14 @@ use super::type_system::*;
 
 #[derive(Debug, Eq, PartialEq, Clone)]
 pub enum Type {
-    Void(VoidType),
+    Void,
     Function(FunctionType),
-    Integer1(Integer1Type),
-    Integer8(Integer8Type),
-    Integer16(Integer16Type),
-    Integer32(Integer32Type),
-    Integer64(Integer64Type),
-    Integer128(Integer128Type),
+    Integer1,
+    Integer8,
+    Integer16,
+    Integer32,
+    Integer64,
+    Integer128,
     FloatingPoint(FloatingPointType),
     Pointer(PointerType),
     Vector(VectorType),
@@ -21,14 +21,14 @@ pub enum Type {
 impl std::fmt::Display for Type {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         let s = match self {
-            Type::Void(x) => format!("{}", x),
+            Type::Void => format!("{}", VoidType),
             Type::Function(x) => format!("{}", x),
-            Type::Integer1(x) => format!("{}", x),
-            Type::Integer8(x) => format!("{}", x),
-            Type::Integer16(x) => format!("{}", x),
-            Type::Integer32(x) => format!("{}", x),
-            Type::Integer64(x) => format!("{}", x),
-            Type::Integer128(x) => format!("{}", x),
+            Type::Integer1 => format!("{}", Integer1Type),
+            Type::Integer8 => format!("{}", Integer8Type),
+            Type::Integer16 => format!("{}", Integer16Type),
+            Type::Integer32 => format!("{}", Integer32Type),
+            Type::Integer64 => format!("{}", Integer64Type),
+            Type::Integer128 => format!("{}", Integer128Type),
             Type::FloatingPoint(x) => format!("{}", x),
             Type::Pointer(x) => format!("{}", x),
             Type::Vector(x) => format!("{}", x),
