@@ -36,3 +36,20 @@ impl std::fmt::Display for Type {
         write!(f, "{}", s)
     }
 }
+
+impl Type {
+    pub fn pointer1(ty: Type) -> Self {
+        Type::Pointer(PointerType(Box::new(ty)))
+    }
+
+    pub fn pointer2(ty: Type) -> Self {
+        let ty1 = Type::Pointer(PointerType(Box::new(ty)));
+        Type::Pointer(PointerType(Box::new(ty1)))
+    }
+
+    pub fn pointer3(ty: Type) -> Self {
+        let ty1 = Type::Pointer(PointerType(Box::new(ty)));
+        let ty2 = Type::Pointer(PointerType(Box::new(ty1)));
+        Type::Pointer(PointerType(Box::new(ty2)))
+    }
+}

@@ -1,6 +1,10 @@
 //! # Codegen
 
-use crate::llvm::type_system::single_value::PointerType;
+use crate::llvm::global_variables::UnnamedAddr::UnnamedAddr;
+use crate::llvm::global_variables::{
+    GlobalVariable,
+    GlobalVariableKind,
+};
 use crate::llvm::{
     functions::{
         ArgumentList,
@@ -30,9 +34,7 @@ pub fn main_fn() {
                 name: Some("%0".to_string()),
             },
             ArgumentList {
-                parameter_type: Type::Pointer(PointerType(Box::new(Type::Pointer(PointerType(
-                    Box::new(Type::Integer32),
-                ))))),
+                parameter_type: Type::pointer2(Type::Integer32),
                 attributes: None,
                 name: Some("%1".to_string()),
             },
@@ -49,7 +51,26 @@ pub fn main_fn() {
         personality: None,
         metadata: None,
     };
-    println!("main_fn: {}", f)
+
+    let g = GlobalVariable {
+        name: ".str".to_string(),
+        linkage: Some(LinkageTypes::Private),
+        preemption_specifier: None,
+        visibility: None,
+        dll_storage_classes: None,
+        thread_local: None,
+        unnamed_addr: Some(UnnamedAddr),
+        addrspace: None,
+        global_variable_kind: GlobalVariableKind::Constant,
+        value_type: Type::Integer16,
+        initializer_constant: Some(r#"c"Hello: %d\00""#.to_string()),
+        section: None,
+        comdat: None,
+        alignment: None,
+        metadata: None,
+    };
+    println!("{}", g);
+    println!("\n{} {{\n}}\n", f)
 }
 
 #[cfg(test)]

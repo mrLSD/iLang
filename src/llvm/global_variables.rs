@@ -45,21 +45,21 @@ pub enum GlobalVariableKind {
 
 #[derive(Debug, Eq, PartialEq, Clone)]
 pub struct GlobalVariable {
-    name: String,
-    linkage: Option<LinkageTypes>,
-    preemption_specifier: Option<RuntimePreemptionSpecifier>,
-    visibility: Option<VisibilityStyles>,
-    dll_storage_classes: Option<DLLStorageClasses>,
-    thread_local: Option<ThreadLocalStorage>,
-    unnamed_addr: Option<UnnamedAddr>,
-    addrspace: Option<AddrSpace>,
-    global_variable_kind: GlobalVariableKind,
-    value_type: Type,
-    initializer_constant: Option<String>,
-    section: Option<Section>,
-    comdat: Option<ComDat>,
-    alignment: Option<Alignment>,
-    metadata: Option<String>,
+    pub name: String,
+    pub linkage: Option<LinkageTypes>,
+    pub preemption_specifier: Option<RuntimePreemptionSpecifier>,
+    pub visibility: Option<VisibilityStyles>,
+    pub dll_storage_classes: Option<DLLStorageClasses>,
+    pub thread_local: Option<ThreadLocalStorage>,
+    pub unnamed_addr: Option<UnnamedAddr>,
+    pub addrspace: Option<AddrSpace>,
+    pub global_variable_kind: GlobalVariableKind,
+    pub value_type: Type,
+    pub initializer_constant: Option<String>,
+    pub section: Option<Section>,
+    pub comdat: Option<ComDat>,
+    pub alignment: Option<Alignment>,
+    pub metadata: Option<String>,
 }
 
 impl std::fmt::Display for UnnamedAddr {
