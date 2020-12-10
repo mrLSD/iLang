@@ -193,3 +193,20 @@ macro_rules! global {
         }
     };
 }
+
+#[macro_export]
+macro_rules! store {
+    ($var:ident.$attr:ident @ $val:expr) => {{
+        $var.$attr = Some($val);
+    }};
+    ($ty:ident $val:expr, $ptrval:expr) => {{
+        Store {
+            volatile: None,
+            ty: $ty,
+            value: $val.to_string(),
+            ty_pointer: $ty,
+            pointer: $ptrval.to_string(),
+            align: None,
+        }
+    }};
+}

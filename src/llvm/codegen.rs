@@ -52,14 +52,7 @@ pub fn main_fn() {
     let tt = target_triple!(TARGET_X86_64_UNKNOWN_LINUX_GNU);
 
     let a1 = alloca!(Integer32 2);
-    let store1 = Store {
-        volatile: None,
-        ty: Type::Integer32,
-        value: "33".to_string(),
-        ty_pointer: Type::Integer32,
-        pointer: "%2".to_string(),
-        align: None,
-    };
+    let store1 = store!(Integer32 "33", "%2");
     let load1 = Load {
         result: "%3".to_string(),
         volatile: None,
@@ -88,6 +81,8 @@ pub fn main_fn() {
     println!("==================");
     println!("{}\n{}\n{}\n{} {}\n{}", sf, tt, g, f, body, d);
     println!("==================");
+    let s = store!(Integer32 "33", "%2");
+    println!("{}", s);
 }
 
 #[cfg(test)]
