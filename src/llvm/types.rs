@@ -1,7 +1,10 @@
 //! # Basic LLVM types
 
-use super::type_system::single_value::*;
-use super::type_system::*;
+use super::type_system::{
+    aggregate::*,
+    single_value::*,
+    *,
+};
 
 #[derive(Debug, Eq, PartialEq, Clone)]
 pub enum Type {
@@ -16,6 +19,8 @@ pub enum Type {
     FloatingPoint(FloatingPointType),
     Pointer(PointerType),
     Vector(VectorType),
+    Array(ArrayType),
+    Structure(StructureType),
 }
 
 impl std::fmt::Display for Type {
@@ -32,6 +37,8 @@ impl std::fmt::Display for Type {
             Type::FloatingPoint(x) => format!("{}", x),
             Type::Pointer(x) => format!("{}", x),
             Type::Vector(x) => format!("{}", x),
+            Type::Array(x) => format!("{}", x),
+            Type::Structure(x) => format!("{}", x),
         };
         write!(f, "{}", s)
     }

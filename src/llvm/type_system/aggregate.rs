@@ -17,7 +17,7 @@ use super::super::types::Type;
 /// [<# elements> x <elementtype>]
 /// ```
 #[derive(Debug, Eq, PartialEq, Clone)]
-pub struct ArrayType(i32, Box<Type>);
+pub struct ArrayType(pub i32, pub Box<Type>);
 
 /// The structure type is used to represent a collection of data members
 /// together in memory. The elements of a structure may be any type that
