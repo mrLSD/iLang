@@ -1,6 +1,5 @@
 //! # Codegen
 
-use crate::llvm::types::Type::Integer8;
 use crate::llvm::{
     functions::{
         ArgumentList,
@@ -18,16 +17,16 @@ use crate::llvm::{
         Store,
     },
     instructions::other_operations::Call,
-    linkage_types::LinkageTypes::External,
+    linkage_types::LinkageTypes::{
+        External,
+        Private,
+    },
     runtime_preemption::RuntimePreemptionSpecifier::DsoLocal,
     source_filename::SourceFileName,
-    target_triple::{
-        TargetTriple,
-        TARGET_X86_64_UNKNOWN_LINUX_GNU,
-    },
+    target_triple::TargetTriple,
     type_system::aggregate::ArrayType,
     types::Type,
-    types::Type::Integer32,
+    types::Type::*,
 };
 
 pub fn main_fn() {
@@ -43,26 +42,14 @@ pub fn main_fn() {
     def!(d.argument_list arg!(ty1, ...));
     def!(d.preemption_specifier @DsoLocal);
 
-    let g = GlobalVariable {
-        name: ".str".to_string(),
-        linkage: None,
-        preemption_specifier: None,
-        visibility: None,
-        dll_storage_classes: None,
-        thread_local: None,
-        unnamed_addr: Some(UnnamedAddr),
-        addrspace: None,
-        global_variable_kind: GlobalVariableKind::Constant,
-        value_type: Type::Array(ArrayType(10, Box::new(Type::Integer8))),
-        initializer_constant: Some(r#"c"Hello: %d\00""#.to_string()),
-        section: None,
-        comdat: None,
-        alignment: None,
-        metadata: None,
-    };
+    let gty = Type::Array(ArrayType(10, Box::new(Type::Integer8)));
+    let mut g = global!(Constant gty ".str");
+    global!(g.linkage @Private);
+    global!(g.unnamed_addr @UnnamedAddr);
+    global!(g.initializer_constant @r#"c"Hello: %d\00""#.to_string());
 
-    let sf = SourceFileName("main.il".to_string());
-    let tt = TargetTriple(TARGET_X86_64_UNKNOWN_LINUX_GNU.to_string());
+    let sf = source_file!(1.il);
+    let tt = target_triple!(TARGET_X86_64_UNKNOWN_LINUX_GNU);
 
     let a1 = alloca!(Integer32 2);
     let store1 = Store {
@@ -101,10 +88,6 @@ pub fn main_fn() {
     println!("==================");
     println!("{}\n{}\n{}\n{} {}\n{}", sf, tt, g, f, body, d);
     println!("==================");
-    let sf = source_file!(1.il);
-    let tt = target_triple!(TARGET_X86_64_UNKNOWN_LINUX_GNU);
-    println!("{}", sf);
-    println!("{}", tt);
 }
 
 #[cfg(test)]

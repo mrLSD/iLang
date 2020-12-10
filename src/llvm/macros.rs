@@ -119,20 +119,7 @@ macro_rules! def {
             ret_attrs: None,
             result_type: Type::$ty,
             function_name: stringify!($name).to_string(),
-            argument_list: vec![
-                ArgumentList {
-                    parameter_type: Some(Type::Integer32),
-                    attributes: None,
-                    name: Some("%0".to_string()),
-                    variable_argument: false,
-                },
-                ArgumentList {
-                    parameter_type: Some(Type::pointer2(Type::Integer32)),
-                    attributes: None,
-                    name: Some("%1".to_string()),
-                    variable_argument: false,
-                },
-            ],
+            argument_list: vec![],
             unnamed_addr: None,
             addr_sapce: None,
             fn_attrs: vec![],
@@ -175,5 +162,34 @@ macro_rules! source_file {
 macro_rules! target_triple {
     ($name:ident) => {
         TargetTriple(stringify!($name).to_string());
+    };
+}
+
+#[macro_export]
+macro_rules! global {
+    ($var:ident.$attr:ident $val:expr) => {{
+        $var.$attr = $val;
+    }};
+    ($var:ident.$attr:ident @ $val:expr) => {{
+        $var.$attr = Some($val);
+    }};
+    ($kind:ident $ty:ident $name:expr) => {
+        GlobalVariable {
+            name: $name.to_string(),
+            linkage: None,
+            preemption_specifier: None,
+            visibility: None,
+            dll_storage_classes: None,
+            thread_local: None,
+            unnamed_addr: None,
+            addrspace: None,
+            global_variable_kind: GlobalVariableKind::$kind,
+            value_type: $ty,
+            initializer_constant: None,
+            section: None,
+            comdat: None,
+            alignment: None,
+            metadata: None,
+        }
     };
 }
