@@ -1,5 +1,6 @@
 //! # Codegen
 
+use crate::llvm::types::Type::Integer8;
 use crate::llvm::{
     functions::{
         ArgumentList,
@@ -30,14 +31,53 @@ use crate::llvm::{
     types::Type::Integer32,
 };
 
+macro_rules! arg {
+    ($($ty:ident $val:expr)? $(,$ty1:ident $val1:expr)*) => {{
+        let mut v = vec![];
+        $( v.push(ArgumentList {
+            parameter_type: Some($ty),
+            attributes: None,
+            name: Some(format!("%{}", stringify!($val))),
+            variable_argument: false,
+        });)?
+        $( v.push(ArgumentList {
+            parameter_type: Some($ty1),
+            attributes: None,
+            name: Some(format!("%{}", stringify!($val1))),
+            variable_argument: false,
+        });)*
+        v
+    }};
+    ($($ty:ident $val:expr)? $(,$ty1:ident $val1:expr)*, ...) => {{
+        let mut v = vec![];
+        $( v.push(ArgumentList {
+            parameter_type: Some($ty),
+            attributes: None,
+            name: Some(format!("%{}", stringify!($val))),
+            variable_argument: false,
+        });)?
+        $( v.push(ArgumentList {
+            parameter_type: Some($ty1),
+            attributes: None,
+            name: Some(format!("%{}", stringify!($val1))),
+            variable_argument: false,
+        });)*
+        v.push(ArgumentList {
+            parameter_type: None,
+            attributes: None,
+            name: None,
+            variable_argument: true,
+        });
+        v
+    }};
+}
+
 macro_rules! def {
     ($fnval:ident.$attr:ident $val:expr) => {{
         $fnval.$attr = $val;
-        $fnval
     }};
     ($fnval:ident.$attr:ident @ $val:expr) => {{
         $fnval.$attr = Some($val);
-        $fnval
     }};
     ($ty:ident $name:ident) => {{
         Function {
@@ -79,43 +119,34 @@ macro_rules! def {
     }};
 }
 
+macro_rules! decl {
+    ($fnval:ident.$attr:ident $val:expr) => {{
+        $fnval.$attr = $val;
+    }};
+    ($fnval:ident.$attr:ident @ $val:expr) => {{
+        $fnval.$attr = Some($val);
+    }};
+    ($ty:ident $name:ident) => {{
+        let mut f_decl = def!($ty $name);
+        let d = FunctionDefinitionType::Declare;
+        def!(f_decl.definition_type d);
+        f_decl
+    }};
+}
+
 pub fn main_fn() {
-    let f = Function {
-        definition_type: FunctionDefinitionType::Define,
-        linkage: Some(External),
-        preemption_specifier: Some(RuntimePreemptionSpecifier::DsoLocal),
-        visibility: None,
-        dll_storage_class: None,
-        cconv: None,
-        ret_attrs: None,
-        result_type: Type::Integer32,
-        function_name: "main".to_string(),
-        argument_list: vec![
-            ArgumentList {
-                parameter_type: Some(Type::Integer32),
-                attributes: None,
-                name: Some("%0".to_string()),
-                variable_argument: false,
-            },
-            ArgumentList {
-                parameter_type: Some(Type::pointer2(Type::Integer32)),
-                attributes: None,
-                name: Some("%1".to_string()),
-                variable_argument: false,
-            },
-        ],
-        unnamed_addr: None,
-        addr_sapce: None,
-        fn_attrs: vec![],
-        section_name: None,
-        comdat: None,
-        align: None,
-        gc: None,
-        prefix: None,
-        prologue: None,
-        personality: None,
-        metadata: None,
-    };
+    let ty1 = Type::pointer2(Integer8);
+
+    let mut f = def!(Integer32 main);
+    def!(f.linkage @External);
+    def!(f.preemption_specifier @DsoLocal);
+    def!(f.argument_list arg!(Integer32 0, ty1 1));
+
+    let ty1 = Type::pointer2(Integer8);
+    let mut d = decl!(Integer32 printf);
+    def!(d.argument_list arg!(Integer32 0, ty1 1, ...));
+    def!(d.preemption_specifier @DsoLocal);
+    println!("{}", d);
 
     let g = GlobalVariable {
         name: ".str".to_string(),
@@ -212,16 +243,6 @@ pub fn main_fn() {
     println!("==================");
     println!("{}\n{}\n{}\n{} {}\n{}", sf, tt, g, f, body, f1);
     println!("==================");
-
-    let a1 = alloca!(Integer32 1);
-    println!("{}", a1);
-    let a1 = alloca!(Integer32 v1, 4);
-    println!("{}", a1);
-
-    let mut f2 = def!(Integer32 main);
-    let mut f2 = def!(f2.linkage @External);
-    let f2 = def!(f2.preemption_specifier @DsoLocal);
-    println!("\t#{}", f2);
 }
 
 #[cfg(test)]
