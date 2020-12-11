@@ -70,6 +70,44 @@ macro_rules! arg {
         });
         v
     }};
+    ($($ty:ident)? $(,$ty1:ident)*) => {{
+        let mut v = vec![];
+        $( v.push(ArgumentList {
+            parameter_type: Some($ty),
+            attributes: None,
+            name: None,
+            variable_argument: false,
+        });)?
+        $( v.push(ArgumentList {
+            parameter_type: Some($ty1),
+            attributes: None,
+            name: None,
+            variable_argument: false,
+        });)*
+        v
+    }};
+    ($($ty:ident)? $(,$ty1:ident)*, ...) => {{
+        let mut v = vec![];
+        $( v.push(ArgumentList {
+            parameter_type: Some($ty),
+            attributes: None,
+            name: None,
+            variable_argument: false,
+        });)?
+        $( v.push(ArgumentList {
+            parameter_type: Some($ty1),
+            attributes: None,
+            name: None,
+            variable_argument: false,
+        });)*
+        v.push(ArgumentList {
+            parameter_type: None,
+            attributes: None,
+            name: None,
+            variable_argument: true,
+        });
+        v
+    }};
 }
 
 macro_rules! def {
@@ -144,7 +182,7 @@ pub fn main_fn() {
 
     let ty1 = Type::pointer2(Integer8);
     let mut d = decl!(Integer32 printf);
-    def!(d.argument_list arg!(Integer32 0, ty1 1, ...));
+    def!(d.argument_list arg!(Integer32, ty1, ...));
     def!(d.preemption_specifier @DsoLocal);
     println!("{}", d);
 
