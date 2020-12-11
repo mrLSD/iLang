@@ -1,25 +1,21 @@
 #[macro_export]
 macro_rules! alloca {
-    ($res:expr; $ty:expr) => {
+    ($ty:ident $res:expr) => {
         Alloca {
-            result: stringify!($res).to_string(),
+            result: format!("%{}", stringify!($res)),
             alloc_ty: $ty,
             elements: None,
             align: None,
             addrspace: None,
         }
     };
-    ($res:expr; $ty:expr; $align:expr) => {
+    ($ty:ident $res:expr, $align:expr) => {
         Alloca {
-            result: stringify!($res).to_string(),
+            result: format!("%{}", stringify!($res)),
             alloc_ty: $ty,
             elements: None,
-            align: Some(crate::llvm::align::Alignment($align)),
+            align: Some(super::align::Alignment($align)),
             addrspace: None,
         }
     };
 }
-
-// fn sad() {
-// 	Alignment
-// }
