@@ -19,3 +19,147 @@ macro_rules! alloca {
         }
     };
 }
+
+#[macro_export]
+macro_rules! arg {
+    ($($ty:ident $val:expr)? $(,$ty1:ident $val1:expr)*) => {{
+        let mut v = vec![];
+        $( v.push(ArgumentList {
+            parameter_type: Some($ty),
+            attributes: None,
+            name: Some(format!("%{}", stringify!($val))),
+            variable_argument: false,
+        });)?
+        $( v.push(ArgumentList {
+            parameter_type: Some($ty1),
+            attributes: None,
+            name: Some(format!("%{}", stringify!($val1))),
+            variable_argument: false,
+        });)*
+        v
+    }};
+    ($($ty:ident $val:expr)? $(,$ty1:ident $val1:expr)*, ...) => {{
+        let mut v = vec![];
+        $( v.push(ArgumentList {
+            parameter_type: Some($ty),
+            attributes: None,
+            name: Some(format!("%{}", stringify!($val))),
+            variable_argument: false,
+        });)?
+        $( v.push(ArgumentList {
+            parameter_type: Some($ty1),
+            attributes: None,
+            name: Some(format!("%{}", stringify!($val1))),
+            variable_argument: false,
+        });)*
+        v.push(ArgumentList {
+            parameter_type: None,
+            attributes: None,
+            name: None,
+            variable_argument: true,
+        });
+        v
+    }};
+    ($($ty:ident)? $(,$ty1:ident)*) => {{
+        let mut v = vec![];
+        $( v.push(ArgumentList {
+            parameter_type: Some($ty),
+            attributes: None,
+            name: None,
+            variable_argument: false,
+        });)?
+        $( v.push(ArgumentList {
+            parameter_type: Some($ty1),
+            attributes: None,
+            name: None,
+            variable_argument: false,
+        });)*
+        v
+    }};
+    ($($ty:ident)? $(,$ty1:ident)*, ...) => {{
+        let mut v = vec![];
+        $( v.push(ArgumentList {
+            parameter_type: Some($ty),
+            attributes: None,
+            name: None,
+            variable_argument: false,
+        });)?
+        $( v.push(ArgumentList {
+            parameter_type: Some($ty1),
+            attributes: None,
+            name: None,
+            variable_argument: false,
+        });)*
+        v.push(ArgumentList {
+            parameter_type: None,
+            attributes: None,
+            name: None,
+            variable_argument: true,
+        });
+        v
+    }};
+}
+
+#[macro_export]
+macro_rules! def {
+    ($fnval:ident.$attr:ident $val:expr) => {{
+        $fnval.$attr = $val;
+    }};
+    ($fnval:ident.$attr:ident @ $val:expr) => {{
+        $fnval.$attr = Some($val);
+    }};
+    ($ty:ident $name:ident) => {{
+        Function {
+            definition_type: FunctionDefinitionType::Define,
+            linkage: None,
+            preemption_specifier: None,
+            visibility: None,
+            dll_storage_class: None,
+            cconv: None,
+            ret_attrs: None,
+            result_type: Type::$ty,
+            function_name: stringify!($name).to_string(),
+            argument_list: vec![
+                ArgumentList {
+                    parameter_type: Some(Type::Integer32),
+                    attributes: None,
+                    name: Some("%0".to_string()),
+                    variable_argument: false,
+                },
+                ArgumentList {
+                    parameter_type: Some(Type::pointer2(Type::Integer32)),
+                    attributes: None,
+                    name: Some("%1".to_string()),
+                    variable_argument: false,
+                },
+            ],
+            unnamed_addr: None,
+            addr_sapce: None,
+            fn_attrs: vec![],
+            section_name: None,
+            comdat: None,
+            align: None,
+            gc: None,
+            prefix: None,
+            prologue: None,
+            personality: None,
+            metadata: None,
+        }
+    }};
+}
+
+#[macro_export]
+macro_rules! decl {
+    ($fnval:ident.$attr:ident $val:expr) => {{
+        $fnval.$attr = $val;
+    }};
+    ($fnval:ident.$attr:ident @ $val:expr) => {{
+        $fnval.$attr = Some($val);
+    }};
+    ($ty:ident $name:ident) => {{
+        let mut f_decl = def!($ty $name);
+        let d = FunctionDefinitionType::Declare;
+        def!(f_decl.definition_type d);
+        f_decl
+    }};
+}

@@ -19,7 +19,6 @@ use crate::llvm::{
     },
     instructions::other_operations::Call,
     linkage_types::LinkageTypes::External,
-    runtime_preemption::RuntimePreemptionSpecifier,
     runtime_preemption::RuntimePreemptionSpecifier::DsoLocal,
     source_filename::SourceFileName,
     target_triple::{
@@ -31,147 +30,6 @@ use crate::llvm::{
     types::Type::Integer32,
 };
 
-macro_rules! arg {
-    ($($ty:ident $val:expr)? $(,$ty1:ident $val1:expr)*) => {{
-        let mut v = vec![];
-        $( v.push(ArgumentList {
-            parameter_type: Some($ty),
-            attributes: None,
-            name: Some(format!("%{}", stringify!($val))),
-            variable_argument: false,
-        });)?
-        $( v.push(ArgumentList {
-            parameter_type: Some($ty1),
-            attributes: None,
-            name: Some(format!("%{}", stringify!($val1))),
-            variable_argument: false,
-        });)*
-        v
-    }};
-    ($($ty:ident $val:expr)? $(,$ty1:ident $val1:expr)*, ...) => {{
-        let mut v = vec![];
-        $( v.push(ArgumentList {
-            parameter_type: Some($ty),
-            attributes: None,
-            name: Some(format!("%{}", stringify!($val))),
-            variable_argument: false,
-        });)?
-        $( v.push(ArgumentList {
-            parameter_type: Some($ty1),
-            attributes: None,
-            name: Some(format!("%{}", stringify!($val1))),
-            variable_argument: false,
-        });)*
-        v.push(ArgumentList {
-            parameter_type: None,
-            attributes: None,
-            name: None,
-            variable_argument: true,
-        });
-        v
-    }};
-    ($($ty:ident)? $(,$ty1:ident)*) => {{
-        let mut v = vec![];
-        $( v.push(ArgumentList {
-            parameter_type: Some($ty),
-            attributes: None,
-            name: None,
-            variable_argument: false,
-        });)?
-        $( v.push(ArgumentList {
-            parameter_type: Some($ty1),
-            attributes: None,
-            name: None,
-            variable_argument: false,
-        });)*
-        v
-    }};
-    ($($ty:ident)? $(,$ty1:ident)*, ...) => {{
-        let mut v = vec![];
-        $( v.push(ArgumentList {
-            parameter_type: Some($ty),
-            attributes: None,
-            name: None,
-            variable_argument: false,
-        });)?
-        $( v.push(ArgumentList {
-            parameter_type: Some($ty1),
-            attributes: None,
-            name: None,
-            variable_argument: false,
-        });)*
-        v.push(ArgumentList {
-            parameter_type: None,
-            attributes: None,
-            name: None,
-            variable_argument: true,
-        });
-        v
-    }};
-}
-
-macro_rules! def {
-    ($fnval:ident.$attr:ident $val:expr) => {{
-        $fnval.$attr = $val;
-    }};
-    ($fnval:ident.$attr:ident @ $val:expr) => {{
-        $fnval.$attr = Some($val);
-    }};
-    ($ty:ident $name:ident) => {{
-        Function {
-            definition_type: FunctionDefinitionType::Define,
-            linkage: None,
-            preemption_specifier: None,
-            visibility: None,
-            dll_storage_class: None,
-            cconv: None,
-            ret_attrs: None,
-            result_type: Type::$ty,
-            function_name: stringify!($name).to_string(),
-            argument_list: vec![
-                ArgumentList {
-                    parameter_type: Some(Type::Integer32),
-                    attributes: None,
-                    name: Some("%0".to_string()),
-                    variable_argument: false,
-                },
-                ArgumentList {
-                    parameter_type: Some(Type::pointer2(Type::Integer32)),
-                    attributes: None,
-                    name: Some("%1".to_string()),
-                    variable_argument: false,
-                },
-            ],
-            unnamed_addr: None,
-            addr_sapce: None,
-            fn_attrs: vec![],
-            section_name: None,
-            comdat: None,
-            align: None,
-            gc: None,
-            prefix: None,
-            prologue: None,
-            personality: None,
-            metadata: None,
-        }
-    }};
-}
-
-macro_rules! decl {
-    ($fnval:ident.$attr:ident $val:expr) => {{
-        $fnval.$attr = $val;
-    }};
-    ($fnval:ident.$attr:ident @ $val:expr) => {{
-        $fnval.$attr = Some($val);
-    }};
-    ($ty:ident $name:ident) => {{
-        let mut f_decl = def!($ty $name);
-        let d = FunctionDefinitionType::Declare;
-        def!(f_decl.definition_type d);
-        f_decl
-    }};
-}
-
 pub fn main_fn() {
     let ty1 = Type::pointer2(Integer8);
 
@@ -180,11 +38,10 @@ pub fn main_fn() {
     def!(f.preemption_specifier @DsoLocal);
     def!(f.argument_list arg!(Integer32 0, ty1 1));
 
-    let ty1 = Type::pointer2(Integer8);
+    let ty1 = Type::pointer1(Integer8);
     let mut d = decl!(Integer32 printf);
-    def!(d.argument_list arg!(Integer32, ty1, ...));
+    def!(d.argument_list arg!(ty1, ...));
     def!(d.preemption_specifier @DsoLocal);
-    println!("{}", d);
 
     let g = GlobalVariable {
         name: ".str".to_string(),
@@ -206,43 +63,6 @@ pub fn main_fn() {
 
     let sf = SourceFileName("main.il".to_string());
     let tt = TargetTriple(TARGET_X86_64_UNKNOWN_LINUX_GNU.to_string());
-
-    let f1 = Function {
-        definition_type: FunctionDefinitionType::Declare,
-        linkage: None,
-        preemption_specifier: Some(RuntimePreemptionSpecifier::DsoLocal),
-        visibility: None,
-        dll_storage_class: None,
-        cconv: None,
-        ret_attrs: None,
-        result_type: Type::Integer32,
-        function_name: "printf".to_string(),
-        argument_list: vec![
-            ArgumentList {
-                parameter_type: Some(Type::pointer1(Type::Integer8)),
-                attributes: None,
-                name: None,
-                variable_argument: false,
-            },
-            ArgumentList {
-                parameter_type: None,
-                attributes: None,
-                name: Some("%1".to_string()),
-                variable_argument: true,
-            },
-        ],
-        unnamed_addr: None,
-        addr_sapce: None,
-        fn_attrs: vec![],
-        section_name: None,
-        comdat: None,
-        align: None,
-        gc: None,
-        prefix: None,
-        prologue: None,
-        personality: None,
-        metadata: None,
-    };
 
     let a1 = alloca!(Integer32 2);
     let store1 = Store {
@@ -279,7 +99,7 @@ pub fn main_fn() {
     let body = format!("{{\n\t{}\n\t{}\n\t{}\n\t{}\n}}", a1, store1, load1, call1);
 
     println!("==================");
-    println!("{}\n{}\n{}\n{} {}\n{}", sf, tt, g, f, body, f1);
+    println!("{}\n{}\n{}\n{} {}\n{}", sf, tt, g, f, body, d);
     println!("==================");
 }
 
