@@ -71,9 +71,10 @@ use crate::llvm::{
 /// ```
 #[derive(Debug, Eq, PartialEq, Clone)]
 pub struct ArgumentList {
-    pub parameter_type: Type,
+    pub parameter_type: Option<Type>,
     pub attributes: Option<ParameterAttributes>,
     pub name: Option<String>,
+    pub variable_argument: bool,
 }
 
 #[derive(Debug, Eq, PartialEq, Clone)]
@@ -194,12 +195,18 @@ impl std::fmt::Display for Function {
 
 impl std::fmt::Display for ArgumentList {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        let mut s = format!("{}", self.parameter_type);
+        let mut s = "".to_string();
+        if let Some(t) = &self.parameter_type {
+            s = format!("{}", t);
+        }
         if let Some(x) = &self.attributes {
             s = format!("{} {}", s, x);
         }
         if let Some(x) = &self.name {
             s = format!("{} {}", s, x);
+        }
+        if self.variable_argument {
+            s = "...".to_string();
         }
         write!(f, "{}", s)
     }

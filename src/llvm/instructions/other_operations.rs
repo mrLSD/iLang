@@ -404,7 +404,7 @@ impl std::fmt::Display for Call {
             "".to_string()
         };
 
-        let mut s = format!("%{} = {} call {}", tail, self.ret_val, fast_math);
+        let mut s = format!("%{} = {} call {}", self.ret_val, tail, fast_math);
         if let Some(v) = &self.cconv {
             s = format!("{} {}", s, v)
         }

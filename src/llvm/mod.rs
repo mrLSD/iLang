@@ -1,3 +1,6 @@
+#[macro_use]
+pub mod macros;
+
 pub mod addrspace;
 pub mod aliases;
 pub mod align;
@@ -13,6 +16,7 @@ pub mod functions;
 pub mod gc_stratagy_name;
 pub mod global_variables;
 pub mod ifunc;
+#[macro_use]
 pub mod instructions;
 pub mod linkage_types;
 pub mod module_inline_asm;

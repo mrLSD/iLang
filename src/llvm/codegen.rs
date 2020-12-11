@@ -5,6 +5,12 @@ use crate::llvm::global_variables::{
     GlobalVariable,
     GlobalVariableKind,
 };
+use crate::llvm::instructions::memory_access_addressing_operations::{
+    Alloca,
+    Load,
+    Store,
+};
+use crate::llvm::instructions::other_operations::Call;
 use crate::llvm::source_filename::SourceFileName;
 use crate::llvm::target_triple::{
     TargetTriple,
@@ -35,14 +41,16 @@ pub fn main_fn() {
         function_name: "main".to_string(),
         argument_list: vec![
             ArgumentList {
-                parameter_type: Type::Integer32,
+                parameter_type: Some(Type::Integer32),
                 attributes: None,
                 name: Some("%0".to_string()),
+                variable_argument: false,
             },
             ArgumentList {
-                parameter_type: Type::pointer2(Type::Integer32),
+                parameter_type: Some(Type::pointer2(Type::Integer32)),
                 attributes: None,
                 name: Some("%1".to_string()),
+                variable_argument: false,
             },
         ],
         unnamed_addr: None,
@@ -91,14 +99,16 @@ pub fn main_fn() {
         function_name: "printf".to_string(),
         argument_list: vec![
             ArgumentList {
-                parameter_type: Type::pointer1(Type::Integer8),
+                parameter_type: Some(Type::pointer1(Type::Integer8)),
                 attributes: None,
                 name: None,
+                variable_argument: false,
             },
             ArgumentList {
-                parameter_type: Type::pointer2(Type::Integer32),
+                parameter_type: None,
                 attributes: None,
                 name: Some("%1".to_string()),
+                variable_argument: true,
             },
         ],
         unnamed_addr: None,
@@ -114,10 +124,54 @@ pub fn main_fn() {
         metadata: None,
     };
 
-    println!("{}", sf);
-    println!("{}", tt);
-    println!("{}", g);
-    println!("\n{} {{\n}}\n", f)
+    let a1 = Alloca {
+        result: "%2".to_string(),
+        alloc_ty: Type::Integer32,
+        elements: None,
+        align: None,
+        addrspace: None,
+    };
+    let store1 = Store {
+        volatile: None,
+        ty: Type::Integer32,
+        value: "33".to_string(),
+        ty_pointer: Type::Integer32,
+        pointer: "%2".to_string(),
+        align: None,
+    };
+    let load1 = Load {
+        result: "%3".to_string(),
+        volatile: None,
+        ty: Type::Integer32,
+        ty_pointer: Type::Integer32,
+        pointer: "%2".to_string(),
+        align: None,
+    };
+    let call1 = Call {
+        ret_val: "%3".to_string(),
+        tail: None,
+        fast_math_flags: None,
+        cconv: None,
+        ret_attr: None,
+        addrspace: None,
+        ty: Type::Integer32,
+        fnty: None,
+        fnptrval: (false, "printf".to_string()),
+        function_args: vec![],
+        function_attrs: None,
+        operand_bundles: None,
+    };
+
+    let body = format!("{{\n\t{}\n\t{}\n\t{}\n\t{}\n}}", a1, store1, load1, call1);
+
+    println!("==================");
+    println!("{}\n{}\n{}\n{} {}\n{}", sf, tt, g, f, body, f1);
+    println!("==================");
+
+    let a1 = alloca!(v1; Type::Integer32);
+    println!("{}", a1);
+    let a1 = alloca!(v1; Type::Integer32; 4);
+    println!("{}", a1);
 }
 
 #[cfg(test)]

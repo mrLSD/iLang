@@ -84,7 +84,6 @@ pub struct Load {
 /// https://llvm.org/docs/LangRef.html#store-instruction
 #[derive(Debug, Eq, PartialEq, Clone)]
 pub struct Store {
-    pub result: String,
     pub volatile: Option<()>,
     pub ty: Type,
     pub value: String,
@@ -154,7 +153,7 @@ impl std::fmt::Display for Load {
 
 impl std::fmt::Display for Store {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        let mut s = format!("{} = store", self.result);
+        let mut s = "store".to_string();
         if self.volatile.is_some() {
             s = format!("{} volatile", s);
         }
