@@ -101,6 +101,10 @@ pub fn main_fn() {
     println!("==================");
     println!("{}\n{}\n{}\n{} {}\n{}", sf, tt, g, f, body, d);
     println!("==================");
+    let sf = source_file!(1.il);
+    let tt = target_triple!(TARGET_X86_64_UNKNOWN_LINUX_GNU);
+    println!("{}", sf);
+    println!("{}", tt);
 }
 
 #[cfg(test)]

@@ -163,3 +163,17 @@ macro_rules! decl {
         f_decl
     }};
 }
+
+#[macro_export]
+macro_rules! source_file {
+    ($name:expr) => {
+        SourceFileName(stringify!($name).to_string());
+    };
+}
+
+#[macro_export]
+macro_rules! target_triple {
+    ($name:ident) => {
+        TargetTriple(stringify!($name).to_string());
+    };
+}
