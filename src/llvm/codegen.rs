@@ -1,6 +1,5 @@
 //! # Codegen
 
-use crate::llvm::align::Alignment;
 use crate::llvm::{
     functions::{
         ArgumentList,
@@ -18,6 +17,7 @@ use crate::llvm::{
         Store,
     },
     instructions::other_operations::Call,
+    instructions::terminator::Ret,
     linkage_types::LinkageTypes::{
         External,
         Private,
@@ -43,7 +43,7 @@ pub fn main_fn() {
     def!(d.argument_list arg!(ty1, ...));
     def!(d.preemption_specifier @DsoLocal);
 
-    let gty = Type::Array(ArrayType(10, Box::new(Type::Integer8)));
+    let gty = Type::Array(ArrayType(10, b!(Integer8)));
     let mut g = global!(Constant gty ".str");
     global!(g.linkage @Private);
     global!(g.unnamed_addr @UnnamedAddr);
@@ -54,14 +54,7 @@ pub fn main_fn() {
 
     let a1 = alloca!(Integer32 2);
     let store1 = store!(Integer32 "33", "%2");
-    let load1 = Load {
-        result: "%3".to_string(),
-        volatile: None,
-        ty: Type::Integer32,
-        ty_pointer: Type::Integer32,
-        pointer: "%2".to_string(),
-        align: None,
-    };
+    let load1 = load!(Integer32 "3", "%2");
     let call1 = Call {
         ret_val: "%3".to_string(),
         tail: None,
@@ -76,15 +69,14 @@ pub fn main_fn() {
         function_attrs: None,
         operand_bundles: None,
     };
-
     let body = format!("{{\n\t{}\n\t{}\n\t{}\n\t{}\n}}", a1, store1, load1, call1);
 
     println!("==================");
     println!("{}\n{}\n{}\n{} {}\n{}", sf, tt, g, f, body, d);
     println!("==================");
-    let mut s = load!(Integer32 "3", "%2");
-    load!(s.align @Alignment(4));
-    load!(s.volatile @());
+    let s = ret!(Integer32 @"%3");
+    println!("{}", s);
+    let s = ret!();
     println!("{}", s);
 }
 

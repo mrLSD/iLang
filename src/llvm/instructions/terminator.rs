@@ -21,7 +21,7 @@ use crate::llvm::types::Type;
 /// occur.
 /// https://llvm.org/docs/LangRef.html#id1437
 #[derive(Debug, Eq, PartialEq, Clone)]
-pub struct Ret(Type, Option<String>);
+pub struct Ret(pub Option<(Type, String)>);
 
 /// The ‘br’ instruction is used to cause control flow to transfer to a
 /// different basic block in the current function. There are two forms of
@@ -277,8 +277,8 @@ pub struct Unreachable();
 
 impl std::fmt::Display for Ret {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        if let Some(v) = &self.1 {
-            write!(f, "ret {} {}", self.0, v)
+        if let Some(v) = &self.0 {
+            write!(f, "ret {} {}", v.0, v.1)
         } else {
             write!(f, "ret void")
         }

@@ -227,3 +227,20 @@ macro_rules! load {
         }
     }};
 }
+
+#[macro_export]
+macro_rules! ret {
+    ($ty:ident @ $val:expr) => {{
+        Ret(Some(($ty, $val.to_string())))
+    }};
+    () => {{
+        Ret(None)
+    }};
+}
+
+#[macro_export]
+macro_rules! b {
+    ($ty:expr) => {{
+        Box::new($ty)
+    }};
+}
