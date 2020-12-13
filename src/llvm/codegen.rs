@@ -1,5 +1,6 @@
 //! # Codegen
 
+use crate::llvm::align::Alignment;
 use crate::llvm::{
     functions::{
         ArgumentList,
@@ -81,7 +82,9 @@ pub fn main_fn() {
     println!("==================");
     println!("{}\n{}\n{}\n{} {}\n{}", sf, tt, g, f, body, d);
     println!("==================");
-    let s = store!(Integer32 "33", "%2");
+    let mut s = load!(Integer32 "3", "%2");
+    load!(s.align @Alignment(4));
+    load!(s.volatile @());
     println!("{}", s);
 }
 

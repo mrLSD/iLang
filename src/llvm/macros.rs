@@ -210,3 +210,20 @@ macro_rules! store {
         }
     }};
 }
+
+#[macro_export]
+macro_rules! load {
+    ($var:ident.$attr:ident @ $val:expr) => {{
+        $var.$attr = Some($val);
+    }};
+    ($ty:ident $res:expr, $ptrval:expr) => {{
+        Load {
+            result: format!("%{}", $res.to_string()),
+            volatile: None,
+            ty: $ty,
+            ty_pointer: $ty,
+            pointer: $ptrval.to_string(),
+            align: None,
+        }
+    }};
+}
