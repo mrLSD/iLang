@@ -5,6 +5,7 @@
 //!
 //! https://llvm.org/docs/LangRef.html#other-operations
 
+use crate::llvm::functions::ArgumentList;
 use crate::llvm::{
     addrspace::AddrSpace,
     calling_convention::CallingConvention,
@@ -235,7 +236,7 @@ pub struct Call {
     pub ret_attr: Option<ParameterAttributes>,
     pub addrspace: Option<AddrSpace>,
     pub ty: Type,
-    pub fnty: Option<String>,
+    pub fnty: Vec<ArgumentList>,
     pub fnptrval: (bool, String),
     // first param indicate is it ptr
     pub function_args: Vec<FunctionArg>,
@@ -415,8 +416,19 @@ impl std::fmt::Display for Call {
             s = format!("{} {}", s, v)
         }
         s = format!("{} {}", s, &self.ty);
-        if let Some(v) = &self.fnty {
-            s = format!("{} {}", s, v)
+        if !self.fnty.is_empty() {
+            let arg = self
+                .fnty
+                .iter()
+                .enumerate()
+                .fold("".to_string(), |s, (i, x)| {
+                    if i == 0 {
+                        format!("{}", x)
+                    } else {
+                        format!("{}, {}", s, x)
+                    }
+                });
+            s = format!("{} ({})", s, arg);
         }
         // Check is it Ptr
         if self.fnptrval.0 {

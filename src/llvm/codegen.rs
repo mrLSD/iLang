@@ -13,10 +13,12 @@ use crate::llvm::{
     },
     instructions::memory_access_addressing_operations::{
         Alloca,
+        GetElementPtr,
         Load,
         Store,
     },
     instructions::other_operations::Call,
+    instructions::terminator::FunctionArg,
     instructions::terminator::Ret,
     linkage_types::LinkageTypes::{
         External,
@@ -43,7 +45,7 @@ pub fn main_fn() {
     def!(d.argument_list arg!(ty1, ...));
     def!(d.preemption_specifier @DsoLocal);
 
-    let gty = Type::Array(ArrayType(10, b!(Integer8)));
+    let gty = Array(ArrayType(10, b!(Integer8)));
     let mut g = global!(Constant gty ".str");
     global!(g.linkage @Private);
     global!(g.unnamed_addr @UnnamedAddr);
@@ -52,24 +54,43 @@ pub fn main_fn() {
     let sf = source_file!(1.il);
     let tt = target_triple!(TARGET_X86_64_UNKNOWN_LINUX_GNU);
 
-    let a1 = alloca!(Integer32 2);
-    let store1 = store!(Integer32 "33", "%2");
-    let load1 = load!(Integer32 "3", "%2");
+    let a1 = alloca!(Integer32 3);
+    let store1 = store!(Integer32 "33", "%3");
+    let load1 = load!(Integer32 "4", "%3");
+    let gty = Array(ArrayType(10, b!(Integer8)));
+    let ge = GetElementPtr {
+        result: "%el".to_string(),
+        inbounds: Some(()),
+        ty: gty.clone(),
+        ty_pointer: gty,
+        ptr_val: "@.str".to_string(),
+        range_val: vec![(None, Integer64, 0), (None, Integer64, 0)],
+    };
+
+    let ty2 = Type::pointer1(Integer8);
+    let ty3 = Type::pointer1(Integer8);
     let call1 = Call {
-        ret_val: "%3".to_string(),
+        ret_val: "5".to_string(),
         tail: None,
         fast_math_flags: None,
         cconv: None,
         ret_attr: None,
         addrspace: None,
         ty: Type::Integer32,
-        fnty: None,
+        fnty: arg!(ty2, ...),
         fnptrval: (false, "printf".to_string()),
-        function_args: vec![],
+        function_args: vec![
+            FunctionArg(ty3, "%el".to_string()),
+            FunctionArg(Integer32, "%4".to_string()),
+        ],
         function_attrs: None,
         operand_bundles: None,
     };
-    let body = format!("{{\n\t{}\n\t{}\n\t{}\n\t{}\n}}", a1, store1, load1, call1);
+    let ret1 = ret!(Integer32 @0);
+    let body = format!(
+        "{{\n\t{}\n\t{}\n\t{}\n\t{}\n\t{}\n\t{}\n}}",
+        a1, store1, load1, ge, call1, ret1
+    );
 
     println!("==================");
     println!("{}\n{}\n{}\n{} {}\n{}", sf, tt, g, f, body, d);

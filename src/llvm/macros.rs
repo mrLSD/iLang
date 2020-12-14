@@ -161,7 +161,7 @@ macro_rules! source_file {
 #[macro_export]
 macro_rules! target_triple {
     ($name:ident) => {
-        TargetTriple(stringify!($name).to_string());
+        TargetTriple(crate::llvm::target_triple::$name.to_string());
     };
 }
 
@@ -242,5 +242,20 @@ macro_rules! ret {
 macro_rules! b {
     ($ty:expr) => {{
         Box::new($ty)
+    }};
+}
+
+#[macro_export]
+macro_rules! getelementptr {
+    () => {{
+        //inrange
+        1
+    }};
+}
+
+#[macro_export]
+macro_rules! call {
+    () => {{
+        1
     }};
 }
