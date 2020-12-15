@@ -247,9 +247,35 @@ macro_rules! b {
 
 #[macro_export]
 macro_rules! getelementptr {
-    () => {{
-        //inrange
-        1
+    ($ty:ident $res:expr, $ptrval:expr => [$($tyrng1:ident $rng1:expr)? $(=> $tyrng2:ident $rng2:expr)? $(,$tyrng3:ident $rng3:expr)* $(,=> $tyrng4:ident $rng4:expr)*]) => {{
+        let mut v = vec![];
+        $( v.push((None, $tyrng1, $rng1));)?
+        $( v.push((Some(()), $tyrng2, $rng2));)?
+        $( v.push((None, $tyrng3, $rng3));)*
+        $( v.push((Some(()), $tyrng4, $rng4));)*
+        GetElementPtr {
+            result: $res.to_string(),
+            inbounds: None,
+            ty: $ty.clone(),
+            ty_pointer: $ty,
+            ptr_val: $ptrval.to_string(),
+            range_val: v,
+        }
+    }};
+    ($ty:ident inbounds $res:expr, $ptrval:expr => [$($tyrng1:ident $rng1:expr)? $(=> $tyrng2:ident $rng2:expr)? $(,$tyrng3:ident $rng3:expr)* $(,=> $tyrng4:ident $rng4:expr)*]) => {{
+        let mut v = vec![];
+        $( v.push((None, $tyrng1, $rng1));)?
+        $( v.push((Some(()), $tyrng2, $rng2));)?
+        $( v.push((None, $tyrng3, $rng3));)*
+        $( v.push((Some(()), $tyrng4, $rng4));)*
+        GetElementPtr {
+            result: $res.to_string(),
+            inbounds: Some(()),
+            ty: $ty.clone(),
+            ty_pointer: $ty,
+            ptr_val: $ptrval.to_string(),
+            range_val: v,
+        }
     }};
 }
 

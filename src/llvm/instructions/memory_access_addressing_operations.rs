@@ -170,7 +170,7 @@ impl std::fmt::Display for Store {
 
 impl std::fmt::Display for GetElementPtr {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        let mut s = format!("{} = getelementptr", self.result);
+        let mut s = format!("%{} = getelementptr", self.result);
         if self.inbounds.is_some() {
             s = format!("{} inbounds", s);
         }

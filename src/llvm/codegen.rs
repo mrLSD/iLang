@@ -58,14 +58,7 @@ pub fn main_fn() {
     let store1 = store!(Integer32 "33", "%3");
     let load1 = load!(Integer32 "4", "%3");
     let gty = Array(ArrayType(10, b!(Integer8)));
-    let ge = GetElementPtr {
-        result: "%el".to_string(),
-        inbounds: Some(()),
-        ty: gty.clone(),
-        ty_pointer: gty,
-        ptr_val: "@.str".to_string(),
-        range_val: vec![(None, Integer64, 0), (None, Integer64, 0)],
-    };
+    let ge = getelementptr!(gty inbounds "el", "@.str" => [Integer64 0, Integer64 0]);
 
     let ty2 = Type::pointer1(Integer8);
     let ty3 = Type::pointer1(Integer8);
