@@ -7,8 +7,8 @@
 //!
 //! https://llvm.org/docs/LangRef.html#memory-access-and-addressing-operations
 
-use crate::llvm::addrspace::AddrSpace;
 use crate::llvm::{
+    addrspace::AddrSpace,
     align::Alignment,
     types::Type,
 };
@@ -120,7 +120,7 @@ pub struct GetElementPtr {
 
 impl std::fmt::Display for Alloca {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        let mut s = format!("{} = alloca {}", self.result, self.alloc_ty);
+        let mut s = format!("%{} = alloca {}", self.result, self.alloc_ty);
         if let Some(el) = &self.elements {
             let els = el
                 .iter()
@@ -139,7 +139,7 @@ impl std::fmt::Display for Alloca {
 
 impl std::fmt::Display for Load {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        let mut s = format!("{} = load", self.result);
+        let mut s = format!("%{} = load", self.result);
         if self.volatile.is_some() {
             s = format!("{} volatile", s);
         }

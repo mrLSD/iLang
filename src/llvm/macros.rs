@@ -1,8 +1,19 @@
+//! # Codegen helper macros
+//! Implemented most common codegen structures
+
+/// `alloca` macros
+///
+/// ```ignore
+/// // Allocate
+/// let res = alloca!(Integer32 3);
+/// // Allocate with align
+/// let res = alloca!(Integer32 3, 8);
+/// ```
 #[macro_export]
 macro_rules! alloca {
     ($ty:ident $res:expr) => {
         Alloca {
-            result: format!("%{}", stringify!($res)),
+            result: stringify!($res).to_string(),
             alloc_ty: $ty,
             elements: None,
             align: None,
@@ -11,7 +22,7 @@ macro_rules! alloca {
     };
     ($ty:ident $res:expr, $align:expr) => {
         Alloca {
-            result: format!("%{}", stringify!($res)),
+            result: stringify!($res).to_string(),
             alloc_ty: $ty,
             elements: None,
             align: Some(super::align::Alignment($align)),
@@ -20,6 +31,19 @@ macro_rules! alloca {
     };
 }
 
+/// `arg` macros
+/// Arguments for `define` and `declare`
+///
+/// ```ignore
+/// // Declare 2 arguments with different types
+/// let res = arg!(Integer32 0, Integer8 1);
+/// // Declare 2 arguments with different types, last argument variadic
+/// let res = arg!(Integer32 0, Integer8 1, ...);
+/// // Declare 2 argument without value
+/// let res = arg!(Integer32, Integer8);
+/// // Declare 1 argument without value, last argument variadic
+/// let res = arg!(Integer32, ...);
+/// ```
 #[macro_export]
 macro_rules! arg {
     ($($ty:ident $val:expr)? $(,$ty1:ident $val1:expr)*) => {{
@@ -151,6 +175,12 @@ macro_rules! decl {
     }};
 }
 
+/// `source_file` macros
+///
+/// ```ignore
+/// // Described source file `1.ll`
+/// let res = source_file!(1.il);
+/// ```
 #[macro_export]
 macro_rules! source_file {
     ($name:expr) => {
@@ -158,6 +188,12 @@ macro_rules! source_file {
     };
 }
 
+/// `target_triple` macros
+///
+/// ```ignore
+/// // Described target constant parameter
+/// let res = target_triple!(TARGET_X86_64_UNKNOWN_LINUX_GNU);
+/// ```
 #[macro_export]
 macro_rules! target_triple {
     ($name:ident) => {
@@ -194,6 +230,16 @@ macro_rules! global {
     };
 }
 
+/// `store` macros
+///
+/// ```igonre
+/// // Store constant value to `%3` value: store i32 33, i32* %3
+/// let res = store!(Integer32 "33", "%3");
+/// // Store variable `%2` to `%3` value: store i32 %2, i32* %3
+/// let res = store!(Integer32 "%2", "%3");
+/// // Extend `store` instruction for optional field `volatile`
+/// let res = store!(res.volatile @());
+/// ```
 #[macro_export]
 macro_rules! store {
     ($var:ident.$attr:ident @ $val:expr) => {{
@@ -211,6 +257,14 @@ macro_rules! store {
     }};
 }
 
+/// `load` macros
+///
+/// ```igonre
+/// // load to `res` bu addr %3`:  %res = load i32, i32* %3
+/// let res = load!(Integer32 "res", "%3");
+/// // Extend `load` instruction for optional field `volatile`
+/// let res = load!(res.volatile @());
+/// ```
 #[macro_export]
 macro_rules! load {
     ($var:ident.$attr:ident @ $val:expr) => {{
@@ -218,7 +272,7 @@ macro_rules! load {
     }};
     ($ty:ident $res:expr, $ptrval:expr) => {{
         Load {
-            result: format!("%{}", $res.to_string()),
+            result: $res.to_string(),
             volatile: None,
             ty: $ty,
             ty_pointer: $ty,
@@ -228,6 +282,16 @@ macro_rules! load {
     }};
 }
 
+/// `ret` macros
+///
+/// ```ignore
+/// // return constant: ret i32 0
+/// let res = ret!(Integer32 @0);
+/// // return value: ret i32 %1
+/// let res = ret!(Integer32 @"%1");
+/// // return void: ret void
+/// let res = ret!();
+/// ```
 #[macro_export]
 macro_rules! ret {
     ($ty:ident @ $val:expr) => {{
@@ -238,6 +302,13 @@ macro_rules! ret {
     }};
 }
 
+/// `b` macros
+/// Boxing macros
+///
+/// ```ignore
+/// // Boxing any parameter
+/// let res = b!(Integer8);
+/// ```
 #[macro_export]
 macro_rules! b {
     ($ty:expr) => {{
@@ -245,6 +316,18 @@ macro_rules! b {
     }};
 }
 
+/// `getelementptr` macros
+///
+/// ```igonre
+/// // Empty range values
+/// let res = getelementptr!(Integer64 "el", "@.str" => []);
+/// // With range values
+/// let res = getelementptr!(Integer64 "el", "@.str" => [Integer64 0, Integer64 0]);
+/// // With inbounds & range values
+/// let res = getelementptr!(Integer64 inbounds "el", "@.str" => [Integer64 0, Integer64 0]);
+/// // With inbounds & range values & `inrange` values
+/// let res = getelementptr!(Integer64 inbounds "el", "@.str" => [Integer64 0, => Integer64 0]);
+/// ```
 #[macro_export]
 macro_rules! getelementptr {
     ($ty:ident $res:expr, $ptrval:expr => [$($tyrng1:ident $rng1:expr)? $(=> $tyrng2:ident $rng2:expr)? $(,$tyrng3:ident $rng3:expr)* $(,=> $tyrng4:ident $rng4:expr)*]) => {{
@@ -279,6 +362,10 @@ macro_rules! getelementptr {
     }};
 }
 
+/// `call` macros
+///
+/// ```ignore
+/// ```
 #[macro_export]
 macro_rules! call {
     () => {{
