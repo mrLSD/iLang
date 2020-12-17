@@ -42,8 +42,8 @@ pub fn main_fn() {
 
     let ty1 = Type::pointer1(Integer8);
     let mut d = decl!(Integer32 printf);
-    def!(d.argument_list arg!(ty1, ...));
-    def!(d.preemption_specifier @DsoLocal);
+    decl!(d.argument_list arg!(ty1, ...));
+    decl!(d.preemption_specifier @DsoLocal);
 
     let gty = Array(ArrayType(10, b!(Integer8)));
     let mut g = global!(Constant gty ".str");
@@ -88,10 +88,6 @@ pub fn main_fn() {
     println!("==================");
     println!("{}\n{}\n{}\n{} {}\n{}", sf, tt, g, f, body, d);
     println!("==================");
-    let s = ret!(Integer32 @"%3");
-    println!("{}", s);
-    let s = ret!();
-    println!("{}", s);
 }
 
 #[cfg(test)]

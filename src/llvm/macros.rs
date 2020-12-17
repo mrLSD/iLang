@@ -124,6 +124,17 @@ macro_rules! arg {
     }};
 }
 
+/// `def` macros
+/// `define` instruction
+///
+/// ```ignore
+/// // Basic `define` declaration
+/// let mut f = def!(Integer32 main);
+/// // Add optional `@` value for field `linkage`
+/// def!(f.linkage @External);
+/// // Extend non-optional value
+/// def!(f.argument_list arg!(Integer32 0, ty1 1));
+/// ```
 #[macro_export]
 macro_rules! def {
     ($fnval:ident.$attr:ident $val:expr) => {{
@@ -159,6 +170,17 @@ macro_rules! def {
     }};
 }
 
+/// `decl` macros
+/// `declare` instruction
+///
+/// ```ignore
+/// // Basic declaration
+/// let mut d = decl!(Integer32 printf);
+/// // Extend non-optional value - arg list with variadic args
+/// decl!(d.argument_list arg!(ty1, ...));
+/// // Extend optional value `@` for `preemption_specifier` field
+/// decl!(d.preemption_specifier @DsoLocal);
+/// ```
 #[macro_export]
 macro_rules! decl {
     ($fnval:ident.$attr:ident $val:expr) => {{
@@ -201,6 +223,20 @@ macro_rules! target_triple {
     };
 }
 
+/// `global` macros
+///
+/// ```ignore
+/// // Basic `global` declaration
+/// let mut g = global!(Constant gty ".str");
+/// // Extend ofr non-optional field `name`
+/// global!(g.name "nm".to_string());
+/// // Extent with optional `@` value for field `linkage`
+/// global!(g.linkage @Private);
+/// // Extent with optional `@` value for field `unnamed_addr`
+/// global!(g.unnamed_addr @UnnamedAddr);
+/// // Extent with optional `@` value for field `initializer_constant`
+/// global!(g.initializer_constant @r#"c"Hello: %d\00""#.to_string());
+/// ```
 #[macro_export]
 macro_rules! global {
     ($var:ident.$attr:ident $val:expr) => {{
