@@ -394,7 +394,7 @@ macro_rules! getelementptr {
             ty_pointer: $ty,
             ptr_val: $ptrval.to_string(),
             range_val: v,
-        }
+	}
     }};
 }
 
@@ -404,7 +404,37 @@ macro_rules! getelementptr {
 /// ```
 #[macro_export]
 macro_rules! call {
-    () => {{
-        1
+    ($var:ident.$attr:ident @ $val:expr) => {{
+        $var.$attr = Some($val);
+    }};
+    ($ty:ident $res:expr => $(%$name1:ident)? $(@$name2:ident)? $declargs:expr) => {{
+    	#[allow(unused_assignments)]
+    	let mut name = None;
+    	$(
+			name = Some((true, stringify!($name1).to_string()));
+    	)?
+    	$(
+    		if name.is_some() {
+    			panic!("can't init `name` twice!");
+    		}
+			name = Some((false, stringify!($name2).to_string()));
+    	)?
+        Call {
+            ret_val: $res.to_string(),
+            tail: None,
+            fast_math_flags: None,
+            cconv: None,
+            ret_attr: None,
+            addrspace: None,
+            ty: $ty,
+            fnty: $declargs,
+            fnptrval: name.unwrap(),
+            function_args: vec![
+                FunctionArg(Integer32, "%el".to_string()),
+                FunctionArg(Integer32, "%4".to_string()),
+            ],
+            function_attrs: None,
+            operand_bundles: None,
+        }
     }};
 }

@@ -79,6 +79,9 @@ pub fn main_fn() {
         function_attrs: None,
         operand_bundles: None,
     };
+    let ty2 = Type::pointer1(Integer8);
+    let c = call!(Integer32 "5" => %nm arg!(ty2, ...));
+    println!("\n#{}", c);
     let ret1 = ret!(Integer32 @0);
     let body = format!(
         "{{\n\t{}\n\t{}\n\t{}\n\t{}\n\t{}\n\t{}\n}}",
