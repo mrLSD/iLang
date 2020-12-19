@@ -62,26 +62,7 @@ pub fn main_fn() {
 
     let ty2 = Type::pointer1(Integer8);
     let ty3 = Type::pointer1(Integer8);
-    let call1 = Call {
-        ret_val: "5".to_string(),
-        tail: None,
-        fast_math_flags: None,
-        cconv: None,
-        ret_attr: None,
-        addrspace: None,
-        ty: Type::Integer32,
-        fnty: arg!(ty2, ...),
-        fnptrval: (false, "printf".to_string()),
-        function_args: vec![
-            FunctionArg(ty3, "%el".to_string()),
-            FunctionArg(Integer32, "%4".to_string()),
-        ],
-        function_attrs: None,
-        operand_bundles: None,
-    };
-    let ty2 = Type::pointer1(Integer8);
-    let c = call!(Integer32 "5" => %nm arg!(ty2, ...));
-    println!("\n#{}", c);
+    let call1 = call!(Integer32 "5" => @printf arg!(ty2, ...) => [ty3 "%el".to_string(), Integer32 "%4".to_string()]);
     let ret1 = ret!(Integer32 @0);
     let body = format!(
         "{{\n\t{}\n\t{}\n\t{}\n\t{}\n\t{}\n\t{}\n}}",

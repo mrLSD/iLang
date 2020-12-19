@@ -401,13 +401,17 @@ macro_rules! getelementptr {
 /// `call` macros
 ///
 /// ```ignore
+/// // Basic `call` invokation:  %5 =  call  i32 (i8*, ...) @printf ( i8* %el, i32 %4)
+/// let mut res = call!(Integer32 "5" => @printf arg!(ty2, ...) => [ty3 "%el".to_string(), Integer32 "%4".to_string()]);
+/// // Extend with optional value for field `tail`
+/// call!(res.tail @());
 /// ```
 #[macro_export]
 macro_rules! call {
     ($var:ident.$attr:ident @ $val:expr) => {{
         $var.$attr = Some($val);
     }};
-    ($ty:ident $res:expr => $(%$name1:ident)? $(@$name2:ident)? $declargs:expr) => {{
+    ($ty:ident $res:expr => $(%$name1:ident)? $(@$name2:ident)? $declargs:expr => [$($argty1:ident $argval1:expr)? $(,$argty2:ident $argval2:expr)*]) => {{
     	#[allow(unused_assignments)]
     	let mut name = None;
     	$(
@@ -419,6 +423,15 @@ macro_rules! call {
     		}
 			name = Some((false, stringify!($name2).to_string()));
     	)?
+
+    	let mut args: Vec<FunctionArg> = vec![];
+    	$(
+			args.push(FunctionArg($argty1, $argval1));
+    	)?
+    	$(
+			args.push(FunctionArg($argty2, $argval2));
+    	)*
+
         Call {
             ret_val: $res.to_string(),
             tail: None,
@@ -429,10 +442,7 @@ macro_rules! call {
             ty: $ty,
             fnty: $declargs,
             fnptrval: name.unwrap(),
-            function_args: vec![
-                FunctionArg(Integer32, "%el".to_string()),
-                FunctionArg(Integer32, "%4".to_string()),
-            ],
+            function_args: args,
             function_attrs: None,
             operand_bundles: None,
         }
