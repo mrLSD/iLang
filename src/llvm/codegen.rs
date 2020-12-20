@@ -72,6 +72,8 @@ pub fn main_fn() {
     println!("==================");
     println!("{}\n{}\n{}\n{} {}\n{}", sf, tt, g, f, body, d);
     println!("==================");
+    let e = entry!(1);
+    println!("{}", e);
 }
 
 #[cfg(test)]

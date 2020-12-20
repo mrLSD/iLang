@@ -448,3 +448,17 @@ macro_rules! call {
         }
     }};
 }
+
+/// `entry` macros
+/// Label entry. Used for BR
+///
+/// ```ignore
+/// // Basic declaration: entry1:
+/// let res = entry!(1);
+/// ```
+#[macro_export]
+macro_rules! entry {
+    ($val:expr) => {{
+        format!("entry{}:", $val.to_string())
+    }};
+}
