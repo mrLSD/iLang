@@ -45,35 +45,32 @@ pub fn main_fn() {
     decl!(d.argument_list arg!(ty1, ...));
     decl!(d.preemption_specifier @DsoLocal);
 
-    let gty = Array(ArrayType(10, b!(Integer8)));
+    let gty = Array(ArrayType(11, b!(Integer8)));
     let mut g = global!(Constant gty ".str");
     global!(g.linkage @Private);
     global!(g.unnamed_addr @UnnamedAddr);
-    global!(g.initializer_constant @r#"c"Hello: %d\00""#.to_string());
+    global!(g.initializer_constant @r#"c"Hello: %d\0A\00""#.to_string());
 
     let sf = source_file!(1.il);
     let tt = target_triple!(TARGET_X86_64_UNKNOWN_LINUX_GNU);
 
-    let a1 = alloca!(Integer32 3);
-    let store1 = store!(Integer32 "33", "%3");
-    let load1 = load!(Integer32 "4", "%3");
-    let gty = Array(ArrayType(10, b!(Integer8)));
+    let a1 = alloca!(Integer32 2);
+    let store1 = store!(Integer32 "33", "%2");
+    let load1 = load!(Integer32 "3", "%2");
+    let gty = Array(ArrayType(11, b!(Integer8)));
     let ge = getelementptr!(gty inbounds "el", "@.str" => [Integer64 0, Integer64 0]);
 
     let ty2 = Type::pointer1(Integer8);
     let ty3 = Type::pointer1(Integer8);
-    let call1 = call!(Integer32 "5" => @printf arg!(ty2, ...) => [ty3 "%el".to_string(), Integer32 "%4".to_string()]);
+    let call1 = call!(Integer32 "4" => @printf arg!(ty2, ...) => [ty3 "%el".to_string(), Integer32 "%3".to_string()]);
     let ret1 = ret!(Integer32 @0);
-    let body = format!(
-        "{{\n\t{}\n\t{}\n\t{}\n\t{}\n\t{}\n\t{}\n}}",
-        a1, store1, load1, ge, call1, ret1
-    );
+    let entry1 = entry!(0);
+    let body = body!(entry1 a1 store1 load1 ge call1 ret1);
 
     println!("==================");
-    println!("{}\n{}\n{}\n{} {}\n{}", sf, tt, g, f, body, d);
+    let module = module!(sf tt g f body d);
+    println!("{}", module);
     println!("==================");
-    let e = entry!(1);
-    println!("{}", e);
 }
 
 #[cfg(test)]

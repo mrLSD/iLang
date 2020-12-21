@@ -462,3 +462,41 @@ macro_rules! entry {
         format!("entry{}:", $val.to_string())
     }};
 }
+
+/// `body` macros
+/// Function body aggregator
+///
+/// ```ignore
+/// let ret1 = ret!(Integer32 @0);
+/// let entry1 = entry!(0);
+/// // Function body with instructions inside
+/// let body = body!(entry1 ret1);
+/// ```
+#[macro_export]
+macro_rules! body {
+    ($($el:expr)*) => {{
+    	let s = "";
+    	$(
+    		let s = format!("{}\n\t{}", s, $el);
+    	)*
+        format!("{{{}\n}}", s)
+    }};
+}
+
+/// `body` macros
+/// Module declaration - contain main code for file
+///
+/// ```ignore
+/// // Example of module part combinations
+/// module!(fn body);
+/// ```
+#[macro_export]
+macro_rules! module {
+    ($($el:expr)*) => {{
+    	let s = "";
+    	$(
+    		let s = format!("{}{}\n", s, $el);
+    	)*
+        format!("{}", s)
+    }};
+}
