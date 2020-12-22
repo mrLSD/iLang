@@ -13,7 +13,7 @@
 macro_rules! alloca {
     ($ty:ident $res:expr) => {
         Alloca {
-            result: stringify!($res).to_string(),
+            result: format!("{}", $res),
             alloc_ty: $ty,
             elements: None,
             align: None,
@@ -51,13 +51,13 @@ macro_rules! arg {
         $( v.push(ArgumentList {
             parameter_type: Some($ty),
             attributes: None,
-            name: Some(format!("%{}", stringify!($val))),
+            name: Some(format!("%{}", $val)),
             variable_argument: false,
         });)?
         $( v.push(ArgumentList {
             parameter_type: Some($ty1),
             attributes: None,
-            name: Some(format!("%{}", stringify!($val1))),
+            name: Some(format!("%{}", $val1)),
             variable_argument: false,
         });)*
         v
@@ -67,13 +67,13 @@ macro_rules! arg {
         $( v.push(ArgumentList {
             parameter_type: Some($ty),
             attributes: None,
-            name: Some(format!("%{}", stringify!($val))),
+            name: Some(format!("%{}", $val)),
             variable_argument: false,
         });)?
         $( v.push(ArgumentList {
             parameter_type: Some($ty1),
             attributes: None,
-            name: Some(format!("%{}", stringify!($val1))),
+            name: Some(format!("%{}", $val1)),
             variable_argument: false,
         });)*
         v.push(ArgumentList {
