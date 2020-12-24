@@ -17,20 +17,7 @@ use crate::llvm::types::Type::{
     Integer32,
     Void,
 };
-use crate::parser::ast::{
-    BasicTypeExpression,
-    ExpressionFunctionValueCall,
-    FunctionBody,
-    FunctionBodyStatement,
-    FunctionCall,
-    FunctionValue,
-    Main,
-    MainStatement,
-    ParameterValueList,
-    ParameterValueType,
-    TypeExpression,
-    ValueExpression,
-};
+use crate::parser::ast::*;
 
 pub type Result = std::result::Result<String, CodegenError>;
 
@@ -43,6 +30,9 @@ pub enum CodegenError {
 #[derive(Debug, Clone)]
 pub struct Codegen<'a> {
     ctx: Context,
+    global_ctx: Context,
+    code: Vec<String>, 
+    let_values: Vec<String>,
     global_let_values: Vec<String>,
     ast: &'a Main<'a>,
 }
@@ -57,6 +47,8 @@ impl<'a> Codegen<'a> {
     fn new(ast: &'a Main) -> Self {
         Self {
             ctx: Context::new(),
+            global_ctx:Context::new(),
+            let_values: vec![],
             global_let_values: vec![],
             ast,
         }
@@ -69,7 +61,7 @@ impl<'a> Codegen<'a> {
         Ok(src)
     }
 
-    pub fn type_expression(&mut self, te: &TypeExpression) -> (String, TypeExpressionResult) {
+    pub fn type_expression(&mut self, te: &TypeExpression)  {
         println!(" # type_expression: TypeExpression = {:#?}", te.expr);
         match te.expr {
             BasicTypeExpression::Number(n) => {
@@ -77,10 +69,8 @@ impl<'a> Codegen<'a> {
                 let result_val = self.ctx.val();
                 let s = store!(Integer32 n, result_val);
                 self.ctx.inc();
-                (bf!(a s), TypeExpressionResult{
-                     value: result_val,
-                    global: false,
-                })
+                self.let_values.push(result_val);
+                self.cooe = format!("{}{}", self.cooe, bf!(a s));
             }
             BasicTypeExpression::String(ref s) => {
                 let gty = Type::Array(ArrayType((s.len() + 1) as i32, Box::new(Type::Integer8)));
