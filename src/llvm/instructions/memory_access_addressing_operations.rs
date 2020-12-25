@@ -7,8 +7,8 @@
 //!
 //! https://llvm.org/docs/LangRef.html#memory-access-and-addressing-operations
 
-use crate::llvm::addrspace::AddrSpace;
 use crate::llvm::{
+    addrspace::AddrSpace,
     align::Alignment,
     types::Type,
 };
@@ -84,7 +84,6 @@ pub struct Load {
 /// https://llvm.org/docs/LangRef.html#store-instruction
 #[derive(Debug, Eq, PartialEq, Clone)]
 pub struct Store {
-    pub result: String,
     pub volatile: Option<()>,
     pub ty: Type,
     pub value: String,
@@ -121,7 +120,7 @@ pub struct GetElementPtr {
 
 impl std::fmt::Display for Alloca {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        let mut s = format!("{} = alloca {}", self.result, self.alloc_ty);
+        let mut s = format!("%{} = alloca {}", self.result, self.alloc_ty);
         if let Some(el) = &self.elements {
             let els = el
                 .iter()
@@ -140,7 +139,7 @@ impl std::fmt::Display for Alloca {
 
 impl std::fmt::Display for Load {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        let mut s = format!("{} = load", self.result);
+        let mut s = format!("%{} = load", self.result);
         if self.volatile.is_some() {
             s = format!("{} volatile", s);
         }
@@ -154,7 +153,7 @@ impl std::fmt::Display for Load {
 
 impl std::fmt::Display for Store {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        let mut s = format!("{} = store", self.result);
+        let mut s = "store".to_string();
         if self.volatile.is_some() {
             s = format!("{} volatile", s);
         }
@@ -171,7 +170,7 @@ impl std::fmt::Display for Store {
 
 impl std::fmt::Display for GetElementPtr {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        let mut s = format!("{} = getelementptr", self.result);
+        let mut s = format!("%{} = getelementptr", self.result);
         if self.inbounds.is_some() {
             s = format!("{} inbounds", s);
         }

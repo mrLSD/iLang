@@ -12,7 +12,7 @@
 //! https://llvm.org/docs/LangRef.html#source-filename
 
 #[derive(Debug, Eq, PartialEq, Clone)]
-pub struct SourceFileName(String);
+pub struct SourceFileName(pub String);
 
 impl std::fmt::Display for SourceFileName {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {

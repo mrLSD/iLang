@@ -1,38 +1,62 @@
 //! # Basic LLVM types
 
-use super::type_system::single_value::*;
-use super::type_system::*;
+use super::type_system::{
+    aggregate::*,
+    single_value::*,
+    *,
+};
 
 #[derive(Debug, Eq, PartialEq, Clone)]
 pub enum Type {
-    Void(VoidType),
+    Void,
     Function(FunctionType),
-    Integer1(Integer1Type),
-    Integer8(Integer8Type),
-    Integer16(Integer16Type),
-    Integer32(Integer32Type),
-    Integer64(Integer64Type),
-    Integer128(Integer128Type),
+    Integer1,
+    Integer8,
+    Integer16,
+    Integer32,
+    Integer64,
+    Integer128,
     FloatingPoint(FloatingPointType),
     Pointer(PointerType),
     Vector(VectorType),
+    Array(ArrayType),
+    Structure(StructureType),
 }
 
 impl std::fmt::Display for Type {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         let s = match self {
-            Type::Void(x) => format!("{}", x),
+            Type::Void => format!("{}", VoidType),
             Type::Function(x) => format!("{}", x),
-            Type::Integer1(x) => format!("{}", x),
-            Type::Integer8(x) => format!("{}", x),
-            Type::Integer16(x) => format!("{}", x),
-            Type::Integer32(x) => format!("{}", x),
-            Type::Integer64(x) => format!("{}", x),
-            Type::Integer128(x) => format!("{}", x),
+            Type::Integer1 => format!("{}", Integer1Type),
+            Type::Integer8 => format!("{}", Integer8Type),
+            Type::Integer16 => format!("{}", Integer16Type),
+            Type::Integer32 => format!("{}", Integer32Type),
+            Type::Integer64 => format!("{}", Integer64Type),
+            Type::Integer128 => format!("{}", Integer128Type),
             Type::FloatingPoint(x) => format!("{}", x),
             Type::Pointer(x) => format!("{}", x),
             Type::Vector(x) => format!("{}", x),
+            Type::Array(x) => format!("{}", x),
+            Type::Structure(x) => format!("{}", x),
         };
         write!(f, "{}", s)
+    }
+}
+
+impl Type {
+    pub fn pointer1(ty: Type) -> Self {
+        Type::Pointer(PointerType(Box::new(ty)))
+    }
+
+    pub fn pointer2(ty: Type) -> Self {
+        let ty1 = Type::Pointer(PointerType(Box::new(ty)));
+        Type::Pointer(PointerType(Box::new(ty1)))
+    }
+
+    pub fn pointer3(ty: Type) -> Self {
+        let ty1 = Type::Pointer(PointerType(Box::new(ty)));
+        let ty2 = Type::Pointer(PointerType(Box::new(ty1)));
+        Type::Pointer(PointerType(Box::new(ty2)))
     }
 }

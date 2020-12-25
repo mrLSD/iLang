@@ -1,9 +1,14 @@
+#[macro_use]
+pub mod macros;
+
 pub mod addrspace;
 pub mod aliases;
 pub mod align;
 pub mod attribute_groups;
 pub mod calling_convention;
+pub mod codegen;
 pub mod comdat;
+pub mod context;
 pub mod data_layout;
 pub mod dll_storage_classes;
 pub mod fast_math_flags;

@@ -56,7 +56,7 @@ pub enum FloatingPointType {
 /// permit pointers to labels (label*). Use i8* instead.
 /// https://llvm.org/docs/LangRef.html#pointer-type
 #[derive(Debug, Eq, PartialEq, Clone)]
-pub struct PointerType(Box<Type>);
+pub struct PointerType(pub Box<Type>);
 
 /// A vector type is a simple derived type that represents a vector of
 /// elements. Vector types are used when multiple primitive data are
