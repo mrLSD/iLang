@@ -14,7 +14,8 @@ pub enum CodegenError {
     ModuleNotFound,
 }
 
-pub fn fn_module(ast: Main) -> Result {
+#[allow(clippy::ptr_arg)]
+pub fn fn_module(ast: &Main) -> Result {
     if !ast.is_empty() {
         if let MainStatement::Module(m) = &ast[0] {
             let _ = m;
@@ -25,10 +26,22 @@ pub fn fn_module(ast: Main) -> Result {
     Ok(())
 }
 
+#[allow(clippy::ptr_arg)]
+pub fn fn_globa_let(ast: &Main) -> Result {
+    let _s = ast.iter().fold("".to_string(), |s, v| {
+        if let MainStatement::LetBinding(l) = v {
+            println!("# {:#?}", l);
+        }
+        s
+    });
+    Ok(())
+}
+
 pub fn fn_main(ast: Main) -> Result {
-    println!("{:#?}", ast);
+    //println!("{:#?}", ast);
     let _ = ast;
-    fn_module(ast)
+    fn_module(&ast)?;
+    fn_globa_let(&ast)
 }
 
 #[cfg(test)]
@@ -49,7 +62,7 @@ mod tests {
         let res = fn_main(x.1);
         assert_eq!(res.unwrap_err(), CodegenError::ModuleNotFound);
 
-        let x = main(Span::new("module name1.name2\nlet val1: i8 = 10")).unwrap();
+        let x = main(Span::new("module name1.name2\nlet (val1: i8) = 10")).unwrap();
         assert_eq!(x.0.fragment(), &"");
         let res = fn_main(x.1);
         assert!(res.is_ok());
