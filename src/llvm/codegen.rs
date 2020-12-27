@@ -4,7 +4,6 @@ use crate::llvm::context::Context;
 use crate::llvm::{
     functions::{
         ArgumentList,
-        Function,
         FunctionDefinitionType,
     },
     global_variables::{

@@ -144,15 +144,15 @@ macro_rules! def {
         $fnval.$attr = Some($val);
     }};
     ($ty:ident $name:ident) => {{
-        Function {
-            definition_type: FunctionDefinitionType::Define,
+        crate::llvm::functions::Function {
+            definition_type: crate::llvm::functions::FunctionDefinitionType::Define,
             linkage: None,
             preemption_specifier: None,
             visibility: None,
             dll_storage_class: None,
             cconv: None,
             ret_attrs: None,
-            result_type: Type::$ty,
+            result_type: crate::llvm::types::Type::$ty,
             function_name: stringify!($name).to_string(),
             argument_list: vec![],
             unnamed_addr: None,
@@ -492,6 +492,19 @@ macro_rules! body {
 /// ```
 #[macro_export]
 macro_rules! module {
+    ($($el:expr)*) => {{
+    	let s = "";
+    	$(
+    		let s = format!("{}{}\n", s, $el);
+    	)*
+        format!("{}", s)
+    }};
+}
+
+/// Merge different blocks. Same as `module` macros - simply 
+/// different naming
+#[macro_export]
+macro_rules! merge {
     ($($el:expr)*) => {{
     	let s = "";
     	$(
