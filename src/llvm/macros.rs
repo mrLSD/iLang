@@ -158,6 +158,7 @@ macro_rules! def {
             unnamed_addr: None,
             addr_sapce: None,
             fn_attrs: vec![],
+            attr_group: vec![],
             section_name: None,
             comdat: None,
             align: None,
@@ -501,7 +502,7 @@ macro_rules! module {
     }};
 }
 
-/// Merge different blocks. Same as `module` macros - simply 
+/// Merge different blocks. Same as `module` macros - simply
 /// different naming
 #[macro_export]
 macro_rules! merge {

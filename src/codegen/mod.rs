@@ -2,11 +2,11 @@
 //!
 //! COdegen based on syntax analyzer and LLVM code generation
 
+use crate::llvm::linkage_types::LinkageTypes::Internal;
 use crate::parser::ast::{
     Main,
     MainStatement,
 };
-use crate::llvm::linkage_types::LinkageTypes::Internal;
 
 pub type Result = std::result::Result<String, CodegenError>;
 
@@ -49,7 +49,7 @@ pub fn fn_globa_let(ast: &Main) -> Result {
         src = "@llvm.global_ctors = appending global [1 x { i32, void ()*, i8* }] [{ i32, void ()*, i8* } { i32 65535, void ()* @_GLOBAL_let_main, i8* null }]".to_string();
         let mut f = def!(Void _GLOBAL_let_main);
         def!(f.linkage @Internal);
-        def!(f.fn_attrs @"#0".to_string());
+        def!(f.attr_group vec![0]);
         def!(f.section_name @".text.startup".to_string());
         src = format!(
             "{}\ndefine internal void @_GLOBAL_let_main() #0 section \".text.startup\" {{",
