@@ -66,7 +66,8 @@ pub fn main_fn() {
 
     let ty2 = Type::pointer1(Integer8);
     let ty3 = Type::pointer1(Integer8);
-    let call1 = call!(Integer32 ctx.inc().get() => @printf arg!(ty2, ...) => [ty3 valptr.val(), Integer32 vload.val()]);
+    let printf_call = "printf_call";
+    let call1 = call!(Integer32 ctx.inc().get() => @printf_call arg!(ty2, ...) => [ty3 valptr.val(), Integer32 vload.val()]);
     let ret1 = ret!(Integer32 @0);
     let entry1 = entry!(0);
     let body = body!(entry1 a1 store1 load1 ge call1 ret1);

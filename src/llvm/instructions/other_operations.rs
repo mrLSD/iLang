@@ -229,7 +229,7 @@ pub struct Select {
 ///  https://llvm.org/docs/LangRef.html#call-instruction
 #[derive(Debug, Eq, PartialEq, Clone)]
 pub struct Call {
-    pub ret_val: String,
+    pub ret_val: Option<String>,
     pub tail: Option<TailCall>,
     pub fast_math_flags: Option<FastMathFlags>,
     pub cconv: Option<CallingConvention>,
@@ -405,7 +405,11 @@ impl std::fmt::Display for Call {
             "".to_string()
         };
 
-        let mut s = format!("%{} = {} call {}", self.ret_val, tail, fast_math);
+        let mut s = if let Some(v) = &self.ret_val {
+            format!("%{} = {} call {}", v, tail, fast_math)
+        } else {
+            format!("{} call {}", tail, fast_math)
+        };
         if let Some(v) = &self.cconv {
             s = format!("{} {}", s, v)
         }

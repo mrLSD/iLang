@@ -412,20 +412,27 @@ macro_rules! call {
     ($var:ident.$attr:ident @ $val:expr) => {{
         $var.$attr = Some($val);
     }};
-    ($ty:ident $res:expr => $(%$name1:ident)? $(@$name2:ident)? $declargs:expr => [$($argty1:ident $argval1:expr)? $(,$argty2:ident $argval2:expr)*]) => {{
+    ($ty:ident $($res:expr)? => $(%$name1:ident)? $(@$name2:ident)? $declargs:expr => [$($argty1:ident $argval1:expr)? $(,$argty2:ident $argval2:expr)*]) => {{
+    	#[allow(unused_variables)]
+		let res: Option<String> = None;
+    	$(
+			let res = Some($res);
+    	)?
+
     	#[allow(unused_assignments)]
     	let mut name = None;
     	$(
-			name = Some((true, stringify!($name1).to_string()));
+			name = Some((true, $name1.to_string()));
     	)?
     	$(
     		if name.is_some() {
     			panic!("can't init `name` twice!");
     		}
-			name = Some((false, stringify!($name2).to_string()));
+			name = Some((false, $name2.to_string()));
     	)?
 
-    	let mut args: Vec<FunctionArg> = vec![];
+		#[allow(unused_mut)]
+    	let mut args: Vec< crate::llvm::instructions::terminator::FunctionArg> = vec![];
     	$(
 			args.push(FunctionArg($argty1, $argval1));
     	)?
@@ -434,7 +441,7 @@ macro_rules! call {
     	)*
 
         Call {
-            ret_val: $res.to_string(),
+            ret_val: res,
             tail: None,
             fast_math_flags: None,
             cconv: None,
@@ -482,6 +489,15 @@ macro_rules! body {
     	)*
         format!("{{{}\n}}", s)
     }};
+    (@$el:expr) => {{
+    	let s = $el
+    		.iter()
+    		.fold("".to_string(), |s, x|
+    			format!("{}\n\t{}", s, x)
+    		);
+        format!("{{{}\n}}", s)
+    }};
+
 }
 
 /// `body` macros
