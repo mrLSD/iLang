@@ -36,13 +36,15 @@ pub fn main_fn() {
     let mut ctx = Context::new();
     let ty1 = Type::pointer2(Integer8);
 
-    let mut f = def!(Integer32 main);
+    let name = "main";
+    let mut f = def!(Integer32 name);
     def!(f.linkage @External);
     def!(f.preemption_specifier @DsoLocal);
     def!(f.argument_list arg!(Integer32 ctx.get(), ty1 ctx.inc().get()));
 
     let ty1 = Type::pointer1(Integer8);
-    let mut d = decl!(Integer32 printf);
+    let name = "printf";
+    let mut d = decl!(Integer32 name);
     decl!(d.argument_list arg!(ty1, ...));
     decl!(d.preemption_specifier @DsoLocal);
 

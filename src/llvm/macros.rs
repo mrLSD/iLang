@@ -153,7 +153,7 @@ macro_rules! def {
             cconv: None,
             ret_attrs: None,
             result_type: crate::llvm::types::Type::$ty,
-            function_name: stringify!($name).to_string(),
+            function_name: $name.to_string(),
             argument_list: vec![],
             unnamed_addr: None,
             addr_sapce: None,
@@ -332,10 +332,10 @@ macro_rules! load {
 #[macro_export]
 macro_rules! ret {
     ($ty:ident @ $val:expr) => {{
-        Ret(Some(($ty, $val.to_string())))
+        crate::llvm::instructions::terminator::Ret(Some(($ty, $val.to_string())))
     }};
     () => {{
-        Ret(None)
+        crate::llvm::instructions::terminator::Ret(None)
     }};
 }
 
