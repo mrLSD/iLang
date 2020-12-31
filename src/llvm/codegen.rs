@@ -19,14 +19,11 @@ use crate::llvm::{
     },
     instructions::other_operations::Call,
     instructions::terminator::FunctionArg,
-    instructions::terminator::Ret,
     linkage_types::LinkageTypes::{
         External,
         Private,
     },
     runtime_preemption::RuntimePreemptionSpecifier::DsoLocal,
-    source_filename::SourceFileName,
-    target_triple::TargetTriple,
     type_system::aggregate::ArrayType,
     types::Type,
     types::Type::*,
@@ -54,7 +51,7 @@ pub fn main_fn() {
     global!(g.unnamed_addr @UnnamedAddr);
     global!(g.initializer_constant @r#"c"Hello: %d\0A\00""#.to_string());
 
-    let sf = source_file!(1.il);
+    let sf = source_file!("1.il");
     let tt = target_triple!(TARGET_X86_64_UNKNOWN_LINUX_GNU);
 
     let a1 = alloca!(Integer32 ctx.inc().get());

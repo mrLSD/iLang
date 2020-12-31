@@ -207,7 +207,7 @@ macro_rules! decl {
 #[macro_export]
 macro_rules! source_file {
     ($name:expr) => {
-        SourceFileName(stringify!($name).to_string());
+        crate::llvm::source_filename::SourceFileName($name.to_string());
     };
 }
 
@@ -220,7 +220,7 @@ macro_rules! source_file {
 #[macro_export]
 macro_rules! target_triple {
     ($name:ident) => {
-        TargetTriple(crate::llvm::target_triple::$name.to_string());
+        crate::llvm::target_triple::TargetTriple(crate::llvm::target_triple::$name.to_string());
     };
 }
 

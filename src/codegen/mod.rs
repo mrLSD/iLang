@@ -22,11 +22,21 @@ pub fn fn_module(ast: &Main) -> Result {
     let src: String;
     if !ast.is_empty() {
         if let MainStatement::Module(m) = &ast[0] {
-            let x = m
-                .module_name
-                .iter()
-                .fold("".to_string(), |s, v| format!("{}.{}", s, v));
-            src = format!("; {}.i", x);
+            let s = m.module_name.iter().enumerate().fold(
+                "; ModuleID = '".to_string(),
+                |s, (i, name)| {
+                    if i > 0 {
+                        format!("{}.{}", s, name)
+                    } else {
+                        format!("{}{}", s, name)
+                    }
+                },
+            );
+            let s = format!("{}'", s);
+            let source_file = format!("{}.i", m.module_name[m.module_name.len() - 1]);
+            let sf = source_file!(source_file);
+            let tt = target_triple!(TARGET_X86_64_UNKNOWN_LINUX_GNU);
+            src = merge!(s sf tt);
         } else {
             return Err(CodegenError::ModuleNotFound);
         }
@@ -47,7 +57,7 @@ pub fn fn_global_let(ast: &Main) -> Result {
             def!(fn_def.attr_group vec![0]);
             def!(fn_def.section_name @".text.startup".to_string());
             global_let_statement += 1;
-            
+
             let ret = ret!();
             let body = body!(ret);
             merge!(s fn_def body)
@@ -55,7 +65,7 @@ pub fn fn_global_let(ast: &Main) -> Result {
             s
         }
     });
-    let mut src = "".to_string();
+    let mut src = let_src;
     if global_let_statement > 0 {
         let global_ctors = "@llvm.global_ctors = appending global [1 x { i32, void ()*, i8* }] [{ i32, void ()*, i8* } { i32 65535, void ()* @_GLOBAL_let_main, i8* null }]".to_string();
         let name = "_GLOBAL_let_main";
@@ -72,18 +82,16 @@ pub fn fn_global_let(ast: &Main) -> Result {
             call.push(call_fn);
         }
         let body = body!(@ call);
-        src = merge!(global_ctors fn_def body);
+        src = merge!(src global_ctors fn_def body);
     }
     Ok(src)
 }
 
 pub fn fn_main(ast: Main) -> Result {
-    //println!("{:#?}", ast);
-    let _ = ast;
     let module = fn_module(&ast)?;
     let global_let = fn_global_let(&ast)?;
     let src = module!(module global_let);
-    println!("\n#main {}", src);
+    println!("\n{}", src);
     Ok(src)
 }
 
