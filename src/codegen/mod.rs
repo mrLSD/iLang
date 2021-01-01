@@ -2,6 +2,7 @@
 //!
 //! COdegen based on syntax analyzer and LLVM code generation
 
+use crate::llvm::attribute_groups::Attributes;
 use crate::llvm::instructions::other_operations::Call;
 use crate::llvm::linkage_types::LinkageTypes::Internal;
 use crate::llvm::types::Type::Void;
@@ -67,7 +68,7 @@ pub fn fn_global_let(ast: &Main) -> Result {
     });
     let mut src = let_src;
     if global_let_statement > 0 {
-        let global_ctors = "@llvm.global_ctors = appending global [1 x { i32, void ()*, i8* }] [{ i32, void ()*, i8* } { i32 65535, void ()* @_GLOBAL_let_main, i8* null }]".to_string();
+        let global_ctors = "@llvm.global_ctors = appending global [1 x { i32, void ()*, i8* }] [{ i32, void ()*, i8* } { i32 65535, void ()* @_GLOBAL_let_main, i8* null }]\n".to_string();
         let name = "_GLOBAL_let_main";
         let mut fn_def = def!(Void name);
         def!(fn_def.linkage @Internal);
@@ -87,10 +88,17 @@ pub fn fn_global_let(ast: &Main) -> Result {
     Ok(src)
 }
 
+fn fn_attr_group() -> Result {
+    let attr0 = Attributes(0, vec!["noinline".to_string(), "uwtable".to_string()]);
+    //Call{}
+    Ok(merge!(attr0))
+}
+
 pub fn fn_main(ast: Main) -> Result {
     let module = fn_module(&ast)?;
     let global_let = fn_global_let(&ast)?;
-    let src = module!(module global_let);
+    let attrs = fn_attr_group()?;
+    let src = module!(module global_let attrs);
     println!("\n{}", src);
     Ok(src)
 }

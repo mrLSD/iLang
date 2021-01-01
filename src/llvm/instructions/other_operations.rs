@@ -419,7 +419,7 @@ impl std::fmt::Display for Call {
         if let Some(v) = &self.addrspace {
             s = format!("{} {}", s, v)
         }
-        s = format!("{} {}", s, &self.ty);
+        s = format!("{}{}", s, &self.ty);
         if !self.fnty.is_empty() {
             let arg = self
                 .fnty
@@ -451,7 +451,7 @@ impl std::fmt::Display for Call {
                     format!("{} {} {}", s, v.0, v.1)
                 }
             });
-        s = format!("{} ({})", s, args);
+        s = format!("{}({})", s, args);
         if let Some(v) = &self.function_attrs {
             s = format!("{} {}", s, v)
         }
