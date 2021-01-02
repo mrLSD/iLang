@@ -395,7 +395,7 @@ impl std::fmt::Display for TailCall {
 impl std::fmt::Display for Call {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         let tail = if let Some(v) = &self.tail {
-            format!("{}", v)
+            format!("{} ", v)
         } else {
             "".to_string()
         };
@@ -406,9 +406,9 @@ impl std::fmt::Display for Call {
         };
 
         let mut s = if let Some(v) = &self.ret_val {
-            format!("%{} = {} call {}", v, tail, fast_math)
+            format!("%{} = {}call {}", v, tail, fast_math)
         } else {
-            format!("{} call {}", tail, fast_math)
+            format!("{}call {}", tail, fast_math)
         };
         if let Some(v) = &self.cconv {
             s = format!("{} {}", s, v)

@@ -497,7 +497,19 @@ macro_rules! body {
     		);
         format!("{{{}\n}}", s)
     }};
+}
 
+/// `fn_body` - declare function with definition and body
+/// ```ignore
+/// let ret = ret!();
+/// let body = body!(ret);
+/// let fn_body = fn_body!(fn_def body);
+/// ```
+#[macro_export]
+macro_rules! fn_body {
+    ($fn_def:ident $fn_body:ident) => {{
+        format!("{} {}", $fn_def.to_string(), $fn_body.to_string())
+    }};
 }
 
 /// `body` macros

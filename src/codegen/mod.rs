@@ -61,7 +61,8 @@ pub fn fn_global_let(ast: &Main) -> Result {
 
             let ret = ret!();
             let body = body!(ret);
-            merge!(s fn_def body)
+            let fn_body = fn_body!(fn_def body);
+            merge!(s fn_body)
         } else {
             s
         }
@@ -80,17 +81,19 @@ pub fn fn_global_let(ast: &Main) -> Result {
         for i in 0..global_let_statement {
             let name = format!("__global_let_init.{}", i);
             let call_fn = call!(Void => @name vec![] => []);
-            call.push(call_fn);
+            call.push(call_fn.to_string());
         }
+        call.push(ret!().to_string());
+
         let body = body!(@ call);
-        src = merge!(src global_ctors fn_def body);
+        let fn_body = fn_body!(fn_def body);
+        src = merge!(src global_ctors fn_body);
     }
     Ok(src)
 }
 
 fn fn_attr_group() -> Result {
     let attr0 = Attributes(0, vec!["noinline".to_string(), "uwtable".to_string()]);
-    //Call{}
     Ok(merge!(attr0))
 }
 
