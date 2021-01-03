@@ -247,7 +247,7 @@ macro_rules! global {
         $var.$attr = Some($val);
     }};
     ($kind:ident $ty:ident $name:expr) => {
-        GlobalVariable {
+        crate::llvm::global_variables::GlobalVariable {
             name: $name.to_string(),
             linkage: None,
             preemption_specifier: None,
@@ -256,7 +256,7 @@ macro_rules! global {
             thread_local: None,
             unnamed_addr: None,
             addrspace: None,
-            global_variable_kind: GlobalVariableKind::$kind,
+            global_variable_kind: crate::llvm::global_variables::GlobalVariableKind::$kind,
             value_type: $ty,
             initializer_constant: None,
             section: None,

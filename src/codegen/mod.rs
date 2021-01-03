@@ -5,10 +5,16 @@
 use crate::llvm::attribute_groups::Attributes;
 use crate::llvm::instructions::other_operations::Call;
 use crate::llvm::linkage_types::LinkageTypes::Internal;
-use crate::llvm::types::Type::Void;
+use crate::llvm::runtime_preemption::RuntimePreemptionSpecifier::DsoLocal;
+use crate::llvm::types::Type::{
+    Integer32,
+    Void,
+};
 use crate::parser::ast::{
     Main,
     MainStatement,
+    ParameterValueList,
+    ParameterValueType,
 };
 
 pub type Result = std::result::Result<String, CodegenError>;
@@ -48,16 +54,49 @@ pub fn fn_module(ast: &Main) -> Result {
 }
 
 #[allow(clippy::ptr_arg)]
+pub fn expression(_ast: &Main) -> Result {
+    let src = "".to_string();
+    Ok(src)
+}
+
+#[allow(clippy::ptr_arg)]
 pub fn fn_global_let(ast: &Main) -> Result {
     let mut global_let_statement = 0;
+    let mut let_values: Vec<(String, Option<String>)> = vec![];
     let let_src = ast.iter().fold("".to_string(), |s, v| {
-        if let MainStatement::LetBinding(_l) = v {
+        if let MainStatement::LetBinding(l) = v {
+            println!("{:#?}", l);
             let name = format!("__global_let_init.{}", global_let_statement);
             let mut fn_def = def!(Void name);
             def!(fn_def.linkage @Internal);
             def!(fn_def.attr_group vec![0]);
             def!(fn_def.section_name @".text.startup".to_string());
             global_let_statement += 1;
+
+            // Get Let-names & types
+            let mut let_value: Vec<(String, Option<String>)> =
+                l.value_list.iter().fold(vec![], |mut a, v| match v {
+                    ParameterValueList::ParameterValue(p) => {
+                        a.push((p.fragment().to_string(), None));
+                        a
+                    }
+                    ParameterValueList::ParameterList(pl) => {
+                        pl.iter().fold(a, |mut b, p| match p {
+                            ParameterValueType::Value(v) => {
+                                b.push((v.fragment().to_string(), None));
+                                b
+                            }
+                            ParameterValueType::ValueType(v, ref t) => {
+                                b.push((
+                                    v.fragment().to_string(),
+                                    Some(t[0].fragment().to_string()),
+                                ));
+                                b
+                            }
+                        })
+                    }
+                });
+            let_values.append(&mut let_value);
 
             let ret = ret!();
             let body = body!(ret);
@@ -67,7 +106,15 @@ pub fn fn_global_let(ast: &Main) -> Result {
             s
         }
     });
-    let mut src = let_src;
+    let globals = let_values.iter().fold("".to_string(), |s, l| {
+        let mut g = global!(Global Integer32 &l.0);
+        global!(g.preemption_specifier @DsoLocal);
+        global!(g.initializer_constant @"0".to_string());
+        format!("{}{}\n", s, g)
+    });
+
+    //println!("{:#?}", let_values);
+    let mut src = merge!(globals let_src);
     if global_let_statement > 0 {
         let global_ctors = "@llvm.global_ctors = appending global [1 x { i32, void ()*, i8* }] [{ i32, void ()*, i8* } { i32 65535, void ()* @_GLOBAL_let_main, i8* null }]\n".to_string();
         let name = "_GLOBAL_let_main";

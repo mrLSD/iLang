@@ -6,11 +6,7 @@ use crate::llvm::{
         ArgumentList,
         FunctionDefinitionType,
     },
-    global_variables::{
-        GlobalVariable,
-        GlobalVariableKind,
-        UnnamedAddr::UnnamedAddr,
-    },
+    global_variables::UnnamedAddr::UnnamedAddr,
     instructions::memory_access_addressing_operations::{
         Alloca,
         GetElementPtr,
