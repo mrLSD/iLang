@@ -11,6 +11,9 @@ use crate::llvm::types::Type::{
     Void,
 };
 use crate::parser::ast::{
+    ExpressionFunctionValueCall,
+    FunctionBody,
+    FunctionBodyStatement,
     Main,
     MainStatement,
     ParameterValueList,
@@ -60,12 +63,30 @@ pub fn expression(_ast: &Main) -> Result {
 }
 
 #[allow(clippy::ptr_arg)]
+pub fn fn_body(ast: &FunctionBody) -> Result {
+    let _ = ast.iter().fold("".to_string(), |s, b| match b {
+        FunctionBodyStatement::Expression(e) => {
+            //println!("EXPR: {:#?}", e.function_statement);
+            match e.function_statement {
+                ExpressionFunctionValueCall::FunctionValue(ref fv) => {
+                    println!("EXPR: {:#?}", fv);
+                }
+                _ => unimplemented!(),
+            }
+            "".to_string()
+        }
+        _ => s,
+    });
+    let src = "".to_string();
+    Ok(src)
+}
+
+#[allow(clippy::ptr_arg)]
 pub fn fn_global_let(ast: &Main) -> Result {
     let mut global_let_statement = 0;
     let mut let_values: Vec<(String, Option<String>)> = vec![];
     let let_src = ast.iter().fold("".to_string(), |s, v| {
         if let MainStatement::LetBinding(l) = v {
-            println!("{:#?}", l);
             let name = format!("__global_let_init.{}", global_let_statement);
             let mut fn_def = def!(Void name);
             def!(fn_def.linkage @Internal);
@@ -100,8 +121,10 @@ pub fn fn_global_let(ast: &Main) -> Result {
 
             let ret = ret!();
             let body = body!(ret);
-            let fn_body = fn_body!(fn_def body);
-            merge!(s fn_body)
+            let fn_body_src = fn_body!(fn_def body);
+            let _ = fn_body(&l.function_body);
+
+            merge!(s fn_body_src)
         } else {
             s
         }
@@ -149,7 +172,7 @@ pub fn fn_main(ast: Main) -> Result {
     let global_let = fn_global_let(&ast)?;
     let attrs = fn_attr_group()?;
     let src = module!(module global_let attrs);
-    println!("\n{}", src);
+    //println!("\n{}", src);
     Ok(src)
 }
 
