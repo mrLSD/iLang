@@ -3,6 +3,7 @@
 //! COdegen based on syntax analyzer and LLVM code generation
 
 use crate::llvm::attribute_groups::Attributes;
+use crate::llvm::context::Context;
 use crate::llvm::instructions::other_operations::Call;
 use crate::llvm::linkage_types::LinkageTypes::Internal;
 use crate::llvm::runtime_preemption::RuntimePreemptionSpecifier::DsoLocal;
@@ -11,13 +12,16 @@ use crate::llvm::types::Type::{
     Void,
 };
 use crate::parser::ast::{
+    BasicTypeExpression,
     ExpressionFunctionValueCall,
     FunctionBody,
     FunctionBodyStatement,
+    FunctionValue,
     Main,
     MainStatement,
     ParameterValueList,
     ParameterValueType,
+    ValueExpression,
 };
 
 pub type Result = std::result::Result<String, CodegenError>;
@@ -64,18 +68,54 @@ pub fn expression(_ast: &Main) -> Result {
 
 #[allow(clippy::ptr_arg)]
 pub fn fn_body(ast: &FunctionBody) -> Result {
-    let _ = ast.iter().fold("".to_string(), |s, b| match b {
-        FunctionBodyStatement::Expression(e) => {
-            //println!("EXPR: {:#?}", e.function_statement);
-            match e.function_statement {
-                ExpressionFunctionValueCall::FunctionValue(ref fv) => {
-                    println!("EXPR: {:#?}", fv);
+    let mut ctx = Context::new();
+    let entry_ctx = Context::new();
+    let _src = entry!(entry_ctx.get());
+    let _ = ast.iter().fold("".to_string(), |s, b| {
+        let fb = match b {
+            FunctionBodyStatement::Expression(e) => {
+                //println!("EXPR: {:#?}", e.function_statement);
+                match e.function_statement {
+                    ExpressionFunctionValueCall::FunctionValue(ref fv) => {
+                        //println!("EXPR: {:#?}", fv);
+                        match fv {
+                            FunctionValue::ValueList(vl) => {
+                                vl.iter().fold("".to_string(), |s, vlp| {
+                                    let val_list = match vlp {
+                                        ValueExpression::ParameterValue(pv) => {
+                                            println!("ParameterValue: {:#?}", pv);
+                                            "".to_string()
+                                        }
+                                        ValueExpression::TypeExpression(te) => {
+                                            println!("TypeExpression: {:#?}", te.expr);
+                                            match te.expr {
+                                                BasicTypeExpression::Number(n) => {
+                                                    println!("{:?}", n as u64);
+                                                    let a = alloca!(Integer32 ctx.get());
+                                                    let _n_val = ctx.val();
+                                                    let s = store!(Integer32 n, ctx.val());
+                                                    ctx.inc();
+                                                    merge!(a s)
+                                                }
+                                                _ => unimplemented!(),
+                                            }
+                                        }
+                                    };
+                                    merge!(s val_list)
+                                })
+                            }
+                            FunctionValue::Expression(expr) => {
+                                println!("EXPR-VL: {:#?}", expr);
+                                "".to_string()
+                            }
+                        }
+                    }
+                    _ => unimplemented!(),
                 }
-                _ => unimplemented!(),
             }
-            "".to_string()
-        }
-        _ => s,
+            _ => unimplemented!(),
+        };
+        merge!(s fb)
     });
     let src = "".to_string();
     Ok(src)

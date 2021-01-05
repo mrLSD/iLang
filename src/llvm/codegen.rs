@@ -8,10 +8,8 @@ use crate::llvm::{
     },
     global_variables::UnnamedAddr::UnnamedAddr,
     instructions::memory_access_addressing_operations::{
-        Alloca,
         GetElementPtr,
         Load,
-        Store,
     },
     instructions::other_operations::Call,
     instructions::terminator::FunctionArg,

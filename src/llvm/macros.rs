@@ -12,7 +12,7 @@
 #[macro_export]
 macro_rules! alloca {
     ($ty:ident $res:expr) => {
-        Alloca {
+        crate::llvm::instructions::memory_access_addressing_operations::Alloca {
             result: format!("{}", $res),
             alloc_ty: $ty,
             elements: None,
@@ -21,7 +21,7 @@ macro_rules! alloca {
         }
     };
     ($ty:ident $res:expr, $align:expr) => {
-        Alloca {
+        crate::llvm::instructions::memory_access_addressing_operations::Alloca {
             result: stringify!($res).to_string(),
             alloc_ty: $ty,
             elements: None,
@@ -283,7 +283,7 @@ macro_rules! store {
         $var.$attr = Some($val);
     }};
     ($ty:ident $val:expr, $ptrval:expr) => {{
-        Store {
+        crate::llvm::instructions::memory_access_addressing_operations::Store {
             volatile: None,
             ty: $ty,
             value: $val.to_string(),
