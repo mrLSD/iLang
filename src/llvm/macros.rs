@@ -485,7 +485,11 @@ macro_rules! body {
     ($($el:expr)*) => {{
     	let s = "";
     	$(
-    		let s = format!("{}\n\t{}", s, $el);
+    		let s = if s.is_empty() {
+				format!("{}\n{}", s, $el)
+    		} else {
+    			format!("{}\n\t{}", s, $el)
+    		};
     	)*
         format!("{{{}\n}}", s)
     }};
@@ -540,5 +544,39 @@ macro_rules! merge {
     		let s = format!("{}{}\n", s, $el);
     	)*
         format!("{}", s)
+    }};
+}
+
+/// `bf` macros
+/// Simple Function body aggregator
+///
+/// ```ignore
+/// let ret1 = ret!(Integer32 @0);
+/// let entry1 = entry!(0);
+/// // Function body with instructions inside
+/// let body = bf!(entry1 ret1);
+/// ```
+#[macro_export]
+macro_rules! bf {
+    ($($el:expr)*) => {{
+    	let s = "";
+    	$(
+    		let s = format!("{}\n\t{}", s, $el);
+    	)*
+        s
+    }};
+    (@$($el:expr)*) => {{
+    	let s = "";
+    	$(
+    		let s = format!("{}\n{}", s, $el);
+    	)*
+        s
+    }};
+    (=$($el:expr)*) => {{
+    	let s = "";
+    	$(
+    		let s = format!("{}{}", s, $el);
+    	)*
+        s
     }};
 }

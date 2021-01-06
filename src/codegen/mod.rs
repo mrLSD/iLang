@@ -66,58 +66,60 @@ pub fn expression(_ast: &Main) -> Result {
     Ok(src)
 }
 
+pub fn fn_body_statement(ctx: &mut Context, fbs: &FunctionBodyStatement) -> String {
+    println!("statement: {:#?}", fbs);
+    match fbs {
+        FunctionBodyStatement::Expression(e) => {
+            match e.function_statement {
+                ExpressionFunctionValueCall::FunctionValue(ref fv) => {
+                    //println!("EXPR: {:#?}", fv);
+                    match fv {
+                        FunctionValue::ValueList(vl) => vl.iter().fold("".to_string(), |s, vlp| {
+                            let val_list = match vlp {
+                                ValueExpression::ParameterValue(pv) => {
+                                    println!("ParameterValue: {:#?}", pv);
+                                    "".to_string()
+                                }
+                                ValueExpression::TypeExpression(te) => {
+                                    println!("TypeExpression: {:#?}", te.expr);
+                                    match te.expr {
+                                        BasicTypeExpression::Number(n) => {
+                                            let a = alloca!(Integer32 ctx.get());
+                                            let _n_val = ctx.val();
+                                            let s = store!(Integer32 n, ctx.val());
+                                            ctx.inc();
+                                            bf!(a s)
+                                        }
+                                        _ => unimplemented!(),
+                                    }
+                                }
+                            };
+                            bf!(= s val_list)
+                        }),
+                        FunctionValue::Expression(expr) => {
+                            println!("EXPR-VL: {:#?}", expr);
+                            "".to_string()
+                        }
+                    }
+                }
+                _ => unimplemented!(),
+            }
+        }
+        _ => unimplemented!(),
+    }
+}
+
 #[allow(clippy::ptr_arg)]
 pub fn fn_body(ast: &FunctionBody) -> Result {
     let mut ctx = Context::new();
     let entry_ctx = Context::new();
-    let _src = entry!(entry_ctx.get());
-    let _ = ast.iter().fold("".to_string(), |s, b| {
-        let fb = match b {
-            FunctionBodyStatement::Expression(e) => {
-                //println!("EXPR: {:#?}", e.function_statement);
-                match e.function_statement {
-                    ExpressionFunctionValueCall::FunctionValue(ref fv) => {
-                        //println!("EXPR: {:#?}", fv);
-                        match fv {
-                            FunctionValue::ValueList(vl) => {
-                                vl.iter().fold("".to_string(), |s, vlp| {
-                                    let val_list = match vlp {
-                                        ValueExpression::ParameterValue(pv) => {
-                                            println!("ParameterValue: {:#?}", pv);
-                                            "".to_string()
-                                        }
-                                        ValueExpression::TypeExpression(te) => {
-                                            println!("TypeExpression: {:#?}", te.expr);
-                                            match te.expr {
-                                                BasicTypeExpression::Number(n) => {
-                                                    println!("{:?}", n as u64);
-                                                    let a = alloca!(Integer32 ctx.get());
-                                                    let _n_val = ctx.val();
-                                                    let s = store!(Integer32 n, ctx.val());
-                                                    ctx.inc();
-                                                    merge!(a s)
-                                                }
-                                                _ => unimplemented!(),
-                                            }
-                                        }
-                                    };
-                                    merge!(s val_list)
-                                })
-                            }
-                            FunctionValue::Expression(expr) => {
-                                println!("EXPR-VL: {:#?}", expr);
-                                "".to_string()
-                            }
-                        }
-                    }
-                    _ => unimplemented!(),
-                }
-            }
-            _ => unimplemented!(),
-        };
-        merge!(s fb)
+    let src = entry!(entry_ctx.get());
+    let body_src = ast.iter().fold("".to_string(), |s, b| {
+        let fb = fn_body_statement(&mut ctx, b);
+        bf!(= s fb)
     });
-    let src = "".to_string();
+    let src = bf!(= src body_src);
+    println!("{}", src);
     Ok(src)
 }
 
@@ -159,10 +161,10 @@ pub fn fn_global_let(ast: &Main) -> Result {
                 });
             let_values.append(&mut let_value);
 
+            let fn_body_part_src = fn_body(&l.function_body).unwrap();
             let ret = ret!();
-            let body = body!(ret);
+            let body = body!(fn_body_part_src ret);
             let fn_body_src = fn_body!(fn_def body);
-            let _ = fn_body(&l.function_body);
 
             merge!(s fn_body_src)
         } else {
@@ -212,7 +214,7 @@ pub fn fn_main(ast: Main) -> Result {
     let global_let = fn_global_let(&ast)?;
     let attrs = fn_attr_group()?;
     let src = module!(module global_let attrs);
-    //println!("\n{}", src);
+    println!("\n{}", src);
     Ok(src)
 }
 
