@@ -66,45 +66,48 @@ pub fn expression(_ast: &Main) -> Result {
     Ok(src)
 }
 
-pub fn fn_body_statement(ctx: &mut Context, fbs: &FunctionBodyStatement) -> String {
-    println!("statement: {:#?}", fbs);
-    match fbs {
-        FunctionBodyStatement::Expression(e) => {
-            match e.function_statement {
-                ExpressionFunctionValueCall::FunctionValue(ref fv) => {
-                    //println!("EXPR: {:#?}", fv);
-                    match fv {
-                        FunctionValue::ValueList(vl) => vl.iter().fold("".to_string(), |s, vlp| {
-                            let val_list = match vlp {
-                                ValueExpression::ParameterValue(pv) => {
-                                    println!("ParameterValue: {:#?}", pv);
-                                    "".to_string()
-                                }
-                                ValueExpression::TypeExpression(te) => {
-                                    println!("TypeExpression: {:#?}", te.expr);
-                                    match te.expr {
-                                        BasicTypeExpression::Number(n) => {
-                                            let a = alloca!(Integer32 ctx.get());
-                                            let _n_val = ctx.val();
-                                            let s = store!(Integer32 n, ctx.val());
-                                            ctx.inc();
-                                            bf!(a s)
-                                        }
-                                        _ => unimplemented!(),
-                                    }
-                                }
-                            };
-                            bf!(= s val_list)
-                        }),
-                        FunctionValue::Expression(expr) => {
-                            println!("EXPR-VL: {:#?}", expr);
-                            "".to_string()
-                        }
-                    }
+pub fn value_expression(ctx: &mut Context, vle: &ValueExpression) -> String {
+    match vle {
+        ValueExpression::ParameterValue(pv) => {
+            println!("ParameterValue: {:#?}", pv);
+            "".to_string()
+        }
+        ValueExpression::TypeExpression(te) => {
+            println!("TypeExpression: {:#?}", te.expr);
+            match te.expr {
+                BasicTypeExpression::Number(n) => {
+                    let a = alloca!(Integer32 ctx.get());
+                    let _n_val = ctx.val();
+                    let s = store!(Integer32 n, ctx.val());
+                    ctx.inc();
+                    bf!(a s)
                 }
                 _ => unimplemented!(),
             }
         }
+    }
+}
+
+pub fn function_value(ctx: &mut Context, fv: &FunctionValue) -> String {
+    match fv {
+        FunctionValue::ValueList(vl) => vl.iter().fold("".to_string(), |s, vle| {
+            let val_list = value_expression(ctx, vle);
+            bf!(= s val_list)
+        }),
+        FunctionValue::Expression(expr) => {
+            println!("EXPR-VL: {:#?}", expr);
+            "".to_string()
+        }
+    }
+}
+
+pub fn fn_body_statement(ctx: &mut Context, fbs: &FunctionBodyStatement) -> String {
+    println!("statement: {:#?}", fbs);
+    match fbs {
+        FunctionBodyStatement::Expression(e) => match e.function_statement {
+            ExpressionFunctionValueCall::FunctionValue(ref fv) => function_value(ctx, fv),
+            _ => unimplemented!(),
+        },
         _ => unimplemented!(),
     }
 }
