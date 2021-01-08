@@ -16,11 +16,13 @@ use crate::parser::ast::{
     ExpressionFunctionValueCall,
     FunctionBody,
     FunctionBodyStatement,
+    FunctionCall,
     FunctionValue,
     Main,
     MainStatement,
     ParameterValueList,
     ParameterValueType,
+    TypeExpression,
     ValueExpression,
 };
 
@@ -66,25 +68,27 @@ pub fn expression(_ast: &Main) -> Result {
     Ok(src)
 }
 
+pub fn type_expression(ctx: &mut Context, te: &TypeExpression) -> String {
+    println!("TypeExpression: {:#?}", te.expr);
+    match te.expr {
+        BasicTypeExpression::Number(n) => {
+            let a = alloca!(Integer32 ctx.get());
+            let _n_val = ctx.val();
+            let s = store!(Integer32 n, ctx.val());
+            ctx.inc();
+            bf!(a s)
+        }
+        _ => unimplemented!(),
+    }
+}
+
 pub fn value_expression(ctx: &mut Context, vle: &ValueExpression) -> String {
     match vle {
         ValueExpression::ParameterValue(pv) => {
             println!("ParameterValue: {:#?}", pv);
             "".to_string()
         }
-        ValueExpression::TypeExpression(te) => {
-            println!("TypeExpression: {:#?}", te.expr);
-            match te.expr {
-                BasicTypeExpression::Number(n) => {
-                    let a = alloca!(Integer32 ctx.get());
-                    let _n_val = ctx.val();
-                    let s = store!(Integer32 n, ctx.val());
-                    ctx.inc();
-                    bf!(a s)
-                }
-                _ => unimplemented!(),
-            }
-        }
+        ValueExpression::TypeExpression(te) => type_expression(ctx, te),
     }
 }
 
@@ -101,13 +105,23 @@ pub fn function_value(ctx: &mut Context, fv: &FunctionValue) -> String {
     }
 }
 
+pub fn function_value_call(ctx: &mut Context, efvc: &ExpressionFunctionValueCall) -> String {
+    match efvc {
+        ExpressionFunctionValueCall::FunctionValue(ref fv) => function_value(ctx, fv),
+        _ => unimplemented!(),
+    }
+}
+
+pub fn function_call(_ctx: &mut Context, fc: &FunctionCall) -> String {
+    println!("function_call: {:#?}", fc);
+    unimplemented!()
+}
+
 pub fn fn_body_statement(ctx: &mut Context, fbs: &FunctionBodyStatement) -> String {
     println!("statement: {:#?}", fbs);
     match fbs {
-        FunctionBodyStatement::Expression(e) => match e.function_statement {
-            ExpressionFunctionValueCall::FunctionValue(ref fv) => function_value(ctx, fv),
-            _ => unimplemented!(),
-        },
+        FunctionBodyStatement::Expression(e) => function_value_call(ctx, &e.function_statement),
+        FunctionBodyStatement::FunctionCall(fc) => function_call(ctx, fc),
         _ => unimplemented!(),
     }
 }
@@ -181,7 +195,6 @@ pub fn fn_global_let(ast: &Main) -> Result {
         format!("{}{}\n", s, g)
     });
 
-    //println!("{:#?}", let_values);
     let mut src = merge!(globals let_src);
     if global_let_statement > 0 {
         let global_ctors = "@llvm.global_ctors = appending global [1 x { i32, void ()*, i8* }] [{ i32, void ()*, i8* } { i32 65535, void ()* @_GLOBAL_let_main, i8* null }]\n".to_string();
