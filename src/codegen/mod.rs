@@ -126,6 +126,29 @@ pub fn fn_body_statement(ctx: &mut Context, fbs: &FunctionBodyStatement) -> Stri
     }
 }
 
+pub fn fn_parameter_value_list(
+    acc: Vec<(String, Option<String>)>,
+    pvl: &ParameterValueList,
+) -> Vec<(String, Option<String>)> {
+    match pvl {
+        ParameterValueList::ParameterValue(p) => {
+            let mut res = acc;
+            res.push((p.fragment().to_string(), None));
+            res
+        }
+        ParameterValueList::ParameterList(pl) => pl.iter().fold(acc, |mut b, p| match p {
+            ParameterValueType::Value(v) => {
+                b.push((v.fragment().to_string(), None));
+                b
+            }
+            ParameterValueType::ValueType(v, ref t) => {
+                b.push((v.fragment().to_string(), Some(t[0].fragment().to_string())));
+                b
+            }
+        }),
+    }
+}
+
 #[allow(clippy::ptr_arg)]
 pub fn fn_body(ast: &FunctionBody) -> Result {
     let mut ctx = Context::new();
@@ -155,27 +178,7 @@ pub fn fn_global_let(ast: &Main) -> Result {
 
             // Get Let-names & types
             let mut let_value: Vec<(String, Option<String>)> =
-                l.value_list.iter().fold(vec![], |mut a, v| match v {
-                    ParameterValueList::ParameterValue(p) => {
-                        a.push((p.fragment().to_string(), None));
-                        a
-                    }
-                    ParameterValueList::ParameterList(pl) => {
-                        pl.iter().fold(a, |mut b, p| match p {
-                            ParameterValueType::Value(v) => {
-                                b.push((v.fragment().to_string(), None));
-                                b
-                            }
-                            ParameterValueType::ValueType(v, ref t) => {
-                                b.push((
-                                    v.fragment().to_string(),
-                                    Some(t[0].fragment().to_string()),
-                                ));
-                                b
-                            }
-                        })
-                    }
-                });
+                l.value_list.iter().fold(vec![], fn_parameter_value_list);
             let_values.append(&mut let_value);
 
             let fn_body_part_src = fn_body(&l.function_body).unwrap();
