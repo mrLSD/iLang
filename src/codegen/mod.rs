@@ -126,6 +126,24 @@ pub fn fn_body_statement(ctx: &mut Context, fbs: &FunctionBodyStatement) -> Stri
     }
 }
 
+pub fn fn_parameter_value_type(
+    acc: Vec<(String, Option<String>)>,
+    pvt: &ParameterValueType,
+) -> Vec<(String, Option<String>)> {
+    match pvt {
+        ParameterValueType::Value(v) => {
+            let mut res = acc;
+            res.push((v.fragment().to_string(), None));
+            res
+        }
+        ParameterValueType::ValueType(v, ref t) => {
+            let mut res = acc;
+            res.push((v.fragment().to_string(), Some(t[0].fragment().to_string())));
+            res
+        }
+    }
+}
+
 pub fn fn_parameter_value_list(
     acc: Vec<(String, Option<String>)>,
     pvl: &ParameterValueList,
@@ -136,16 +154,7 @@ pub fn fn_parameter_value_list(
             res.push((p.fragment().to_string(), None));
             res
         }
-        ParameterValueList::ParameterList(pl) => pl.iter().fold(acc, |mut b, p| match p {
-            ParameterValueType::Value(v) => {
-                b.push((v.fragment().to_string(), None));
-                b
-            }
-            ParameterValueType::ValueType(v, ref t) => {
-                b.push((v.fragment().to_string(), Some(t[0].fragment().to_string())));
-                b
-            }
-        }),
+        ParameterValueList::ParameterList(pl) => pl.iter().fold(acc, fn_parameter_value_type),
     }
 }
 
