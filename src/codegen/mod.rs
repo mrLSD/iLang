@@ -120,7 +120,16 @@ pub fn function_call(_ctx: &mut Context, fc: &FunctionCall) -> String {
 pub fn fn_body_statement(ctx: &mut Context, fbs: &FunctionBodyStatement) -> String {
     println!("statement: {:#?}", fbs);
     match fbs {
-        FunctionBodyStatement::Expression(e) => function_value_call(ctx, &e.function_statement),
+        FunctionBodyStatement::Expression(e) => {
+            let res = function_value_call(ctx, &e.function_statement);
+            if let Some(_op) = &e.operation_statement {
+                if let Some(_ex) = &e.expression {
+                } else {
+                    panic!("Expression doesn't exist")
+                }
+            }
+            res
+        }
         FunctionBodyStatement::FunctionCall(fc) => function_call(ctx, fc),
         _ => unimplemented!(),
     }
