@@ -83,6 +83,7 @@ pub fn type_expression(ctx: &mut Context, te: &TypeExpression) -> String {
 }
 
 pub fn value_expression(ctx: &mut Context, vle: &ValueExpression) -> String {
+    println!("ValueExpression");
     match vle {
         ValueExpression::ParameterValue(pv) => {
             println!("ParameterValue: {:#?}", pv);
@@ -93,6 +94,7 @@ pub fn value_expression(ctx: &mut Context, vle: &ValueExpression) -> String {
 }
 
 pub fn function_value(ctx: &mut Context, fv: &FunctionValue) -> String {
+    println!("FunctionValue");
     match fv {
         FunctionValue::ValueList(vl) => vl.iter().fold("".to_string(), |s, vle| {
             let val_list = value_expression(ctx, vle);
@@ -106,6 +108,7 @@ pub fn function_value(ctx: &mut Context, fv: &FunctionValue) -> String {
 }
 
 pub fn function_value_call(ctx: &mut Context, efvc: &ExpressionFunctionValueCall) -> String {
+    println!("ExpressionFunctionValueCall");
     match efvc {
         ExpressionFunctionValueCall::FunctionValue(ref fv) => function_value(ctx, fv),
         _ => unimplemented!(),
@@ -113,17 +116,19 @@ pub fn function_value_call(ctx: &mut Context, efvc: &ExpressionFunctionValueCall
 }
 
 pub fn function_call(_ctx: &mut Context, fc: &FunctionCall) -> String {
-    println!("function_call: {:#?}", fc);
+    println!("FunctionCall: {:#?}", fc);
     unimplemented!()
 }
 
 pub fn fn_body_statement(ctx: &mut Context, fbs: &FunctionBodyStatement) -> String {
-    println!("statement: {:#?}", fbs);
+    println!("FunctionBodyStatement: {:#?}", fbs);
     match fbs {
         FunctionBodyStatement::Expression(e) => {
             let res = function_value_call(ctx, &e.function_statement);
-            if let Some(_op) = &e.operation_statement {
-                if let Some(_ex) = &e.expression {
+            if let Some(op) = &e.operation_statement {
+                println!("operation_statement: {:?}", op);
+                if let Some(ex) = &e.expression {
+                    println!("expression: {:?}", ex);    
                 } else {
                     panic!("Expression doesn't exist")
                 }
@@ -139,6 +144,7 @@ pub fn fn_parameter_value_type(
     acc: Vec<(String, Option<String>)>,
     pvt: &ParameterValueType,
 ) -> Vec<(String, Option<String>)> {
+    println!("ParameterValueType");
     match pvt {
         ParameterValueType::Value(v) => {
             let mut res = acc;
@@ -157,6 +163,7 @@ pub fn fn_parameter_value_list(
     acc: Vec<(String, Option<String>)>,
     pvl: &ParameterValueList,
 ) -> Vec<(String, Option<String>)> {
+    println!("ParameterValueList");
     match pvl {
         ParameterValueList::ParameterValue(p) => {
             let mut res = acc;

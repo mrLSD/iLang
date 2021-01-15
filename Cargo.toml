@@ -17,4 +17,3 @@ git = "https://github.com/TheDan64/inkwell"
 rev = "cdc45cd"
 # features = ["llvm11-0"]
 features = ["llvm10-0"]
- 
