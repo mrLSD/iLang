@@ -128,7 +128,7 @@ pub fn fn_body_statement(ctx: &mut Context, fbs: &FunctionBodyStatement) -> Stri
             if let Some(op) = &e.operation_statement {
                 println!("operation_statement: {:?}", op);
                 if let Some(ex) = &e.expression {
-                    println!("expression: {:?}", ex);    
+                    println!("expression: {:?}", ex);
                 } else {
                     panic!("Expression doesn't exist")
                 }
@@ -248,15 +248,15 @@ pub fn fn_global_let(ast: &Main) -> Result {
     Ok(src)
 }
 
-fn fn_attr_group() -> Result {
+fn fn_attr_group() -> String {
     let attr0 = Attributes(0, vec!["noinline".to_string(), "uwtable".to_string()]);
-    Ok(merge!(attr0))
+    merge!(attr0)
 }
 
 pub fn fn_main(ast: Main) -> Result {
     let module = fn_module(&ast)?;
     let global_let = fn_global_let(&ast)?;
-    let attrs = fn_attr_group()?;
+    let attrs = fn_attr_group();
     let src = module!(module global_let attrs);
     println!("\n{}", src);
     Ok(src)

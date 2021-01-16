@@ -103,7 +103,7 @@ where
     T: InputTakeAtPosition,
     <T as InputTakeAtPosition>::Item: AsChar,
 {
-    let f = |c: &char| c.is_alphanumeric() || c.as_char() == '_';
+    let f = |c: &char| c.is_alphanumeric() || c.as_char() == &'_';
     input.split_at_position_complete(|item| !item.is_a(f))
 }
 
