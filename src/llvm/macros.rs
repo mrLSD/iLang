@@ -63,7 +63,12 @@ macro_rules! arg {
         v
     }};
     ($($ty:ident $val:expr)? $(,$ty1:ident $val1:expr)*, ...) => {{
-        let mut v = vec![];
+        let mut v = vec![ArgumentList {
+            parameter_type: None,
+            attributes: None,
+            name: None,
+            variable_argument: true,
+        }];
         $( v.push(ArgumentList {
             parameter_type: Some($ty),
             attributes: None,
@@ -76,12 +81,6 @@ macro_rules! arg {
             name: Some(format!("%{}", $val1)),
             variable_argument: false,
         });)*
-        v.push(ArgumentList {
-            parameter_type: None,
-            attributes: None,
-            name: None,
-            variable_argument: true,
-        });
         v
     }};
     ($($ty:ident)? $(,$ty1:ident)*) => {{
@@ -101,7 +100,12 @@ macro_rules! arg {
         v
     }};
     ($($ty:ident)? $(,$ty1:ident)*, ...) => {{
-        let mut v = vec![];
+        let mut v = vec![ArgumentList {
+            parameter_type: None,
+            attributes: None,
+            name: None,
+            variable_argument: true,
+        }];
         $( v.push(ArgumentList {
             parameter_type: Some($ty),
             attributes: None,
@@ -114,12 +118,6 @@ macro_rules! arg {
             name: None,
             variable_argument: false,
         });)*
-        v.push(ArgumentList {
-            parameter_type: None,
-            attributes: None,
-            name: None,
-            variable_argument: true,
-        });
         v
     }};
 }
