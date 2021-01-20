@@ -1,4 +1,5 @@
 //! # Codegen
+#![cfg(nightly)]
 #![allow(clippy::vec_init_then_push)]
 
 use crate::llvm::context::Context;
