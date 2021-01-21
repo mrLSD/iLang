@@ -448,7 +448,7 @@ impl std::fmt::Display for Call {
                 if i > 0 {
                     format!("{}, {} {}", s, v.0, v.1)
                 } else {
-                    format!("{} {} {}", s, v.0, v.1)
+                    format!("{} {}", v.0, v.1)
                 }
             });
         s = format!("{}({})", s, args);

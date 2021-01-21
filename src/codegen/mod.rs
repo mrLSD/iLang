@@ -67,9 +67,9 @@ impl InstructionSet for FunctionParameter {
 impl std::fmt::Display for FunctionParameter {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         let s = if self.global {
-            format!("@{{{}}}", self.name)
+            format!("@{}", self.name)
         } else {
-            format!("%{{{}}}", self.name)
+            format!("%{}", self.name)
         };
         write!(f, "{}", s)
     }
@@ -225,11 +225,24 @@ impl<'a> Codegen<'a> {
         });
         println!("\t#[function_call]: [{:?}]", params[0].get_type());
         if let Some(p) = params[0].get_type() {
+            // Get param for function
             //if params[0].is_global() {
             let n1 = params[0].get_value().unwrap();
             let n2 = "1".to_string();
+            let n2_val = format!("%{}", n2);
             let ge1 = getelementptr!(p inbounds n2, n1 => [Integer64 0, Integer64 0]);
-            println!("\t#[function_call]: [{}]", ge1);
+
+            // Declare function
+            let ty1 = Type::Pointer(PointerType(Box::new(Integer8)));
+            let ty2 = ty1.clone();
+            let ty3 = ty1.clone();
+            let mut fn_decl = decl!(Integer32 fn_name);
+            decl!(fn_decl.argument_list arg!(ty1, ...));
+
+            // Call function
+            //let n4 = params[1].get_value().unwrap();
+            let fn_call = call!(Integer32 => @fn_name arg!(ty2, ...) => [ty3 n2_val, Integer32 params[1].to_string()]);
+            println!("\t#[function_call]:\n\t-> {}\n\t-> {}\n\t-> {}", ge1, fn_decl, fn_call);
         }
         /*
         let a1 = load!(Integer32 "1", "2");
