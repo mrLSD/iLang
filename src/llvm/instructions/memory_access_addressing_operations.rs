@@ -213,6 +213,6 @@ impl std::fmt::Display for GetElementPtr {
                 format!("{}, {} {}", s, v.1, v.2)
             }
         });
-        write!(f, "{} ({} п{})", s, s_val, r)
+        write!(f, "{} ({}{})", s, s_val, r)
     }
 }

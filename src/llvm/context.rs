@@ -14,11 +14,6 @@ impl Context {
         format!("{}", self.val)
     }
 
-    /// Get current context as value string
-    pub fn val(&self) -> String {
-        format!("%{}", self.val)
-    }
-
     /// Increment context value
     pub fn inc(&mut self) -> Self {
         self.val += 1;
@@ -28,6 +23,11 @@ impl Context {
     /// Set context value
     pub fn set(&mut self, val: u64) {
         self.val = val;
+    }
+
+    /// Get current context value
+    pub fn val(&mut self) -> u64 {
+        self.val
     }
 }
 

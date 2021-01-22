@@ -27,6 +27,11 @@ use std::collections::{
     HashMap,
     HashSet,
 };
+use std::rc::Rc;
+use std::sync::{
+    Arc,
+    Mutex,
+};
 
 pub type Result = std::result::Result<String, CodegenError>;
 
@@ -62,6 +67,13 @@ pub struct FunctionParameter {
 
 impl InstructionSet for FunctionParameter {
     fn set_context(&mut self, _ctx: u64) {}
+    fn get_value(&self) -> Option<String> {
+        if self.global {
+            Some(format!("@{}", self.name))
+        } else {
+            Some(format!("%{}", self.name))
+        }
+    }
 }
 
 impl std::fmt::Display for FunctionParameter {
@@ -206,31 +218,60 @@ impl<'a> Codegen<'a> {
     }
 
     #[allow(clippy::vec_init_then_push)]
-    pub fn function_call(&mut self, fc: &FunctionCall) -> VecInstructionSet {
+    pub fn function_call(
+        &mut self,
+        ctx: &Context,
+        fc: &FunctionCall,
+    ) -> (Context, VecInstructionSet) {
         println!("\t#[call]: function_call: FunctionCall");
         if fc.function_call_name.is_empty() {
-            return vec![];
+            return (ctx.clone(), vec![]);
         }
+        let mut raw_ctx = ctx.clone().val();
         let fn_name = fc.function_call_name[0].fragment();
         println!("\t#[function_call] fn_name: {}", fn_name);
-        let params: VecInstructionSet = fc.function_value.iter().fold(vec![], |s, v| {
-            let mut res = self.function_value(v);
-            println!(
-                "\t#[function_call] fn_function_value count: [{}]",
-                res.len()
-            );
+        let mut params = fc.function_value.iter().fold(vec![], |s, v| {
             let mut x = s;
-            x.append(&mut res);
+            x.append(&mut self.function_value(v));
             x
         });
-        println!("\t#[function_call]: [{:?}]", params[0].get_type());
+        println!(
+            "\t#[function_call] fn_function_value count: [{}]",
+            params.len()
+        );
+        for i in 0..params.len() {
+            raw_ctx += 1;
+            &params[i].set_context(raw_ctx);
+            if let Some(p) = params[i].get_type() {
+                println!("type: {}", p);
+            } else {
+                println!("no-type");
+            }
+        }
+
+        /*.iter()
+        .enumerate()
+        .for_each(|(idx, param)| {
+            let mut param = param.clone();
+            raw_ctx += 1;
+            &param.set_context(raw_ctx);
+            print!("\t->{} ", idx);
+            if let Some(p) = param.get_type() {
+                println!("type: {}", p);
+            } else {
+                println!("no-type");
+            }
+        });*/
+        /*println!("\t#[function_call]: [{:?}]", params[0].get_type());
         if let Some(p) = params[0].get_type() {
             // Get param for function
             //if params[0].is_global() {
             let n1 = params[0].get_value().unwrap();
             let n2 = "1".to_string();
             let n2_val = format!("%{}", n2);
+            println!("{:?}", n1);
             let ge1 = getelementptr!(p inbounds n2, n1 => [Integer64 0, Integer64 0]);
+            let n3 = params[1].get_value().unwrap();
 
             // Declare function
             let ty1 = Type::Pointer(PointerType(Box::new(Integer8)));
@@ -241,9 +282,14 @@ impl<'a> Codegen<'a> {
 
             // Call function
             //let n4 = params[1].get_value().unwrap();
-            let fn_call = call!(Integer32 => @fn_name arg!(ty2, ...) => [ty3 n2_val, Integer32 params[1].to_string()]);
-            println!("\t#[function_call]:\n\t-> {}\n\t-> {}\n\t-> {}", ge1, fn_decl, fn_call);
+            let fn_call = call!(Integer32 => @fn_name arg!(ty2, ...) => [ty3 n2_val, Integer32 n3]);
+            println!(
+                "\t#[function_call]:\n\t-> {}\n\t-> {}\n\t-> {}",
+                ge1, fn_decl, fn_call
+            );
         }
+        */
+
         /*
         let a1 = load!(Integer32 "1", "2");
         let gty = Type::Array(ArrayType((s.len() + 1) as i32, Box::new(Type::Integer8)));
@@ -273,10 +319,14 @@ impl<'a> Codegen<'a> {
             a1,
             ge1,
         );*/
-        params
+        ((*ctx).clone(), vec![])
     }
 
-    pub fn fn_body_statement(&mut self, fbs: &FunctionBodyStatement) -> VecInstructionSet {
+    pub fn fn_body_statement(
+        &mut self,
+        ctx: &Context,
+        fbs: &FunctionBodyStatement,
+    ) -> (Context, VecInstructionSet) {
         println!(
             "\t#[call] fn_body_statement: FunctionBodyStatement = {:#?}",
             fbs
@@ -293,15 +343,15 @@ impl<'a> Codegen<'a> {
                         panic!("\t#[fn_body_statement] Expression doesn't exist")
                     }
                 }
-                res
+                (ctx.clone(), res)
             }
             FunctionBodyStatement::FunctionCall(fc) => {
                 println!("\t#[fn_body_statement] FunctionCall");
-                self.function_call(fc)
+                self.function_call(&ctx, fc)
             }
             FunctionBodyStatement::LetBinding(lb) => {
                 println!("\t#[fn_body_statement] LetBinding: {:#?}", lb);
-                vec![]
+                (ctx.clone(), vec![])
             }
         }
     }
@@ -345,7 +395,7 @@ impl<'a> Codegen<'a> {
         let entry_ctx = Context::new();
         let src = entry!(entry_ctx.get());
         let body_src = ast.iter().fold("".to_string(), |_, b| {
-            let statement = self.fn_body_statement(b);
+            let (entry_ctx, statement) = self.fn_body_statement(&entry_ctx, b);
             statement.iter().fold((), |_, v| println!("\t# {:#?}", v));
             /*let fb = if let Some(ref v) = res_val {
                 if let_value_name.is_empty() {

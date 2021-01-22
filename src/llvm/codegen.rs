@@ -51,18 +51,20 @@ pub fn main_fn() {
     let tt = target_triple!(TARGET_X86_64_UNKNOWN_LINUX_GNU);
 
     let a1 = alloca!(Integer32 ctx.inc().get());
-    let v = ctx.val();
+    let v = format!("%{}", ctx.get());
     let store1 = store!(Integer32 "33", v);
     let vload = ctx.inc();
     let load1 = load!(Integer32 vload.get(), v);
     let gty = Array(ArrayType(11, b!(Integer8)));
-    let valptr = ctx.inc();
+    let valptr = format!("%{}", ctx.inc().get());
     let ge = getelementptr!(gty inbounds valptr.get(), "@.str" => [Integer64 0, Integer64 0]);
 
     let ty2 = Type::pointer1(Integer8);
     let ty3 = Type::pointer1(Integer8);
     let printf_call = "printf_call";
-    let call1 = call!(Integer32 ctx.inc().get() => @printf_call arg!(ty2, ...) => [ty3 valptr.val(), Integer32 vload.val()]);
+    let valptr = format!("%{}", valptr.get());
+    let vload = format!("%{}", vload.get());
+    let call1 = call!(Integer32 ctx.inc().get() => @printf_call arg!(ty2, ...) => [ty3 valptr, Integer32 vload]);
     let ret1 = ret!(Integer32 @0);
     let entry1 = entry!(0);
     let body = body!(entry1 a1 store1 load1 ge call1 ret1);
