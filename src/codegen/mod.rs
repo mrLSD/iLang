@@ -242,13 +242,29 @@ impl<'a> Codegen<'a> {
         for i in 0..params.len() {
             raw_ctx += 1;
             &params[i].set_context(raw_ctx);
+            print!("\t->{} [{}] ", i, params[i]);
             if let Some(p) = params[i].get_type() {
                 println!("type: {}", p);
+                let n1 = &params[i].get_value().unwrap();
+                raw_ctx += 1;
+                let val_alias = raw_ctx.to_string();
+                let p1 = p.clone();
+                let ge1 = getelementptr!(p inbounds val_alias, n1 => [Integer64 0, Integer64 0]);
+                println!("\t->{}: {} = {}", val_alias, p1, ge1)
             } else {
-                println!("no-type");
+                let ty1 = Type::Pointer(PointerType(Box::new(Integer8)));
+                let n1 = &params[i].get_value().unwrap();
+                println!("no-type: {}: {}", n1, ty1);
             }
         }
-
+        // Declare function
+        let ty1 = Type::Pointer(PointerType(Box::new(Integer8)));
+        let ty2 = ty1.clone();
+        let ty3 = ty1.clone();
+        let mut fn_decl = decl!(Integer32 fn_name);
+        decl!(fn_decl.argument_list arg!(ty1, ...));
+        println!("\t->{}", fn_decl);
+        
         /*.iter()
         .enumerate()
         .for_each(|(idx, param)| {
@@ -272,13 +288,6 @@ impl<'a> Codegen<'a> {
             println!("{:?}", n1);
             let ge1 = getelementptr!(p inbounds n2, n1 => [Integer64 0, Integer64 0]);
             let n3 = params[1].get_value().unwrap();
-
-            // Declare function
-            let ty1 = Type::Pointer(PointerType(Box::new(Integer8)));
-            let ty2 = ty1.clone();
-            let ty3 = ty1.clone();
-            let mut fn_decl = decl!(Integer32 fn_name);
-            decl!(fn_decl.argument_list arg!(ty1, ...));
 
             // Call function
             //let n4 = params[1].get_value().unwrap();
