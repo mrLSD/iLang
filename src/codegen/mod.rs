@@ -31,7 +31,6 @@ pub enum CodegenError {
 pub struct Codegen<'a> {
     ctx: Context,
     global_ctx: Context,
-    code: Vec<String>, 
     let_values: Vec<String>,
     global_let_values: Vec<String>,
     ast: &'a Main<'a>,
@@ -39,7 +38,6 @@ pub struct Codegen<'a> {
 
 pub struct TypeExpressionResult {
     pub value: String,
-    pub global: bool,
 }
 
 impl<'a> Codegen<'a> {
@@ -47,7 +45,7 @@ impl<'a> Codegen<'a> {
     fn new(ast: &'a Main) -> Self {
         Self {
             ctx: Context::new(),
-            global_ctx:Context::new(),
+            global_ctx: Context::new(),
             let_values: vec![],
             global_let_values: vec![],
             ast,
@@ -61,7 +59,7 @@ impl<'a> Codegen<'a> {
         Ok(src)
     }
 
-    pub fn type_expression(&mut self, te: &TypeExpression)  {
+    pub fn type_expression(&mut self, te: &TypeExpression) -> (String, Option<String>) {
         println!(" # type_expression: TypeExpression = {:#?}", te.expr);
         match te.expr {
             BasicTypeExpression::Number(n) => {
@@ -69,8 +67,8 @@ impl<'a> Codegen<'a> {
                 let result_val = self.ctx.val();
                 let s = store!(Integer32 n, result_val);
                 self.ctx.inc();
-                self.let_values.push(result_val);
-                self.cooe = format!("{}{}", self.cooe, bf!(a s));
+                self.let_values.push(result_val.clone());
+                (bf!(a s), Some(result_val))
             }
             BasicTypeExpression::String(ref s) => {
                 let gty = Type::Array(ArrayType((s.len() + 1) as i32, Box::new(Type::Integer8)));
@@ -81,16 +79,13 @@ impl<'a> Codegen<'a> {
                 global!(g.unnamed_addr @UnnamedAddr);
                 global!(g.initializer_constant @val);
                 self.ctx.inc();
-                (bf!(g), TypeExpressionResult{
-                    value: result_val,
-                    global: true,
-                })
+                (bf!(g), Some(result_val))
             }
             _ => unimplemented!(),
         }
     }
 
-    pub fn value_expression(&mut self, vle: &ValueExpression) -> (String, TypeExpressionResult) {
+    pub fn value_expression(&mut self, vle: &ValueExpression) -> (String, Option<String>) {
         println!(" # value_expression: ValueExpression");
         match vle {
             ValueExpression::ParameterValue(pv) => {
@@ -155,10 +150,10 @@ impl<'a> Codegen<'a> {
         let fn_name = fc.function_call_name[0].fragment();
         println!("\t# {}", fn_name);
         let params: Vec<String> = fc.function_value.iter().fold(vec![], |s, v| {
-            let x = self.fn_function_value(v);
+            let x = self.function_value(v);
             println!("\t# fn_function_value: {:?}", x);
             let mut data = s;
-            data.push(x);
+            data.push("".into());
             data
         });
         println!("\t# params: {:?}", params);
@@ -375,10 +370,7 @@ impl<'a> Codegen<'a> {
     }
 
     pub fn build(source: &str) -> Result {
-        use crate::parser::{
-            ast::Span,
-            token::main,
-        };
+        use crate::parser::token::main;
 
         let src = main(Span::new(source)).unwrap();
         if src.0.fragment().is_empty() {}
