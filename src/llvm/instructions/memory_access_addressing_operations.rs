@@ -205,7 +205,7 @@ impl std::fmt::Display for GetElementPtr {
         if self.inbounds.is_some() {
             s = format!("{} inbounds", s);
         }
-        s = format!("{} {}, {}* {}", s, self.ty, self.ty_pointer, self.ptr_val);
+        let s_val = format!("{}, {}* {}", self.ty, self.ty_pointer, self.ptr_val);
         let r = self.range_val.iter().fold("".to_string(), |s, v| {
             if v.0.is_some() {
                 format!("{}, inrange {} {}", s, v.1, v.2)
@@ -213,6 +213,6 @@ impl std::fmt::Display for GetElementPtr {
                 format!("{}, {} {}", s, v.1, v.2)
             }
         });
-        write!(f, "{} {}", s, r)
+        write!(f, "{} ({} п{})", s, s_val, r)
     }
 }

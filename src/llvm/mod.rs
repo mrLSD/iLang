@@ -41,7 +41,7 @@ pub trait InstructionSet: Debug + Display {
     /// Set context of input values (it mean increment flow of
     /// context values)
     fn set_context(&mut self, ctx: u64);
-    /// Is context flow read only. So it mean previos context
+    /// Is context flow read only. So it mean previous context
     /// should not be changed/incremented
     fn is_read_only_context(&self) -> bool {
         false
@@ -56,6 +56,10 @@ pub trait InstructionSet: Debug + Display {
     }
     /// Get type for current value
     fn get_type(&self) -> Option<Type> {
+        None
+    }
+    // Get current value, also related to `is_assignment`
+    fn get_value(&self) -> Option<String> {
         None
     }
 }

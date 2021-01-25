@@ -225,10 +225,10 @@ impl<'a> Codegen<'a> {
         });
         println!("\t#[function_call]: [{:?}]", params[0].get_type());
         if let Some(p) = params[0].get_type() {
-            if params[0].is_global() {
-                
-            }
-            let ge1 = getelementptr!(p inbounds "el", "@.str" => [Integer64 0, Integer64 0]);
+            //if params[0].is_global() {
+            let n1 = params[0].get_value().unwrap();
+            let n2 = "1".to_string();
+            let ge1 = getelementptr!(p inbounds n2, n1 => [Integer64 0, Integer64 0]);
             println!("\t#[function_call]: [{}]", ge1);
         }
         /*

@@ -64,6 +64,16 @@ pub struct GlobalVariable {
     pub ctx: Option<u64>,
 }
 
+impl GlobalVariable {
+    pub fn get_value_name(&self) -> Option<String> {
+        if let Some(ctx) = self.ctx {
+            Some(format!("@{:?}", ctx))
+        } else {
+            Some(format!("@{}", self.name))
+        }
+    }
+}
+
 impl InstructionSet for GlobalVariable {
     fn set_context(&mut self, ctx: u64) {
         self.ctx = Some(ctx);
@@ -76,6 +86,9 @@ impl InstructionSet for GlobalVariable {
     }
     fn get_type(&self) -> Option<Type> {
         Some(self.value_type.clone())
+    }
+    fn get_value(&self) -> Option<String> {
+        self.get_value_name()
     }
 }
 
