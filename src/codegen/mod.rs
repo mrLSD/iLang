@@ -27,11 +27,6 @@ use std::collections::{
     HashMap,
     HashSet,
 };
-use std::rc::Rc;
-use std::sync::{
-    Arc,
-    Mutex,
-};
 
 pub type Result = std::result::Result<String, CodegenError>;
 
@@ -223,6 +218,8 @@ impl<'a> Codegen<'a> {
         ctx: &Context,
         fc: &FunctionCall,
     ) -> (Context, VecInstructionSet) {
+        use crate::llvm::functions::ArgumentList;
+
         println!("\t#[call]: function_call: FunctionCall");
         if fc.function_call_name.is_empty() {
             return (ctx.clone(), vec![]);
@@ -230,41 +227,56 @@ impl<'a> Codegen<'a> {
         let mut raw_ctx = ctx.clone().val();
         let fn_name = fc.function_call_name[0].fragment();
         println!("\t#[function_call] fn_name: {}", fn_name);
-        let mut params = fc.function_value.iter().fold(vec![], |s, v| {
-            let mut x = s;
-            x.append(&mut self.function_value(v));
-            x
-        });
-        println!(
-            "\t#[function_call] fn_function_value count: [{}]",
-            params.len()
-        );
-        for i in 0..params.len() {
-            raw_ctx += 1;
-            &params[i].set_context(raw_ctx);
-            print!("\t->{} [{}] ", i, params[i]);
-            if let Some(p) = params[i].get_type() {
-                println!("type: {}", p);
-                let n1 = &params[i].get_value().unwrap();
+        let data: (Vec<String>, Vec<ArgumentList>) = fc
+            .function_value
+            .iter()
+            .fold(vec![], |instr, v| {
+                let mut x = instr;
+                x.append(&mut self.function_value(v));
+                x
+            })
+            .iter_mut()
+            .fold((vec![], vec![]), |d, param| {
+                let mut new_data = d;
                 raw_ctx += 1;
-                let val_alias = raw_ctx.to_string();
-                let p1 = p.clone();
-                let ge1 = getelementptr!(p inbounds val_alias, n1 => [Integer64 0, Integer64 0]);
-                println!("\t->{}: {} = {}", val_alias, p1, ge1)
-            } else {
-                let ty1 = Type::Pointer(PointerType(Box::new(Integer8)));
-                let n1 = &params[i].get_value().unwrap();
-                println!("no-type: {}: {}", n1, ty1);
-            }
-        }
+                //params[i].set_context(raw_ctx);
+                param.set_context(raw_ctx);
+                print!("\t->{} [{}] ", raw_ctx, param);
+                if let Some(p) = param.get_type() {
+                    println!("type: {}", p);
+                    let n1 = param.get_value().unwrap();
+                    raw_ctx += 1;
+                    let val_alias = raw_ctx.to_string();
+                    let p1 = p.clone();
+                    let ge1 =
+                        getelementptr!(p inbounds val_alias, n1 => [Integer64 0, Integer64 0]);
+                    println!("\t->{}: {} = {}", val_alias, p1, ge1);
+                    let arg = ArgumentList {
+                        parameter_type: Some(p1),
+                        attributes: None,
+                        name: Some(val_alias),
+                        variable_argument: false,
+                    };
+                    new_data.0.push(ge1.to_string());
+                    new_data.1.push(arg);
+                } else {
+                    let ty1 = Type::Pointer(PointerType(Box::new(Integer8)));
+                    let n1 = param.get_value().unwrap();
+                    println!("no-type: {}: {}", n1, ty1);
+                }
+                new_data
+            });
         // Declare function
         let ty1 = Type::Pointer(PointerType(Box::new(Integer8)));
-        let ty2 = ty1.clone();
-        let ty3 = ty1.clone();
         let mut fn_decl = decl!(Integer32 fn_name);
-        decl!(fn_decl.argument_list arg!(ty1, ...));
+        let args = arg!(ty1, ...);
+        let args_decl = args.clone();
+        decl!(fn_decl.argument_list args);
         println!("\t->{}", fn_decl);
-        
+        let fn_call = call!(Integer32 => @fn_name args_decl => []);
+        println!("\t->{}", fn_call);
+        println!("\t->{:?}", data);
+
         /*.iter()
         .enumerate()
         .for_each(|(idx, param)| {
@@ -401,10 +413,11 @@ impl<'a> Codegen<'a> {
 
     pub fn fn_body(&mut self, ast: &FunctionBody) -> Result {
         println!("\t#[call] fn_body: FunctionBody");
-        let entry_ctx = Context::new();
+        let mut entry_ctx = Context::new();
         let src = entry!(entry_ctx.get());
         let body_src = ast.iter().fold("".to_string(), |_, b| {
-            let (entry_ctx, statement) = self.fn_body_statement(&entry_ctx, b);
+            let (ctx, statement) = self.fn_body_statement(&entry_ctx, b);
+            entry_ctx = ctx;
             statement.iter().fold((), |_, v| println!("\t# {:#?}", v));
             /*let fb = if let Some(ref v) = res_val {
                 if let_value_name.is_empty() {
