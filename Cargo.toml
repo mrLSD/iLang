@@ -17,3 +17,18 @@ clap = "2.33"
 git = "https://github.com/TheDan64/inkwell"
 branch = "master"
 features = ["llvm11-0"]
+
+[features]
+default = ["fn_body", "fn_body_statement", "fn_body_statement_dump"]
+fn_main = []
+fn_global_let = []
+fn_body = []
+fn_body_statement = ["function_call"]
+fn_body_statement_dump = []
+function_call = ["function_value"]
+# function_call = []
+function_value = ["value_expression"]
+# function_value = []
+value_expression = ["type_expression"]
+# value_expression = []
+type_expression = []
