@@ -157,8 +157,8 @@ impl<'a> Codegen<'a> {
 
     pub fn value_expression(&mut self, vle: &ValueExpression) -> VecInstructionSet {
         #[cfg(feature = "value_expression")]
-        println!("\t#[call] value_expression: ValueExpression");
-        match vle {
+        println!("\t#[call] value_expression (ValueExpression)");
+        let res: VecInstructionSet = match vle {
             ValueExpression::ParameterValue(pv) => {
                 let value_key = pv.fragment();
                 if let Some(x) = self.global_let_values.get(&value_key.to_string()) {
@@ -182,17 +182,20 @@ impl<'a> Codegen<'a> {
                 println!("\t#[value_expression] TypeExpression");
                 self.type_expression(te)
             }
-        }
+        };
+        #[cfg(feature = "value_expression")]
+        println!("\t#[end_value_expression]");
+        res
     }
 
     pub fn function_value(&mut self, fv: &FunctionValue) -> VecInstructionSet {
         #[cfg(feature = "function_value")]
-        println!("\t#[call] function_value: FunctionValue");
-        match fv {
+        println!("\t#[call] function_value (FunctionValue)");
+        let res = match fv {
             FunctionValue::ValueList(vl) => vl.iter().fold(vec![], |s, vle| {
-                let mut res = self.value_expression(vle);
                 #[cfg(feature = "function_value")]
-                println!("\t#[function_value] ValueList [{}]", res.len());
+                println!("\t#[function_value] ValueList");
+                let mut res = self.value_expression(vle);
                 let mut x = s;
                 x.append(&mut res);
                 x
@@ -202,21 +205,51 @@ impl<'a> Codegen<'a> {
                 println!("\t#[function_value] Expression [not impl]: {:#?}", expr);
                 vec![]
             }
-        }
+        };
+        #[cfg(feature = "function_value")]
+        println!(
+            "\t#[function_value] ValueList [{}]\n\t#[end_function_value]",
+            res.len()
+        );
+        res
     }
 
-    pub fn function_value_call(&mut self, efvc: &ExpressionFunctionValueCall) -> VecInstructionSet {
-        println!("\t#[call] function_value_call: ExpressionFunctionValueCall");
-        match efvc {
+    pub fn function_value_call(
+        &mut self,
+        ctx: &Context,
+        efvc: &ExpressionFunctionValueCall,
+    ) -> (Context, VecInstructionSet) {
+        #[cfg(feature = "function_value_call")]
+        println!("\t#[call] function_value_call (ExpressionFunctionValueCall)");
+        let mut raw_ctx = ctx.clone().val();
+        let mut res = match efvc {
             ExpressionFunctionValueCall::FunctionValue(ref fv) => {
+                #[cfg(feature = "function_value_call")]
                 println!("\t#[function_value_call] FunctionValue");
                 self.function_value(fv)
             }
             ExpressionFunctionValueCall::FunctionCall(ref fc) => {
-                println!("\t#[function_value_call] FunctionCall: {:#?}", fc);
+                let _ = fc;
+                #[cfg(feature = "function_value_call")]
+                println!(
+                    "\t#[function_value_call] FunctionCall [not_impl]: {:#?}",
+                    fc
+                );
                 vec![]
             }
-        }
+        };
+        res.iter_mut().for_each(|v| {
+            raw_ctx += raw_ctx;
+            v.set_context(raw_ctx);
+            #[cfg(feature = "function_value_call")]
+            println!("\t#[function_value_call] value: {:#?}", v);
+        });
+
+        let mut ctx = Context::new();
+        ctx.set(raw_ctx);
+        #[cfg(feature = "function_value_call")]
+        println!("\t#[end_function_value_call]");
+        (ctx, res)
     }
 
     #[allow(clippy::vec_init_then_push)]
@@ -228,7 +261,7 @@ impl<'a> Codegen<'a> {
         use crate::llvm::functions::ArgumentList;
 
         #[cfg(feature = "function_call")]
-        println!("\t#[call]: function_call: FunctionCall");
+        print!("\t#[call] function_call (FunctionCall):");
         if fc.function_call_name.is_empty() {
             return (ctx.clone(), vec![]);
         }
@@ -291,70 +324,11 @@ impl<'a> Codegen<'a> {
         #[cfg(feature = "function_call")]
         println!("\t->{}\t->{:?}", fn_call, data);
 
-        /*.iter()
-        .enumerate()
-        .for_each(|(idx, param)| {
-            let mut param = param.clone();
-            raw_ctx += 1;
-            &param.set_context(raw_ctx);
-            print!("\t->{} ", idx);
-            if let Some(p) = param.get_type() {
-                println!("type: {}", p);
-            } else {
-                println!("no-type");
-            }
-        });*/
-        /*println!("\t#[function_call]: [{:?}]", params[0].get_type());
-        if let Some(p) = params[0].get_type() {
-            // Get param for function
-            //if params[0].is_global() {
-            let n1 = params[0].get_value().unwrap();
-            let n2 = "1".to_string();
-            let n2_val = format!("%{}", n2);
-            println!("{:?}", n1);
-            let ge1 = getelementptr!(p inbounds n2, n1 => [Integer64 0, Integer64 0]);
-            let n3 = params[1].get_value().unwrap();
-
-            // Call function
-            //let n4 = params[1].get_value().unwrap();
-            let fn_call = call!(Integer32 => @fn_name arg!(ty2, ...) => [ty3 n2_val, Integer32 n3]);
-            println!(
-                "\t#[function_call]:\n\t-> {}\n\t-> {}\n\t-> {}",
-                ge1, fn_decl, fn_call
-            );
-        }
-        */
-
-        /*
-        let a1 = load!(Integer32 "1", "2");
-        let gty = Type::Array(ArrayType((s.len() + 1) as i32, Box::new(Type::Integer8)));
-        let ge1 = getelementptr!(Integer64 inbounds "el", "@.str" => [Integer64 0, Integer64 0]);
-
-        // Set function declaration
-        let ty1 = Type::Pointer(PointerType(Box::new(Integer8)));
-        let ty2 = ty1.clone();
-        let ty3 = ty1.clone();
-        let mut fn_decl = decl!(Integer32 fn_name);
-        decl!(fn_decl.argument_list arg!(ty1, ...));
-        self.function_declarations.push(FunctionDeclaration {
-            name: fn_name.to_string(),
-            declaration: fn_decl.to_string(),
-        });
-
-        let fn_call = call!(Integer32 => @fn_name arg!(ty2, ...) => [ty3 "%el".to_string(), Integer32 "%4".to_string()]);
-
-        // let name = format!("__global_let_init.{}", i);
-        // let call_fn = call!(Void => @name vec![] => []);
-        println!(
-            "\t#[function_call] params: {:?} #{} |> {} |> {:?} |> {} |> {} ",
-            params.len(),
-            fn_call,
-            fn_decl,
-            fn_call.function_args,
-            a1,
-            ge1,
-        );*/
-        ((*ctx).clone(), vec![])
+        let mut ctx = Context::new();
+        ctx.set(raw_ctx);
+        #[cfg(feature = "function_call")]
+        println!("\t#[end_function_call]");
+        (ctx, vec![])
     }
 
     pub fn fn_body_statement(
@@ -362,26 +336,24 @@ impl<'a> Codegen<'a> {
         ctx: &Context,
         fbs: &FunctionBodyStatement,
     ) -> (Context, VecInstructionSet) {
+        #[cfg(feature = "fn_body_statement")]
+        println!("\t#[call] fn_body_statement");
         #[cfg(feature = "fn_body_statement_dump")]
-        println!(
-            "\t#[call] fn_body_statement: FunctionBodyStatement = {:#?}",
-            fbs
-        );
-        match fbs {
+        println!("\t[fn_body_statement] {:#?}", fbs);
+        let res = match fbs {
             FunctionBodyStatement::Expression(e) => {
                 #[cfg(feature = "fn_body_statement")]
                 println!("\t#[fn_body_statement] Expression");
-                let res = self.function_value_call(&e.function_statement);
                 if let Some(op) = &e.operation_statement {
                     #[cfg(feature = "fn_body_statement")]
                     println!("\t#[fn_body_statement] operation_statement: {:?}", op);
                     if let Some(ex) = &e.expression {
-                        println!("\t#[fn_body_statement] expression: {:?}", ex);
+                        println!("\t#[fn_body_statement] expression [not-impl]: {:?}", ex);
                     } else {
                         panic!("\t#[fn_body_statement] Expression doesn't exist")
                     }
                 }
-                (ctx.clone(), res)
+                self.function_value_call(ctx, &e.function_statement)
             }
             FunctionBodyStatement::FunctionCall(fc) => {
                 #[cfg(feature = "fn_body_statement")]
@@ -389,12 +361,16 @@ impl<'a> Codegen<'a> {
                 self.function_call(ctx, fc)
             }
             FunctionBodyStatement::LetBinding(lb) => {
-                let _ = lb;
-                #[cfg(feature = "fn_body_statement_dump")]
-                println!("\t#[fn_body_statement] LetBinding: {:#?}", lb);
+                #[cfg(feature = "fn_body_statement")]
+                println!("\t#[fn_body_statement] LetBinding");
+                let _ = self.fn_body(&lb.function_body);
+                // Add to local variable
                 (ctx.clone(), vec![])
             }
-        }
+        };
+        #[cfg(feature = "fn_body_statement")]
+        println!("\t#[end_fn_body_statement]");
+        res
     }
 
     pub fn fn_parameter_value_type(&self, pvt: &ParameterValueType) -> ValueType {
@@ -437,10 +413,10 @@ impl<'a> Codegen<'a> {
         let mut entry_ctx = Context::new();
         let src = entry!(entry_ctx.get());
         let body_src = ast.iter().fold("".to_string(), |_, b| {
-            let (ctx, statement) = self.fn_body_statement(&entry_ctx, b);
+            let (ctx, _statement) = self.fn_body_statement(&entry_ctx, b);
             entry_ctx = ctx;
-            statement.iter().fold((), |_, v| println!("\t# {:#?}", v));
-            /*let fb = if let Some(ref v) = res_val {
+            /*statement.iter().fold((), |_, v| println!("\t# {:#?}", v));
+            let fb = if let Some(ref v) = res_val {
                 if let_value_name.is_empty() {
                     fb
                 } else {
@@ -468,7 +444,7 @@ impl<'a> Codegen<'a> {
         println!("\t#[fn_body] fn_body: {:?}", body_src);
         let src = bf!(= src body_src);
         #[cfg(feature = "fn_body")]
-        println!("\t#[fn_body] fn_body: {:?}", src);
+        println!("\t#[fn_body] fn_body: {:?}\n\t#[end_fn_body]", src);
         Ok(src)
     }
 
@@ -533,7 +509,7 @@ impl<'a> Codegen<'a> {
         let let_src = self.ast.iter().fold("".to_string(), |src, v| {
             // Global let bindings
             #[cfg(feature = "fn_global_let")]
-            println!("{:#?}", v);
+            println!("\t#[fn_global_let] {:#?}", v);
             match v {
                 MainStatement::LetBinding(l) => {
                     // Get Let-names & types
