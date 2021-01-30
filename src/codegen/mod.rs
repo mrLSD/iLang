@@ -252,6 +252,7 @@ impl<'a> Codegen<'a> {
         (ctx, res)
     }
 
+    // TODO: read values from local/global variable stor, and return VecInst insted String instructions
     #[allow(clippy::vec_init_then_push)]
     pub fn function_call(
         &mut self,
@@ -407,45 +408,23 @@ impl<'a> Codegen<'a> {
         }
     }
 
-    pub fn fn_body(&mut self, ast: &FunctionBody) -> Result {
+    pub fn fn_body(&mut self, ast: &FunctionBody) -> (VecInstructionSet, Option<Type>) {
         #[cfg(feature = "fn_body")]
         println!("\t#[call] fn_body: FunctionBody");
         let mut entry_ctx = Context::new();
         let src = entry!(entry_ctx.get());
-        let body_src = ast.iter().fold("".to_string(), |_, b| {
-            let (ctx, _statement) = self.fn_body_statement(&entry_ctx, b);
+        let _last_body_type: Option<Type> = None;
+        let body_instr:VecInstructionSet = ast.iter().fold("".to_string(), |_, b| {
+            let (ctx, statement) = self.fn_body_statement(&entry_ctx, b);
             entry_ctx = ctx;
-            /*statement.iter().fold((), |_, v| println!("\t# {:#?}", v));
-            let fb = if let Some(ref v) = res_val {
-                if let_value_name.is_empty() {
-                    fb
-                } else {
-                    // TODO: extend for multi-values
-                    // Also currently onlu Global variables
-                    let name = format!("@{}", &let_value_name[0].0);
-                    let l = load!(Integer32 self.ctx.get(), v);
-                    let s = store!(Integer32 0, name);
-                    self.ctx.inc();
-                    println!("\t#[fn_body] 1> {:?}\n{:?}\n{:?}", fb, l, s);
-                    bf!(=fb bf!(l s))
-                }
-            } else {
-                println!("\t#[fn_body] 2> {:?}", fb);
-                fb
-            };
-            println!("\t#[fn_body] 3> {:?} {:?}", s, fb);
-            */
-            let (s, fb) = ("", "");
-            bf!(= s fb)
+            for _i in statement.len()..0 {
+                
+            }
+            statement
         });
         #[cfg(feature = "fn_body")]
-        println!("\t#[fn_body] fn_body: {:?}", src);
-        #[cfg(feature = "fn_body")]
-        println!("\t#[fn_body] fn_body: {:?}", body_src);
-        let src = bf!(= src body_src);
-        #[cfg(feature = "fn_body")]
-        println!("\t#[fn_body] fn_body: {:?}\n\t#[end_fn_body]", src);
-        Ok(src)
+        println!("\t#[fn_body] fn_body: {:#?} \n\t#[end_fn_body]", body_instr);
+        (body_instr, None)
     }
 
     pub fn fn_module(&self) -> Result {
@@ -527,7 +506,17 @@ impl<'a> Codegen<'a> {
                 MainStatement::Function(f) => {
                     let fn_def = self.init_fn_def(&f.function_name);
                     // Get function body
-                    let body = body!(self.fn_body(&f.function_body).unwrap() ret!());
+                    let body_instr = self.fn_body(&f.function_body);
+                    let mut src = "".to_string();
+                    body_instr.0.iter().for_each(|v|{
+                        src = merge!(src v);
+                    });
+                    let ret = if let Some(ty) = body_instr.1 {
+                        ret!(ty @ 0)
+                    } else {
+                        ret!()
+                    };
+                    let body = body!(src ret);
                     // Generate function
                     let fn_body_src = fn_body!(fn_def body);
                     // Merge generated code

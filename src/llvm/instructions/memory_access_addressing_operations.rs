@@ -104,12 +104,29 @@ pub struct Store {
     pub ctx: Option<u64>,
 }
 
+impl Store {
+    pub fn get_value_name(&self) -> Option<String> {
+        let res = if let Some(ctx) = self.ctx {
+            ctx.to_string()
+        } else {
+            self.pointer.clone()
+        };
+        Some(res)
+    }
+}
+
 impl InstructionSet for Store {
     fn set_context(&mut self, ctx: u64) {
         self.ctx = Some(ctx);
     }
     fn is_read_only_context(&self) -> bool {
         true
+    }
+    fn get_type(&self) -> Option<Type> {
+        Some(self.ty.clone())
+    }
+    fn get_value(&self) -> Option<String> {
+        self.get_value_name()
     }
 }
 
