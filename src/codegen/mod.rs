@@ -408,23 +408,34 @@ impl<'a> Codegen<'a> {
         }
     }
 
-    pub fn fn_body(&mut self, ast: &FunctionBody) -> (VecInstructionSet, Option<Type>) {
+    /// Body of any kind expression.
+    /// Return: Instructions, last Type, last Value
+    pub fn fn_body(
+        &mut self,
+        ast: &FunctionBody,
+    ) -> (VecInstructionSet, Option<Type>, Option<String>) {
         #[cfg(feature = "fn_body")]
         println!("\t#[call] fn_body: FunctionBody");
         let mut entry_ctx = Context::new();
-        let src = entry!(entry_ctx.get());
-        let _last_body_type: Option<Type> = None;
-        let body_instr:VecInstructionSet = ast.iter().fold("".to_string(), |_, b| {
-            let (ctx, statement) = self.fn_body_statement(&entry_ctx, b);
+        //let src = entry!(entry_ctx.get());
+        let mut last_body_type: Option<Type> = None;
+        let mut last_body_value: Option<String> = None;
+        let body_instr: VecInstructionSet = ast.iter().fold(vec![], |v, b| {
+            let (ctx, mut statement) = self.fn_body_statement(&entry_ctx, b);
             entry_ctx = ctx;
-            for _i in statement.len()..0 {
-                
+            for i in (0..statement.len()).rev() {
+                if let Some(ty) = statement[i].get_type() {
+                    last_body_type = Some(ty);
+                    last_body_value = statement[i].get_value();
+                }
             }
-            statement
+            let mut v = v;
+            v.append(&mut statement);
+            v
         });
         #[cfg(feature = "fn_body")]
         println!("\t#[fn_body] fn_body: {:#?} \n\t#[end_fn_body]", body_instr);
-        (body_instr, None)
+        (body_instr, last_body_type, last_body_value)
     }
 
     pub fn fn_module(&self) -> Result {
@@ -496,7 +507,19 @@ impl<'a> Codegen<'a> {
                     // Function definition
                     let fn_def = self.global_init_fn_def(global_let_statement);
                     // Get function body
-                    let body = body!(self.fn_body(&l.function_body).unwrap() ret!());
+                    let (body_instr, ty, val) = self.fn_body(&l.function_body);
+                    let mut src = "".to_string();
+                    body_instr.iter().for_each(|v| {
+                        src = merge!(src v);
+                    });
+                    let ret = if let Some(ty) = ty {
+                        let val = val.unwrap();
+                        ret!(ty @ val)
+                    } else {
+                        ret!()
+                    };
+                    let body = body!(src ret);
+
                     // Generate function
                     let fn_body_src = fn_body!(fn_def body);
                     global_let_statement += 1;
@@ -506,13 +529,14 @@ impl<'a> Codegen<'a> {
                 MainStatement::Function(f) => {
                     let fn_def = self.init_fn_def(&f.function_name);
                     // Get function body
-                    let body_instr = self.fn_body(&f.function_body);
+                    let (body_instr, ty, val) = self.fn_body(&f.function_body);
                     let mut src = "".to_string();
-                    body_instr.0.iter().for_each(|v|{
+                    body_instr.iter().for_each(|v| {
                         src = merge!(src v);
                     });
-                    let ret = if let Some(ty) = body_instr.1 {
-                        ret!(ty @ 0)
+                    let ret = if let Some(ty) = ty {
+                        let val = val.unwrap();
+                        ret!(ty @ val)
                     } else {
                         ret!()
                     };
