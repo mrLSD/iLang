@@ -109,7 +109,7 @@ pub fn ld_builder(app_name: String, build_dir: &str) -> Result<(), String> {
         .map_err(|_| "Failed to run `ld` command".to_string())?
         .wait()
         .map_err(|_| "Failed to process `ld` command".to_string())?;
-    Ok(std::fs::remove_file(obj_file).or::<String>(Ok(()))?)
+    std::fs::remove_file(obj_file).or::<String>(Ok(()))
 }
 
 /// Run linker with `gcc` tool
@@ -125,5 +125,5 @@ pub fn gcc_builder(app_name: String, build_dir: &str) -> Result<(), String> {
         .map_err(|_| "Failed to run `gcc` command".to_string())?
         .wait()
         .map_err(|_| "Failed to process `gcc` command".to_string())?;
-    Ok(std::fs::remove_file(obj_file).or::<String>(Ok(()))?)
+    std::fs::remove_file(obj_file).or::<String>(Ok(()))
 }

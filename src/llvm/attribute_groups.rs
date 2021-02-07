@@ -18,15 +18,15 @@
 pub struct Personality(Vec<i32>);
 
 #[derive(Debug, Eq, PartialEq, Clone)]
-pub struct Attributes(i32, Vec<String>);
+pub struct Attributes(pub i32, pub Vec<String>);
 
 impl std::fmt::Display for Attributes {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         let s = self
             .1
             .iter()
-            .fold("".to_string(), |s, x| format!(" {} {} ", s, x));
-        let s = format!("attributes #{} {{ {} }}", self.0, s);
+            .fold(" ".to_string(), |s, x| format!("{}{} ", s, x));
+        let s = format!("attributes #{} = {{{}}}", self.0, s);
         write!(f, "{}", s)
     }
 }

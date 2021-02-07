@@ -12,7 +12,7 @@
 #[macro_export]
 macro_rules! alloca {
     ($ty:ident $res:expr) => {
-        Alloca {
+        crate::llvm::instructions::memory_access_addressing_operations::Alloca {
             result: format!("{}", $res),
             alloc_ty: $ty,
             elements: None,
@@ -21,7 +21,7 @@ macro_rules! alloca {
         }
     };
     ($ty:ident $res:expr, $align:expr) => {
-        Alloca {
+        crate::llvm::instructions::memory_access_addressing_operations::Alloca {
             result: stringify!($res).to_string(),
             alloc_ty: $ty,
             elements: None,
@@ -63,7 +63,12 @@ macro_rules! arg {
         v
     }};
     ($($ty:ident $val:expr)? $(,$ty1:ident $val1:expr)*, ...) => {{
-        let mut v = vec![];
+        let mut v = vec![ArgumentList {
+            parameter_type: None,
+            attributes: None,
+            name: None,
+            variable_argument: true,
+        }];
         $( v.push(ArgumentList {
             parameter_type: Some($ty),
             attributes: None,
@@ -76,12 +81,6 @@ macro_rules! arg {
             name: Some(format!("%{}", $val1)),
             variable_argument: false,
         });)*
-        v.push(ArgumentList {
-            parameter_type: None,
-            attributes: None,
-            name: None,
-            variable_argument: true,
-        });
         v
     }};
     ($($ty:ident)? $(,$ty1:ident)*) => {{
@@ -101,7 +100,12 @@ macro_rules! arg {
         v
     }};
     ($($ty:ident)? $(,$ty1:ident)*, ...) => {{
-        let mut v = vec![];
+        let mut v = vec![ArgumentList {
+            parameter_type: None,
+            attributes: None,
+            name: None,
+            variable_argument: true,
+        }];
         $( v.push(ArgumentList {
             parameter_type: Some($ty),
             attributes: None,
@@ -114,12 +118,6 @@ macro_rules! arg {
             name: None,
             variable_argument: false,
         });)*
-        v.push(ArgumentList {
-            parameter_type: None,
-            attributes: None,
-            name: None,
-            variable_argument: true,
-        });
         v
     }};
 }
@@ -144,20 +142,21 @@ macro_rules! def {
         $fnval.$attr = Some($val);
     }};
     ($ty:ident $name:ident) => {{
-        Function {
-            definition_type: FunctionDefinitionType::Define,
+        crate::llvm::functions::Function {
+            definition_type: crate::llvm::functions::FunctionDefinitionType::Define,
             linkage: None,
             preemption_specifier: None,
             visibility: None,
             dll_storage_class: None,
             cconv: None,
             ret_attrs: None,
-            result_type: Type::$ty,
-            function_name: stringify!($name).to_string(),
+            result_type: crate::llvm::types::Type::$ty,
+            function_name: $name.to_string(),
             argument_list: vec![],
             unnamed_addr: None,
             addr_sapce: None,
             fn_attrs: vec![],
+            attr_group: vec![],
             section_name: None,
             comdat: None,
             align: None,
@@ -206,7 +205,7 @@ macro_rules! decl {
 #[macro_export]
 macro_rules! source_file {
     ($name:expr) => {
-        SourceFileName(stringify!($name).to_string());
+        crate::llvm::source_filename::SourceFileName($name.to_string());
     };
 }
 
@@ -219,7 +218,7 @@ macro_rules! source_file {
 #[macro_export]
 macro_rules! target_triple {
     ($name:ident) => {
-        TargetTriple(crate::llvm::target_triple::$name.to_string());
+        crate::llvm::target_triple::TargetTriple(crate::llvm::target_triple::$name.to_string());
     };
 }
 
@@ -246,7 +245,7 @@ macro_rules! global {
         $var.$attr = Some($val);
     }};
     ($kind:ident $ty:ident $name:expr) => {
-        GlobalVariable {
+        crate::llvm::global_variables::GlobalVariable {
             name: $name.to_string(),
             linkage: None,
             preemption_specifier: None,
@@ -255,7 +254,7 @@ macro_rules! global {
             thread_local: None,
             unnamed_addr: None,
             addrspace: None,
-            global_variable_kind: GlobalVariableKind::$kind,
+            global_variable_kind: crate::llvm::global_variables::GlobalVariableKind::$kind,
             value_type: $ty,
             initializer_constant: None,
             section: None,
@@ -282,7 +281,7 @@ macro_rules! store {
         $var.$attr = Some($val);
     }};
     ($ty:ident $val:expr, $ptrval:expr) => {{
-        Store {
+        crate::llvm::instructions::memory_access_addressing_operations::Store {
             volatile: None,
             ty: $ty,
             value: $val.to_string(),
@@ -331,10 +330,10 @@ macro_rules! load {
 #[macro_export]
 macro_rules! ret {
     ($ty:ident @ $val:expr) => {{
-        Ret(Some(($ty, $val.to_string())))
+        crate::llvm::instructions::terminator::Ret(Some(($ty, $val.to_string())))
     }};
     () => {{
-        Ret(None)
+        crate::llvm::instructions::terminator::Ret(None)
     }};
 }
 
@@ -411,20 +410,27 @@ macro_rules! call {
     ($var:ident.$attr:ident @ $val:expr) => {{
         $var.$attr = Some($val);
     }};
-    ($ty:ident $res:expr => $(%$name1:ident)? $(@$name2:ident)? $declargs:expr => [$($argty1:ident $argval1:expr)? $(,$argty2:ident $argval2:expr)*]) => {{
+    ($ty:ident $($res:expr)? => $(%$name1:ident)? $(@$name2:ident)? $declargs:expr => [$($argty1:ident $argval1:expr)? $(,$argty2:ident $argval2:expr)*]) => {{
+    	#[allow(unused_variables)]
+		let res: Option<String> = None;
+    	$(
+			let res = Some($res);
+    	)?
+
     	#[allow(unused_assignments)]
     	let mut name = None;
     	$(
-			name = Some((true, stringify!($name1).to_string()));
+			name = Some((true, $name1.to_string()));
     	)?
     	$(
     		if name.is_some() {
     			panic!("can't init `name` twice!");
     		}
-			name = Some((false, stringify!($name2).to_string()));
+			name = Some((false, $name2.to_string()));
     	)?
 
-    	let mut args: Vec<FunctionArg> = vec![];
+		#[allow(unused_mut)]
+    	let mut args: Vec< crate::llvm::instructions::terminator::FunctionArg> = vec![];
     	$(
 			args.push(FunctionArg($argty1, $argval1));
     	)?
@@ -433,7 +439,7 @@ macro_rules! call {
     	)*
 
         Call {
-            ret_val: $res.to_string(),
+            ret_val: res,
             tail: None,
             fast_math_flags: None,
             cconv: None,
@@ -477,9 +483,34 @@ macro_rules! body {
     ($($el:expr)*) => {{
     	let s = "";
     	$(
-    		let s = format!("{}\n\t{}", s, $el);
+    		let s = if s.is_empty() {
+				format!("{}\n{}", s, $el)
+    		} else {
+    			format!("{}\n\t{}", s, $el)
+    		};
     	)*
         format!("{{{}\n}}", s)
+    }};
+    (@$el:expr) => {{
+    	let s = $el
+    		.iter()
+    		.fold("".to_string(), |s, x|
+    			format!("{}\n\t{}", s, x)
+    		);
+        format!("{{{}\n}}", s)
+    }};
+}
+
+/// `fn_body` - declare function with definition and body
+/// ```ignore
+/// let ret = ret!();
+/// let body = body!(ret);
+/// let fn_body = fn_body!(fn_def body);
+/// ```
+#[macro_export]
+macro_rules! fn_body {
+    ($fn_def:ident $fn_body:ident) => {{
+        format!("{} {}", $fn_def.to_string(), $fn_body.to_string())
     }};
 }
 
@@ -498,5 +529,52 @@ macro_rules! module {
     		let s = format!("{}{}\n", s, $el);
     	)*
         format!("{}", s)
+    }};
+}
+
+/// Merge different blocks. Same as `module` macros - simply
+/// different naming
+#[macro_export]
+macro_rules! merge {
+    ($($el:expr)*) => {{
+    	let s = "";
+    	$(
+    		let s = format!("{}{}\n", s, $el);
+    	)*
+        format!("{}", s)
+    }};
+}
+
+/// `bf` macros
+/// Simple Function body aggregator
+///
+/// ```ignore
+/// let ret1 = ret!(Integer32 @0);
+/// let entry1 = entry!(0);
+/// // Function body with instructions inside
+/// let body = bf!(entry1 ret1);
+/// ```
+#[macro_export]
+macro_rules! bf {
+    ($($el:expr)*) => {{
+    	let s = "";
+    	$(
+    		let s = format!("{}\n\t{}", s, $el);
+    	)*
+        s
+    }};
+    (@$($el:expr)*) => {{
+    	let s = "";
+    	$(
+    		let s = format!("{}\n{}", s, $el);
+    	)*
+        s
+    }};
+    (=$($el:expr)*) => {{
+    	let s = "";
+    	$(
+    		let s = format!("{}{}", s, $el);
+    	)*
+        s
     }};
 }

@@ -101,6 +101,7 @@ pub struct Function {
     pub unnamed_addr: Option<UnnamedAddr>,
     pub addr_sapce: Option<AddrSpace>,
     pub fn_attrs: Vec<FunctionAttributes>,
+    pub attr_group: Vec<u64>,
     pub section_name: Option<String>,
     pub comdat: Option<ComDat>,
     pub align: Option<Alignment>,
@@ -148,7 +149,7 @@ impl std::fmt::Display for Function {
                     format!("{}, {}", s, x)
                 }
             });
-        s = format!("{} ({})", s, arg);
+        s = format!("{}({})", s, arg);
 
         if let Some(x) = &self.unnamed_addr {
             s = format!("{} {}", s, x);
@@ -161,9 +162,15 @@ impl std::fmt::Display for Function {
         let fn_attrs = self
             .fn_attrs
             .iter()
-            .fold("".to_string(), |s, x| format!("{} {}", s, x));
+            .fold(" ".to_string(), |s, x| format!("{}{} ", s, x));
+        s = format!("{}{}", s, fn_attrs);
 
-        s = format!("{} {}", s, fn_attrs);
+        let attr_group = self
+            .attr_group
+            .iter()
+            .fold("".to_string(), |s, x| format!("{}#{}", s, x));
+        s = format!("{}{}", s, attr_group);
+
         if let Some(x) = &self.section_name {
             s = format!("{} section \"{}\"", s, x);
         }

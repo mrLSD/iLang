@@ -23,3 +23,6 @@ cover:
 		&& grcov ./target/debug/ -s . -t html --llvm --branch --ignore-not-existing -o ./target/debug/coverage/ \
 		&& firefox ./target/debug/coverage/index.html \
 		&& export RUSTFLAGS=""  && cargo clippy && cargo test 
+
+tst:
+	@cargo test test_codegen_main_func_complex -- --nocapture

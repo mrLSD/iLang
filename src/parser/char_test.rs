@@ -3,7 +3,7 @@ use super::char::*;
 #[test]
 fn test_char() {
     let x: char = 'x';
-    assert_eq!(x.as_char(), 'x');
+    assert_eq!(x.as_char(), &'x');
 
     let x: char = 'x';
     assert_eq!(x.is_alpha(), true);

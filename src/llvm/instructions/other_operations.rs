@@ -229,7 +229,7 @@ pub struct Select {
 ///  https://llvm.org/docs/LangRef.html#call-instruction
 #[derive(Debug, Eq, PartialEq, Clone)]
 pub struct Call {
-    pub ret_val: String,
+    pub ret_val: Option<String>,
     pub tail: Option<TailCall>,
     pub fast_math_flags: Option<FastMathFlags>,
     pub cconv: Option<CallingConvention>,
@@ -395,7 +395,7 @@ impl std::fmt::Display for TailCall {
 impl std::fmt::Display for Call {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         let tail = if let Some(v) = &self.tail {
-            format!("{}", v)
+            format!("{} ", v)
         } else {
             "".to_string()
         };
@@ -405,7 +405,11 @@ impl std::fmt::Display for Call {
             "".to_string()
         };
 
-        let mut s = format!("%{} = {} call {}", self.ret_val, tail, fast_math);
+        let mut s = if let Some(v) = &self.ret_val {
+            format!("%{} = {}call {}", v, tail, fast_math)
+        } else {
+            format!("{}call {}", tail, fast_math)
+        };
         if let Some(v) = &self.cconv {
             s = format!("{} {}", s, v)
         }
@@ -415,7 +419,7 @@ impl std::fmt::Display for Call {
         if let Some(v) = &self.addrspace {
             s = format!("{} {}", s, v)
         }
-        s = format!("{} {}", s, &self.ty);
+        s = format!("{}{}", s, &self.ty);
         if !self.fnty.is_empty() {
             let arg = self
                 .fnty
@@ -447,7 +451,7 @@ impl std::fmt::Display for Call {
                     format!("{} {} {}", s, v.0, v.1)
                 }
             });
-        s = format!("{} ({})", s, args);
+        s = format!("{}({})", s, args);
         if let Some(v) = &self.function_attrs {
             s = format!("{} {}", s, v)
         }
