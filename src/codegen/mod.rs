@@ -31,6 +31,7 @@ pub type Result = std::result::Result<String, CodegenError>;
 #[derive(Debug, Eq, PartialEq)]
 pub enum CodegenError {
     ModuleNotFound,
+    ParseSourceCode,
 }
 
 #[derive(Debug, Clone)]
@@ -324,6 +325,17 @@ impl<'a> Codegen<'a> {
         let src = module!(module global_let attrs);
         println!("\n{}", src);
         Ok(src)
+    }
+
+    pub fn build(source: &str) -> Result {
+        use crate::parser::{
+            ast::Span,
+            token::main,
+        };
+
+        let src = main(Span::new(source)).unwrap();
+        if src.0.fragment().is_empty() {}
+        Codegen::fn_main(&src.1)
     }
 }
 

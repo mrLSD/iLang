@@ -3,6 +3,9 @@ clippy:
 
 check:
 	@cargo check
+
+build:
+	@cargo build --release
 	
 fmt:
 	@cargo +nightly fmt
