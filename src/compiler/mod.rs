@@ -68,8 +68,9 @@ pub fn builder(app_name: String, src: String) -> Result<(), String> {
         .write_to_file(&module, FileType::Object, obj_file)
         .map_err(|v| v.to_string())?;
 
-    ar_builder(app_name.clone(), build_dir)?;
-    ld_builder(app_name, build_dir)
+    ar_builder(app_name, build_dir)?;
+    //ld_builder(app_name, build_dir)
+    Ok(())
 }
 
 /// Run `ar` tool for link libraries to static lib
@@ -78,7 +79,7 @@ pub fn ar_builder(app_name: String, build_dir: &str) -> Result<(), String> {
     let a_file_name = format!("{}/lib{}.a", build_dir, app_name);
 
     Command::new("ar")
-        .args(&["crs", &obj_file_name, &a_file_name])
+        .args(&["crs", &a_file_name, &obj_file_name])
         .spawn()
         .map_err(|_| "Failed to run `ar` command".to_string())?
         .wait()

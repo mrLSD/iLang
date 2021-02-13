@@ -40,8 +40,7 @@ pub fn main() {
     println!("# Using input file: {}", source_file);
     let src = read_source(source_file);
     println!("# Source code: {}", src);
-    let llvm_code = Codegen::build(&src);
-    if let Err(err) = llvm_code {
-        println!("Error: {:?}", err);
-    }
+    let llvm_code = Codegen::build(&src).unwrap_or_else(|err| panic!("Error: {:?}", err));
+    compiler::builder("app".into(), llvm_code)
+        .unwrap_or_else(|err| panic!("Failed build: {}", err));
 }

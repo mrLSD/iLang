@@ -4,7 +4,7 @@ clippy:
 check:
 	@cargo check
 
-build:
+release:
 	@cargo build --release
 	
 fmt:
@@ -30,3 +30,6 @@ cover:
 tst:
 	@cargo test test_codegen_global_let_binding -- --nocapture
 	
+x: build
+	@target/release/i-lang tst.i
+	@ls -la build
