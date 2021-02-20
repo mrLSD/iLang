@@ -14,7 +14,5 @@ nom_locate = "2.0"
 
 [dependencies.inkwell]
 git = "https://github.com/TheDan64/inkwell"
-# rev = "cdc45cd"
-rev = "a2db15b"
-# features = ["llvm11-0"]
+branch = "master"
 features = ["llvm10-0"]
