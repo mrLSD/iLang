@@ -16,5 +16,5 @@ nom_locate = "2.0"
 git = "https://github.com/TheDan64/inkwell"
 # rev = "cdc45cd"
 rev = "a2db15b"
-features = ["llvm11-0"]
-# features = ["llvm10-0"]
+# features = ["llvm11-0"]
+features = ["llvm10-0"]
