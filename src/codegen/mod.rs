@@ -97,11 +97,12 @@ pub fn function_value(ctx: &mut Context, fv: &FunctionValue) -> String {
     println!("FunctionValue");
     match fv {
         FunctionValue::ValueList(vl) => vl.iter().fold("".to_string(), |s, vle| {
+            println!("FunctionValue::ValueList");
             let val_list = value_expression(ctx, vle);
             bf!(= s val_list)
         }),
         FunctionValue::Expression(expr) => {
-            println!("EXPR-VL: {:#?}", expr);
+            println!("FunctionValue::Expression: {:#?}", expr);
             "".to_string()
         }
     }
@@ -111,7 +112,10 @@ pub fn function_value_call(ctx: &mut Context, efvc: &ExpressionFunctionValueCall
     println!("ExpressionFunctionValueCall");
     match efvc {
         ExpressionFunctionValueCall::FunctionValue(ref fv) => function_value(ctx, fv),
-        _ => unimplemented!(),
+        ExpressionFunctionValueCall::FunctionCall(ref fc) => {
+            println!("ExpressionFunctionValueCall::FunctionCall: {:#?}", fc);
+            "".into()
+        }
     }
 }
 
@@ -124,6 +128,7 @@ pub fn fn_body_statement(ctx: &mut Context, fbs: &FunctionBodyStatement) -> Stri
     println!("FunctionBodyStatement: {:#?}", fbs);
     match fbs {
         FunctionBodyStatement::Expression(e) => {
+            println!("FunctionBodyStatement::Expression");
             let res = function_value_call(ctx, &e.function_statement);
             if let Some(op) = &e.operation_statement {
                 println!("operation_statement: {:?}", op);
@@ -135,8 +140,14 @@ pub fn fn_body_statement(ctx: &mut Context, fbs: &FunctionBodyStatement) -> Stri
             }
             res
         }
-        FunctionBodyStatement::FunctionCall(fc) => function_call(ctx, fc),
-        _ => unimplemented!(),
+        FunctionBodyStatement::FunctionCall(fc) => {
+            println!("FunctionBodyStatement::FunctionCall");
+            function_call(ctx, fc)
+        }
+        FunctionBodyStatement::LetBinding(lb) => {
+            println!("FunctionBodyStatement::FunctionCall: {:#?}", lb);
+            "".into()
+        }
     }
 }
 
@@ -176,6 +187,7 @@ pub fn fn_parameter_value_list(
 
 #[allow(clippy::ptr_arg)]
 pub fn fn_body(ast: &FunctionBody) -> Result {
+    println!("FunctionBody");
     let mut ctx = Context::new();
     let entry_ctx = Context::new();
     let src = entry!(entry_ctx.get());
