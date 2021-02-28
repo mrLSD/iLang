@@ -25,4 +25,5 @@ cover:
 		&& export RUSTFLAGS=""  && cargo clippy && cargo test 
 
 tst:
-	@cargo test test_codegen_main_func_complex -- --nocapture
+	@cargo test test_codegen_global_let_binding -- --nocapture
+	
