@@ -57,63 +57,66 @@ impl<'a> Codegen<'a> {
         Ok(src)
     }
 
-    pub fn type_expression(&mut self, te: &TypeExpression) -> String {
-        println!(" # TypeExpression - type_expression: {:#?}", te.expr);
+    pub fn type_expression(&mut self, te: &TypeExpression) -> (String, Option<String>) {
+        println!(" # type_expression: TypeExpression = {:#?}", te.expr);
         match te.expr {
             BasicTypeExpression::Number(n) => {
                 let a = alloca!(Integer32 self.ctx.get());
                 let s = store!(Integer32 n, self.ctx.val());
                 self.ctx.inc();
-                bf!(a s)
+                (bf!(a s), Some(a))
             }
             _ => unimplemented!(),
         }
     }
 
-    pub fn value_expression(&mut self, vle: &ValueExpression) -> String {
-        println!(" # ValueExpression - value_expression");
+    pub fn value_expression(&mut self, vle: &ValueExpression) -> (String, Option<String>) {
+        println!(" # value_expression: ValueExpression");
         match vle {
             ValueExpression::ParameterValue(pv) => {
                 println!("ParameterValue: {:#?}", pv);
-                "".to_string()
+                ("".to_string(), None)
             }
             ValueExpression::TypeExpression(te) => self.type_expression(te),
         }
     }
 
-    pub fn function_value(&mut self, fv: &FunctionValue) -> String {
-        println!(" # FunctionValue - function_value");
+    pub fn function_value(&mut self, fv: &FunctionValue) -> (String, Option<String>) {
+        println!(" # function_value: FunctionValue");
         match fv {
             FunctionValue::ValueList(vl) => vl.iter().fold("".to_string(), |s, vle| {
                 println!("FunctionValue::ValueList");
-                let val_list = self.value_expression(vle);
-                bf!(= s val_list)
+                let (val_list, res_value) = self.value_expression(vle);
+                (bf!(= s val_list), res_value)
             }),
             FunctionValue::Expression(expr) => {
                 println!("FunctionValue::Expression: {:#?}", expr);
-                "".to_string()
+                ("".to_string(), None)
             }
         }
     }
 
-    pub fn function_value_call(&mut self, efvc: &ExpressionFunctionValueCall) -> String {
-        println!(" # ExpressionFunctionValueCall - function_value_call");
+    pub fn function_value_call(
+        &mut self,
+        efvc: &ExpressionFunctionValueCall,
+    ) -> (String, Option<String>) {
+        println!(" # function_value_call: ExpressionFunctionValueCall");
         match efvc {
             ExpressionFunctionValueCall::FunctionValue(ref fv) => self.function_value(fv),
             ExpressionFunctionValueCall::FunctionCall(ref fc) => {
                 println!("ExpressionFunctionValueCall::FunctionCall: {:#?}", fc);
-                "".into()
+                ("".into(), None)
             }
         }
     }
 
     pub fn function_call(&self, fc: &FunctionCall) -> String {
-        println!(" # FunctionCall - function_call: {:#?}", fc);
+        println!(" # function_call: FunctionCall = {:#?}", fc);
         unimplemented!()
     }
 
-    pub fn fn_body_statement(&mut self, fbs: &FunctionBodyStatement) -> String {
-        println!(" # FunctionBodyStatement - fn_body_statement: {:#?}", fbs);
+    pub fn fn_body_statement(&mut self, fbs: &FunctionBodyStatement) -> (String, Option<String>) {
+        println!(" # fn_body_statement: FunctionBodyStatement = {:#?}", fbs);
         match fbs {
             FunctionBodyStatement::Expression(e) => {
                 println!("FunctionBodyStatement::Expression");
@@ -126,15 +129,15 @@ impl<'a> Codegen<'a> {
                         panic!("Expression doesn't exist")
                     }
                 }
-                res
+                (res, None)
             }
             FunctionBodyStatement::FunctionCall(fc) => {
                 println!("FunctionBodyStatement::FunctionCall");
-                self.function_call(fc)
+                (self.function_call(fc), None)
             }
             FunctionBodyStatement::LetBinding(lb) => {
                 println!("FunctionBodyStatement::FunctionCall: {:#?}", lb);
-                "".into()
+                ("".into(), None)
             }
         }
     }
@@ -144,7 +147,7 @@ impl<'a> Codegen<'a> {
         acc: Vec<(String, Option<String>)>,
         pvt: &ParameterValueType,
     ) -> Vec<(String, Option<String>)> {
-        println!("ParameterValueType");
+        println!(" # fn_parameter_value_type: ParameterValueType");
         match pvt {
             ParameterValueType::Value(v) => {
                 let mut res = acc;
@@ -164,7 +167,7 @@ impl<'a> Codegen<'a> {
         acc: Vec<(String, Option<String>)>,
         pvl: &ParameterValueList,
     ) -> Vec<(String, Option<String>)> {
-        println!(" # ParameterValueList - fn_parameter_value_list");
+        println!(" # fn_parameter_value_list: ParameterValueList");
         match pvl {
             ParameterValueList::ParameterValue(p) => {
                 let mut res = acc;
@@ -178,16 +181,20 @@ impl<'a> Codegen<'a> {
     }
 
     #[allow(clippy::ptr_arg)]
-    pub fn fn_body(&mut self, ast: &FunctionBody) -> Result {
-        println!("FunctionBody");
+    pub fn fn_body(
+        &mut self,
+        ast: &FunctionBody,
+        let_value_name: &Vec<(String, Option<String>)>,
+    ) -> Result {
+        println!(" # fn_body: FunctionBody");
         let entry_ctx = Context::new();
         let src = entry!(entry_ctx.get());
         let body_src = ast.iter().fold("".to_string(), |s, b| {
-            let fb = self.fn_body_statement(b);
+            let (fb, res_val) = self.fn_body_statement(b);
             bf!(= s fb)
         });
         let src = bf!(= src body_src);
-        println!("{}", src);
+        println!("  #= fn_body: {}", src);
         Ok(src)
     }
 
@@ -241,7 +248,7 @@ impl<'a> Codegen<'a> {
                     .fold(vec![], |acc, v| self.fn_parameter_value_list(acc, v));
                 let_values.append(&mut let_value);
 
-                let fn_body_part_src = self.fn_body(&l.function_body).unwrap();
+                let fn_body_part_src = self.fn_body(&l.function_body, &let_value).unwrap();
                 let ret = ret!();
                 let body = body!(fn_body_part_src ret);
                 let fn_body_src = fn_body!(fn_def body);
