@@ -41,7 +41,8 @@ pub struct Codegen<'a> {
 }
 
 impl<'a> Codegen<'a> {
-    fn new(ast: &Main) -> Self {
+    #[allow(clippy::ptr_arg)]
+    fn new(ast: &'a Main) -> Self {
         Self {
             ctx: Context::new(),
             global_let_values: vec![],
@@ -76,7 +77,7 @@ impl<'a> Codegen<'a> {
                 println!("ParameterValue: {:#?}", pv);
                 "".to_string()
             }
-            ValueExpression::TypeExpression(te) => type_expression(ctx, te),
+            ValueExpression::TypeExpression(te) => self.type_expression(te),
         }
     }
 
@@ -85,7 +86,7 @@ impl<'a> Codegen<'a> {
         match fv {
             FunctionValue::ValueList(vl) => vl.iter().fold("".to_string(), |s, vle| {
                 println!("FunctionValue::ValueList");
-                let val_list = value_expression(ctx, vle);
+                let val_list = self.value_expression(vle);
                 bf!(= s val_list)
             }),
             FunctionValue::Expression(expr) => {
@@ -98,7 +99,7 @@ impl<'a> Codegen<'a> {
     pub fn function_value_call(&mut self, efvc: &ExpressionFunctionValueCall) -> String {
         println!(" # ExpressionFunctionValueCall - function_value_call");
         match efvc {
-            ExpressionFunctionValueCall::FunctionValue(ref fv) => function_value(ctx, fv),
+            ExpressionFunctionValueCall::FunctionValue(ref fv) => self.function_value(fv),
             ExpressionFunctionValueCall::FunctionCall(ref fc) => {
                 println!("ExpressionFunctionValueCall::FunctionCall: {:#?}", fc);
                 "".into()
@@ -116,7 +117,7 @@ impl<'a> Codegen<'a> {
         match fbs {
             FunctionBodyStatement::Expression(e) => {
                 println!("FunctionBodyStatement::Expression");
-                let res = function_value_call(ctx, &e.function_statement);
+                let res = self.function_value_call(&e.function_statement);
                 if let Some(op) = &e.operation_statement {
                     println!("operation_statement: {:?}", op);
                     if let Some(ex) = &e.expression {
@@ -129,7 +130,7 @@ impl<'a> Codegen<'a> {
             }
             FunctionBodyStatement::FunctionCall(fc) => {
                 println!("FunctionBodyStatement::FunctionCall");
-                function_call(ctx, fc)
+                self.function_call(fc)
             }
             FunctionBodyStatement::LetBinding(lb) => {
                 println!("FunctionBodyStatement::FunctionCall: {:#?}", lb);
@@ -170,18 +171,19 @@ impl<'a> Codegen<'a> {
                 res.push((p.fragment().to_string(), None));
                 res
             }
-            ParameterValueList::ParameterList(pl) => pl.iter().fold(acc, fn_parameter_value_type),
+            ParameterValueList::ParameterList(pl) => pl
+                .iter()
+                .fold(acc, |acc, v| self.fn_parameter_value_type(acc, v)),
         }
     }
 
     #[allow(clippy::ptr_arg)]
-    pub fn fn_body(&self, ast: &FunctionBody) -> Result {
+    pub fn fn_body(&mut self, ast: &FunctionBody) -> Result {
         println!("FunctionBody");
-        let mut ctx = Context::new();
         let entry_ctx = Context::new();
         let src = entry!(entry_ctx.get());
         let body_src = ast.iter().fold("".to_string(), |s, b| {
-            let fb = fn_body_statement(&mut ctx, b);
+            let fb = self.fn_body_statement(b);
             bf!(= s fb)
         });
         let src = bf!(= src body_src);
@@ -192,7 +194,7 @@ impl<'a> Codegen<'a> {
     #[allow(clippy::ptr_arg)]
     pub fn fn_module(&self) -> Result {
         let src: String;
-        if !ast.is_empty() {
+        if !self.ast.is_empty() {
             if let MainStatement::Module(m) = &self.ast[0] {
                 let s = m.module_name.iter().enumerate().fold(
                     "; ModuleID = '".to_string(),
@@ -223,7 +225,7 @@ impl<'a> Codegen<'a> {
         println!(" # fn_global_let");
         let mut global_let_statement = 0;
         let mut let_values: Vec<(String, Option<String>)> = vec![];
-        let let_src = ast.iter().fold("".to_string(), |s, v| {
+        let let_src = self.ast.iter().fold("".to_string(), |s, v| {
             if let MainStatement::LetBinding(l) = v {
                 let name = format!("__global_let_init.{}", global_let_statement);
                 let mut fn_def = def!(Void name);
@@ -233,11 +235,13 @@ impl<'a> Codegen<'a> {
                 global_let_statement += 1;
 
                 // Get Let-names & types
-                let mut let_value: Vec<(String, Option<String>)> =
-                    l.value_list.iter().fold(vec![], fn_parameter_value_list);
+                let mut let_value: Vec<(String, Option<String>)> = l
+                    .value_list
+                    .iter()
+                    .fold(vec![], |acc, v| self.fn_parameter_value_list(acc, v));
                 let_values.append(&mut let_value);
 
-                let fn_body_part_src = fn_body(&l.function_body).unwrap();
+                let fn_body_part_src = self.fn_body(&l.function_body).unwrap();
                 let ret = ret!();
                 let body = body!(fn_body_part_src ret);
                 let fn_body_src = fn_body!(fn_def body);
@@ -285,9 +289,10 @@ impl<'a> Codegen<'a> {
         merge!(attr0)
     }
 
-    pub fn fn_main(ast: &Main) -> Result {
+    #[allow(clippy::ptr_arg)]
+    pub fn fn_main(ast: &'a Main) -> Result {
         println!(" # fn_main");
-        let codegen = Self::new(ast);
+        let mut codegen = Self::new(&ast);
         let module = codegen.fn_module()?;
         let global_let = codegen.fn_global_let()?;
         let attrs = codegen.fn_attr_group();
@@ -300,7 +305,7 @@ impl<'a> Codegen<'a> {
 #[cfg(test)]
 mod tests {
     use crate::codegen::{
-        fn_main,
+        Codegen,
         CodegenError,
     };
     use crate::parser::{
@@ -312,7 +317,7 @@ mod tests {
     fn test_codegen_main_module_not_found() {
         let x = main(Span::new("let val1 = 10")).unwrap();
         assert_eq!(x.0.fragment(), &"");
-        let res = fn_main(x.1);
+        let res = Codegen::fn_main(&x.1);
         assert_eq!(res.unwrap_err(), CodegenError::ModuleNotFound);
     }
 
@@ -320,7 +325,7 @@ mod tests {
     fn test_codegen_global_let_binding() {
         let x = main(Span::new("module name1.name2\nlet x1 = 10")).unwrap();
         assert_eq!(x.0.fragment(), &"");
-        let res = fn_main(x.1);
+        let res = Codegen::fn_main(&x.1);
         assert!(res.is_ok());
     }
 
@@ -328,7 +333,7 @@ mod tests {
     fn test_codegen_global_let_expression() {
         let x = main(Span::new("module name1.name2\nlet x2 = 10 * x1")).unwrap();
         assert_eq!(x.0.fragment(), &"");
-        let res = fn_main(x.1);
+        let res = Codegen::fn_main(&x.1);
         assert!(res.is_ok());
     }
 }
