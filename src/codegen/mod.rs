@@ -62,9 +62,10 @@ impl<'a> Codegen<'a> {
         match te.expr {
             BasicTypeExpression::Number(n) => {
                 let a = alloca!(Integer32 self.ctx.get());
-                let s = store!(Integer32 n, self.ctx.val());
+                let result_val = self.ctx.val();
+                let s = store!(Integer32 n, result_val);
                 self.ctx.inc();
-                (bf!(a s), Some(a))
+                (bf!(a s), Some(result_val))
             }
             _ => unimplemented!(),
         }
@@ -84,10 +85,11 @@ impl<'a> Codegen<'a> {
     pub fn function_value(&mut self, fv: &FunctionValue) -> (String, Option<String>) {
         println!(" # function_value: FunctionValue");
         match fv {
-            FunctionValue::ValueList(vl) => vl.iter().fold("".to_string(), |s, vle| {
+            FunctionValue::ValueList(vl) => vl.iter().fold(("".to_string(), None), |s, vle| {
                 println!("FunctionValue::ValueList");
                 let (val_list, res_value) = self.value_expression(vle);
-                (bf!(= s val_list), res_value)
+                println!(" #= FunctionValue::ValueList res_value: {:?}", res_value);
+                (bf!(= s.0 val_list), res_value)
             }),
             FunctionValue::Expression(expr) => {
                 println!("FunctionValue::Expression: {:#?}", expr);
@@ -129,7 +131,7 @@ impl<'a> Codegen<'a> {
                         panic!("Expression doesn't exist")
                     }
                 }
-                (res, None)
+                res
             }
             FunctionBodyStatement::FunctionCall(fc) => {
                 println!("FunctionBodyStatement::FunctionCall");
@@ -191,6 +193,21 @@ impl<'a> Codegen<'a> {
         let src = entry!(entry_ctx.get());
         let body_src = ast.iter().fold("".to_string(), |s, b| {
             let (fb, res_val) = self.fn_body_statement(b);
+            let fb = if let Some(ref v) = res_val {
+                if let_value_name.is_empty() {
+                    fb
+                } else {
+                    // TODO: extend for multi-values
+                    // Also currently onlu Global variables
+                    let name = format!("@{}", &let_value_name[0].0);
+                    let l = load!(Integer32 self.ctx.get(), v);
+                    let s = store!(Integer32 self.ctx.val(), name);
+                    self.ctx.inc();
+                    bf!(fb l s)
+                }
+            } else {
+                fb
+            };
             bf!(= s fb)
         });
         let src = bf!(= src body_src);
@@ -246,9 +263,10 @@ impl<'a> Codegen<'a> {
                     .value_list
                     .iter()
                     .fold(vec![], |acc, v| self.fn_parameter_value_list(acc, v));
+                let let_binding_val = let_value.clone();
                 let_values.append(&mut let_value);
 
-                let fn_body_part_src = self.fn_body(&l.function_body, &let_value).unwrap();
+                let fn_body_part_src = self.fn_body(&l.function_body, &let_binding_val).unwrap();
                 let ret = ret!();
                 let body = body!(fn_body_part_src ret);
                 let fn_body_src = fn_body!(fn_def body);

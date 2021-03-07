@@ -306,7 +306,7 @@ macro_rules! load {
         $var.$attr = Some($val);
     }};
     ($ty:ident $res:expr, $ptrval:expr) => {{
-        Load {
+        crate::llvm::instructions::memory_access_addressing_operations::Load {
             result: $res.to_string(),
             volatile: None,
             ty: $ty,
