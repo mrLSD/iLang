@@ -4,9 +4,15 @@
 
 use crate::llvm::attribute_groups::Attributes;
 use crate::llvm::context::Context;
+use crate::llvm::global_variables::UnnamedAddr::UnnamedAddr;
 use crate::llvm::instructions::other_operations::Call;
-use crate::llvm::linkage_types::LinkageTypes::Internal;
+use crate::llvm::linkage_types::LinkageTypes::{
+    Internal,
+    Private,
+};
 use crate::llvm::runtime_preemption::RuntimePreemptionSpecifier::DsoLocal;
+use crate::llvm::type_system::aggregate::ArrayType;
+use crate::llvm::types::Type;
 use crate::llvm::types::Type::{
     Integer32,
     Void,
@@ -68,6 +74,15 @@ impl<'a> Codegen<'a> {
                 self.ctx.inc();
                 (bf!(a s), Some(result_val))
             }
+            BasicTypeExpression::String(ref s) => {
+                let gty = Type::Array(ArrayType((s.len() + 1) as i32, Box::new(Type::Integer8)));
+                let val = format!(r#"c"{}\00""#, s);
+                let mut g = global!(Constant gty ".str");
+                global!(g.linkage @Private);
+                global!(g.unnamed_addr @UnnamedAddr);
+                global!(g.initializer_constant @val);
+                (bf!(g), None)
+            }
             _ => unimplemented!(),
         }
     }
@@ -77,7 +92,8 @@ impl<'a> Codegen<'a> {
         match vle {
             ValueExpression::ParameterValue(pv) => {
                 println!("ParameterValue: {:#?}", pv);
-                ("".to_string(), None)
+                //("".to_string(), None)
+                unimplemented!();
             }
             ValueExpression::TypeExpression(te) => self.type_expression(te),
         }
@@ -113,8 +129,36 @@ impl<'a> Codegen<'a> {
         }
     }
 
-    pub fn function_call(&self, fc: &FunctionCall) -> String {
+    pub fn fn_function_value(&mut self, fl: &FunctionValue) -> String {
+        println!(" # fn_function_value");
+        match fl {
+            FunctionValue::ValueList(vl) => {
+                let _res: Vec<String> = vl.iter().fold(vec![], |_s, v| {
+                    let x = self.value_expression(v);
+                    println!("RES: {:#?}", x);
+                    vec![]
+                });
+                "".into()
+            }
+            FunctionValue::Expression(_) => unimplemented!(),
+        }
+    }
+
+    pub fn function_call(&mut self, fc: &FunctionCall) -> String {
         println!(" # function_call: FunctionCall = {:#?}", fc);
+        if fc.function_call_name.is_empty() {
+            return "".into();
+        }
+        let fn_name = fc.function_call_name[0].fragment();
+        println!("\t# {}", fn_name);
+        let params: Vec<String> = fc.function_value.iter().fold(vec![], |s, v| {
+            let x = self.fn_function_value(v);
+            println!("\t# fn_function_value: {:?}", x);
+            let mut data = s;
+            data.push(x);
+            data
+        });
+        println!("\t# params: {:?}", params);
         unimplemented!()
     }
 
@@ -369,6 +413,17 @@ mod tests {
     #[test]
     fn test_codegen_global_let_expression() {
         let x = main(Span::new("module name1.name2\nlet x2 = 10 * x1")).unwrap();
+        assert_eq!(x.0.fragment(), &"");
+        let res = Codegen::fn_main(&x.1);
+        assert!(res.is_ok());
+    }
+
+    #[test]
+    fn test_codegen_global_let_and_print() {
+        let x = main(Span::new(
+            "module name1.name2\nlet x1 = 10\nlet main = printfn \"Res: %A\" x1",
+        ))
+        .unwrap();
         assert_eq!(x.0.fragment(), &"");
         let res = Codegen::fn_main(&x.1);
         assert!(res.is_ok());

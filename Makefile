@@ -28,8 +28,8 @@ cover:
 		&& export RUSTFLAGS=""  && cargo clippy && cargo test 
 
 tst:
-	@cargo test test_codegen_global_let_binding -- --nocapture
+	@cargo test test_codegen_global_let_and_print -- --nocapture
 	
-x: build
+x: release
 	@target/release/i-lang tst.i
 	@ls -la build
