@@ -47,6 +47,11 @@ pub struct Codegen<'a> {
     ast: &'a Main<'a>,
 }
 
+pub struct TypeExpressionResult {
+    pub value: String,
+    pub global: bool,
+}
+
 impl<'a> Codegen<'a> {
     #[allow(clippy::ptr_arg)]
     fn new(ast: &'a Main) -> Self {
@@ -64,7 +69,7 @@ impl<'a> Codegen<'a> {
         Ok(src)
     }
 
-    pub fn type_expression(&mut self, te: &TypeExpression) -> (String, Option<String>) {
+    pub fn type_expression(&mut self, te: &TypeExpression) -> (String, TypeExpressionResult) {
         println!(" # type_expression: TypeExpression = {:#?}", te.expr);
         match te.expr {
             BasicTypeExpression::Number(n) => {
@@ -72,22 +77,30 @@ impl<'a> Codegen<'a> {
                 let result_val = self.ctx.val();
                 let s = store!(Integer32 n, result_val);
                 self.ctx.inc();
-                (bf!(a s), Some(result_val))
+                (bf!(a s), TypeExpressionResult{
+                     value: result_val,
+                    global: false,
+                })
             }
             BasicTypeExpression::String(ref s) => {
                 let gty = Type::Array(ArrayType((s.len() + 1) as i32, Box::new(Type::Integer8)));
                 let val = format!(r#"c"{}\00""#, s);
-                let mut g = global!(Constant gty ".str");
+                let result_val = format!(".str{}", self.ctx.val());
+                let mut g = global!(Constant gty result_val);
                 global!(g.linkage @Private);
                 global!(g.unnamed_addr @UnnamedAddr);
                 global!(g.initializer_constant @val);
-                (bf!(g), None)
+                self.ctx.inc();
+                (bf!(g), TypeExpressionResult{
+                    value: result_val,
+                    global: true,
+                })
             }
             _ => unimplemented!(),
         }
     }
 
-    pub fn value_expression(&mut self, vle: &ValueExpression) -> (String, Option<String>) {
+    pub fn value_expression(&mut self, vle: &ValueExpression) -> (String, TypeExpressionResult) {
         println!(" # value_expression: ValueExpression");
         match vle {
             ValueExpression::ParameterValue(pv) => {
