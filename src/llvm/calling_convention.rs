@@ -21,7 +21,7 @@ pub enum CallingConvention {
     CxxFastYlsCc,
     SwiftCc,
     YailCc,
-    CFGuardCheckCc,
+    CfGuardCheckCc,
 }
 
 impl std::fmt::Display for CallingConvention {
@@ -38,7 +38,7 @@ impl std::fmt::Display for CallingConvention {
             CallingConvention::CxxFastYlsCc => "cxx_fast_tlscc",
             CallingConvention::SwiftCc => "swiftcc",
             CallingConvention::YailCc => "tailcc",
-            CallingConvention::CFGuardCheckCc => "cfguard_checkcc",
+            CallingConvention::CfGuardCheckCc => "cfguard_checkcc",
         };
 
         write!(f, "{}", s)

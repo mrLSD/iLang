@@ -115,7 +115,7 @@ fn parse_fragment(input: Span) -> ParseResult<StringFragment> {
         // of that parser.
         map(parse_literal, StringFragment::Literal),
         map(parse_escaped_char, StringFragment::EscapedChar),
-        value(StringFragment::EscapedWS, parse_escaped_whitespace),
+        value(StringFragment::EscapedWs, parse_escaped_whitespace),
     ))(input)
 }
 
@@ -133,7 +133,7 @@ fn build_string(input: Span) -> ParseResult<String> {
             match fragment {
                 StringFragment::Literal(s) => string.push_str(s.fragment()),
                 StringFragment::EscapedChar(c) => string.push(c),
-                StringFragment::EscapedWS => {}
+                StringFragment::EscapedWs => {}
             }
             string
         },

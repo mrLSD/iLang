@@ -18,6 +18,7 @@ use crate::llvm::types::Type::{
     Void,
 };
 use crate::parser::ast::*;
+use std::collections::HashSet;
 
 pub type Result = std::result::Result<String, CodegenError>;
 
@@ -32,7 +33,7 @@ pub struct Codegen<'a> {
     ctx: Context,
     global_ctx: Context,
     let_values: Vec<String>,
-    global_let_values: Vec<String>,
+    global_let_values: HashSet<String>,
     ast: &'a Main<'a>,
 }
 
@@ -47,7 +48,7 @@ impl<'a> Codegen<'a> {
             ctx: Context::new(),
             global_ctx: Context::new(),
             let_values: vec![],
-            global_let_values: vec![],
+            global_let_values: HashSet::new(),
             ast,
         }
     }
@@ -73,12 +74,13 @@ impl<'a> Codegen<'a> {
             BasicTypeExpression::String(ref s) => {
                 let gty = Type::Array(ArrayType((s.len() + 1) as i32, Box::new(Type::Integer8)));
                 let val = format!(r#"c"{}\00""#, s);
-                let result_val = format!(".str{}", self.ctx.val());
+                let result_val = format!(".str{}", self.global_ctx.val());
+                self.global_let_values.insert(result_val.clone());
                 let mut g = global!(Constant gty result_val);
                 global!(g.linkage @Private);
                 global!(g.unnamed_addr @UnnamedAddr);
                 global!(g.initializer_constant @val);
-                self.ctx.inc();
+                self.global_ctx.inc();
                 (bf!(g), Some(result_val))
             }
             _ => unimplemented!(),
@@ -124,21 +126,6 @@ impl<'a> Codegen<'a> {
                 println!("ExpressionFunctionValueCall::FunctionCall: {:#?}", fc);
                 ("".into(), None)
             }
-        }
-    }
-
-    pub fn fn_function_value(&mut self, fl: &FunctionValue) -> String {
-        println!(" # fn_function_value");
-        match fl {
-            FunctionValue::ValueList(vl) => {
-                let _res: Vec<String> = vl.iter().fold(vec![], |_s, v| {
-                    let x = self.value_expression(v);
-                    println!("RES: {:#?}", x);
-                    vec![]
-                });
-                "".into()
-            }
-            FunctionValue::Expression(_) => unimplemented!(),
         }
     }
 
@@ -320,7 +307,7 @@ impl<'a> Codegen<'a> {
             }
         });
         let globals = let_values.iter().fold("".to_string(), |s, l| {
-            self.global_let_values.push(l.0.clone());
+            self.global_let_values.insert(l.0.clone());
             let mut g = global!(Global Integer32 &l.0);
             global!(g.preemption_specifier @DsoLocal);
             global!(g.initializer_constant @"0".to_string());
