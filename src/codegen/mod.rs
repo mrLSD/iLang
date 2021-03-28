@@ -32,8 +32,9 @@ pub enum CodegenError {
 pub struct Codegen<'a> {
     ctx: Context,
     global_ctx: Context,
-    let_values: Vec<String>,
+    let_values: HashSet<String>,
     global_let_values: HashSet<String>,
+    global_let_expressions: Vec<String>,
     ast: &'a Main<'a>,
 }
 
@@ -47,8 +48,9 @@ impl<'a> Codegen<'a> {
         Self {
             ctx: Context::new(),
             global_ctx: Context::new(),
-            let_values: vec![],
+            let_values: HashSet::new(),
             global_let_values: HashSet::new(),
+            global_let_expressions: vec![],
             ast,
         }
     }
@@ -68,20 +70,21 @@ impl<'a> Codegen<'a> {
                 let result_val = self.ctx.val();
                 let s = store!(Integer32 n, result_val);
                 self.ctx.inc();
-                self.let_values.push(result_val.clone());
+                self.let_values.insert(result_val.clone());
                 (bf!(a s), Some(result_val))
             }
             BasicTypeExpression::String(ref s) => {
                 let gty = Type::Array(ArrayType((s.len() + 1) as i32, Box::new(Type::Integer8)));
                 let val = format!(r#"c"{}\00""#, s);
-                let result_val = format!(".str{}", self.global_ctx.val());
+                let result_val = format!(".str{}", self.global_ctx.get());
                 self.global_let_values.insert(result_val.clone());
                 let mut g = global!(Constant gty result_val);
                 global!(g.linkage @Private);
                 global!(g.unnamed_addr @UnnamedAddr);
                 global!(g.initializer_constant @val);
                 self.global_ctx.inc();
-                (bf!(g), Some(result_val))
+                self.global_let_expressions.push(g.to_string());
+                ("".into(), Some(result_val))
             }
             _ => unimplemented!(),
         }
@@ -92,8 +95,8 @@ impl<'a> Codegen<'a> {
         match vle {
             ValueExpression::ParameterValue(pv) => {
                 println!("ParameterValue: {:#?}", pv);
-                //("".to_string(), None)
-                unimplemented!();
+                (";TODO: value_expression".to_string(), None)
+                //unimplemented!();
             }
             ValueExpression::TypeExpression(te) => self.type_expression(te),
         }
@@ -144,7 +147,8 @@ impl<'a> Codegen<'a> {
             data
         });
         println!("\t# params: {:?}", params);
-        unimplemented!()
+        eprintln!(";TODO: function_call");
+        "".into()
     }
 
     pub fn fn_body_statement(&mut self, fbs: &FunctionBodyStatement) -> (String, Option<String>) {
@@ -233,15 +237,21 @@ impl<'a> Codegen<'a> {
                     let l = load!(Integer32 self.ctx.get(), v);
                     let s = store!(Integer32 self.ctx.val(), name);
                     self.ctx.inc();
-                    bf!(fb l s)
+                    println!("==1> {:?}\n{:?}\n{:?}", fb, l, s);
+                    bf!(=fb bf!(l s))
                 }
             } else {
+                println!("==2> {:?}", fb);
                 fb
             };
+            println!("==3> {:?} {:?}", s, fb);
             bf!(= s fb)
         });
+        println!("--> fn_body: {:?}", src);
+        println!("--> fn_body: {:?}", body_src);
         let src = bf!(= src body_src);
-        println!("  #= fn_body: {}", src);
+
+        println!("  #= fn_body: {:?}", src);
         Ok(src)
     }
 
@@ -300,13 +310,16 @@ impl<'a> Codegen<'a> {
                 let ret = ret!();
                 let body = body!(fn_body_part_src ret);
                 let fn_body_src = fn_body!(fn_def body);
-
                 merge!(s fn_body_src)
             } else {
                 s
             }
         });
-        let globals = let_values.iter().fold("".to_string(), |s, l| {
+        let globals_from_let = self
+            .global_let_expressions
+            .iter()
+            .fold("".to_string(), |s, l| format!("{}{}\n", s, l));
+        let globals = let_values.iter().fold(globals_from_let, |s, l| {
             self.global_let_values.insert(l.0.clone());
             let mut g = global!(Global Integer32 &l.0);
             global!(g.preemption_specifier @DsoLocal);

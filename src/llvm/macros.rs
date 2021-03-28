@@ -539,7 +539,11 @@ macro_rules! merge {
     ($($el:expr)*) => {{
     	let s = "";
     	$(
-    		let s = format!("{}{}\n", s, $el);
+    		let s = if !$el.to_string().is_empty() {
+    			format!("{}{}\n", s, $el)
+    		} else {
+    			"".into()
+    		};
     	)*
         format!("{}", s)
     }};
@@ -559,7 +563,11 @@ macro_rules! bf {
     ($($el:expr)*) => {{
     	let s = "";
     	$(
-    		let s = format!("{}\n\t{}", s, $el);
+    		let s = if !$el.to_string().is_empty() {
+				format!("{}\n\t{}", s, $el)
+			} else {
+				"".into()
+			};
     	)*
         s
     }};
