@@ -3,6 +3,9 @@ clippy:
 
 check:
 	@cargo check
+
+release:
+	@cargo build --release
 	
 fmt:
 	@cargo +nightly fmt
@@ -25,4 +28,8 @@ cover:
 		&& export RUSTFLAGS=""  && cargo clippy && cargo test 
 
 tst:
-	@cargo test test_codegen_main_func_complex -- --nocapture
+	@cargo test test_codegen_global_let_and_print -- --nocapture
+	
+x: release
+	@target/release/i-lang tst.i
+	@ls -la build

@@ -21,7 +21,7 @@
 //! https://llvm.org/docs/LangRef.html#aliases
 
 use super::{
-    dll_storage_classes::DLLStorageClasses,
+    dll_storage_classes::DllStorageClasses,
     global_variables::UnnamedAddr,
     linkage_types::LinkageTypes,
     runtime_preemption::RuntimePreemptionSpecifier,
@@ -36,7 +36,7 @@ pub struct Alias {
     linkage: Option<LinkageTypes>,
     preemption_specifier: Option<RuntimePreemptionSpecifier>,
     visibility: Option<VisibilityStyles>,
-    dll_storage_classes: Option<DLLStorageClasses>,
+    dll_storage_classes: Option<DllStorageClasses>,
     thread_local: Option<ThreadLocalStorage>,
     unnamed_addr: Option<UnnamedAddr>,
     aliasee_type: Vec<Type>,

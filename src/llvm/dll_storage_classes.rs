@@ -6,16 +6,16 @@
 //! https://llvm.org/docs/LangRef.html#dll-storage-classes
 
 #[derive(Debug, Eq, PartialEq, Clone)]
-pub enum DLLStorageClasses {
+pub enum DllStorageClasses {
     DllImport,
     DllExport,
 }
 
-impl std::fmt::Display for DLLStorageClasses {
+impl std::fmt::Display for DllStorageClasses {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         let s = match self {
-            DLLStorageClasses::DllImport => "dllimport",
-            DLLStorageClasses::DllExport => "dllexport",
+            DllStorageClasses::DllImport => "dllimport",
+            DllStorageClasses::DllExport => "dllexport",
         };
 
         write!(f, "{}", s)

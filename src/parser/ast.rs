@@ -183,7 +183,7 @@ pub type Main<'a> = Vec<MainStatement<'a>>;
 pub enum StringFragment<'a> {
     Literal(Span<'a>),
     EscapedChar(char),
-    EscapedWS,
+    EscapedWs,
 }
 
 /// String identifier

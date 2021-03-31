@@ -14,9 +14,9 @@
 //! https://llvm.org/docs/LangRef.html#garbage-collector-strategy-names
 
 #[derive(Debug, Eq, PartialEq, Clone)]
-pub struct GCStrategyName(String);
+pub struct GcStrategyName(String);
 
-impl std::fmt::Display for GCStrategyName {
+impl std::fmt::Display for GcStrategyName {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         let s = format!("gc {}", self.0);
         write!(f, "{}", s)
