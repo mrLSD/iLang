@@ -5,16 +5,20 @@
 use crate::llvm::attribute_groups::Attributes;
 use crate::llvm::context::Context;
 use crate::llvm::global_variables::UnnamedAddr::UnnamedAddr;
+use crate::llvm::instructions::memory_access_addressing_operations::GetElementPtr;
 use crate::llvm::instructions::other_operations::Call;
 use crate::llvm::linkage_types::LinkageTypes::{
     Internal,
     Private,
 };
 use crate::llvm::type_system::aggregate::ArrayType;
+use crate::llvm::type_system::single_value::PointerType;
 use crate::llvm::types::Type;
 use crate::llvm::types::Type::{
     Integer1,
     Integer32,
+    Integer64,
+    Integer8,
     Void,
 };
 use crate::llvm::InstructionSet;
@@ -40,7 +44,35 @@ pub struct Codegen<'a> {
     let_values: HashSet<String>,
     global_let_values: HashMap<LetValueName, ValueType>,
     global_let_expressions: Vec<String>,
+    function_declarations: Vec<FunctionDeclaration>,
     ast: &'a Main<'a>,
+}
+
+#[derive(Debug, Clone)]
+pub struct FunctionDeclaration {
+    name: String,
+    declaration: String,
+}
+
+#[derive(Debug, Clone)]
+pub struct FunctionParameter {
+    name: String,
+    global: bool,
+}
+
+impl InstructionSet for FunctionParameter {
+    fn set_context(&mut self, _ctx: u64) {}
+}
+
+impl std::fmt::Display for FunctionParameter {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        let s = if self.global {
+            format!("@{{{}}}", self.name)
+        } else {
+            format!("%{{{}}}", self.name)
+        };
+        write!(f, "{}", s)
+    }
 }
 
 pub struct TypeExpressionResult {
@@ -78,6 +110,7 @@ impl<'a> Codegen<'a> {
             let_values: HashSet::new(),
             global_let_values: HashMap::new(),
             global_let_expressions: vec![],
+            function_declarations: vec![],
             ast,
         }
     }
@@ -118,13 +151,20 @@ impl<'a> Codegen<'a> {
         println!("\t#[call] value_expression: ValueExpression");
         match vle {
             ValueExpression::ParameterValue(pv) => {
-                // TODO: Get value form SOME key-value: parameter-value -> codegen-patam-alias
-                println!(
-                    "\t#[value_expression] ParameterValue [not-implemented]: {:#?}",
-                    pv
-                );
-                vec![]
-                //unimplemented!();
+                let value_key = pv.fragment();
+                if let Some(x) = self.global_let_values.get(&value_key.to_string()) {
+                    println!("\t#[value_expression] ParameterValue: {:#?}", x);
+                    vec![Box::new(FunctionParameter {
+                        name: x.value.clone(),
+                        global: true,
+                    })]
+                } else {
+                    println!(
+                        "\t#[value_expression] ParameterValue [doesn't exist]: {}",
+                        value_key
+                    );
+                    vec![]
+                }
             }
             ValueExpression::TypeExpression(te) => {
                 println!("\t#[value_expression] TypeExpression");
@@ -165,6 +205,7 @@ impl<'a> Codegen<'a> {
         }
     }
 
+    #[allow(clippy::vec_init_then_push)]
     pub fn function_call(&mut self, fc: &FunctionCall) -> VecInstructionSet {
         println!("\t#[call]: function_call: FunctionCall");
         if fc.function_call_name.is_empty() {
@@ -172,22 +213,54 @@ impl<'a> Codegen<'a> {
         }
         let fn_name = fc.function_call_name[0].fragment();
         println!("\t#[function_call] fn_name: {}", fn_name);
-        let params: Vec<String> = fc.function_value.iter().fold(vec![], |_s, v| {
-            let x = self.function_value(v);
-            //println!("\t#[function_call] fn_function_value: {:?}", x);
-            println!("\t#[function_call] fn_function_value: [{}]", x.len());
-            x.iter().fold(0, |_, v| {
-                println!("\t#[function_call] elem: {:#?}", v);
-                0
-            });
-            // let mut data = vec![];
-            // data.push("".into());
-            // data
-            vec![]
+        let params: VecInstructionSet = fc.function_value.iter().fold(vec![], |s, v| {
+            let mut res = self.function_value(v);
+            println!(
+                "\t#[function_call] fn_function_value count: [{}]",
+                res.len()
+            );
+            let mut x = s;
+            x.append(&mut res);
+            x
         });
-        println!("\t#[function_call] params: {:?}", params);
-        eprintln!(";TODO: function_call");
-        vec![]
+        println!("\t#[function_call]: [{:?}]", params[0].get_type());
+        if let Some(p) = params[0].get_type() {
+            if params[0].is_global() {
+                
+            }
+            let ge1 = getelementptr!(p inbounds "el", "@.str" => [Integer64 0, Integer64 0]);
+            println!("\t#[function_call]: [{}]", ge1);
+        }
+        /*
+        let a1 = load!(Integer32 "1", "2");
+        let gty = Type::Array(ArrayType((s.len() + 1) as i32, Box::new(Type::Integer8)));
+        let ge1 = getelementptr!(Integer64 inbounds "el", "@.str" => [Integer64 0, Integer64 0]);
+
+        // Set function declaration
+        let ty1 = Type::Pointer(PointerType(Box::new(Integer8)));
+        let ty2 = ty1.clone();
+        let ty3 = ty1.clone();
+        let mut fn_decl = decl!(Integer32 fn_name);
+        decl!(fn_decl.argument_list arg!(ty1, ...));
+        self.function_declarations.push(FunctionDeclaration {
+            name: fn_name.to_string(),
+            declaration: fn_decl.to_string(),
+        });
+
+        let fn_call = call!(Integer32 => @fn_name arg!(ty2, ...) => [ty3 "%el".to_string(), Integer32 "%4".to_string()]);
+
+        // let name = format!("__global_let_init.{}", i);
+        // let call_fn = call!(Void => @name vec![] => []);
+        println!(
+            "\t#[function_call] params: {:?} #{} |> {} |> {:?} |> {} |> {} ",
+            params.len(),
+            fn_call,
+            fn_decl,
+            fn_call.function_args,
+            a1,
+            ge1,
+        );*/
+        params
     }
 
     pub fn fn_body_statement(&mut self, fbs: &FunctionBodyStatement) -> VecInstructionSet {
@@ -214,7 +287,7 @@ impl<'a> Codegen<'a> {
                 self.function_call(fc)
             }
             FunctionBodyStatement::LetBinding(lb) => {
-                println!("\t#[fn_body_statement] FunctionCall: {:#?}", lb);
+                println!("\t#[fn_body_statement] LetBinding: {:#?}", lb);
                 vec![]
             }
         }
@@ -328,6 +401,14 @@ impl<'a> Codegen<'a> {
         fn_def.to_string()
     }
 
+    // Very simplified representation
+    fn init_fn_def(&self, fn_name: &str) -> String {
+        let mut fn_def = def!(Integer32 fn_name);
+        def!(fn_def.linkage @Internal);
+        def!(fn_def.attr_group vec![0]);
+        fn_def.to_string()
+    }
+
     fn set_let_value_types(&mut self, l: &LetBinding) {
         for v in l.value_list.iter() {
             for vt in self.fn_parameter_value_list(v) {
@@ -342,24 +423,37 @@ impl<'a> Codegen<'a> {
         // Fetch AST tree and generate source code
         let let_src = self.ast.iter().fold("".to_string(), |src, v| {
             // Global let bindings
-            if let MainStatement::LetBinding(l) = v {
-                // Get Let-names & types
-                self.set_let_value_types(l);
-                // Function definition
-                let fn_def = self.global_init_fn_def(global_let_statement);
-                // Get function body
-                let body = body!(self.fn_body(&l.function_body).unwrap() ret!());
-                // Generate function
-                let fn_body_src = fn_body!(fn_def body);
-                global_let_statement += 1;
-                // Merge generated code
-                merge!(src fn_body_src)
-            } else if let MainStatement::Function(_) = v {
-                todo!("should be implemented global functions codegen")
-            } else {
-                src
+            println!("{:#?}", v);
+            match v {
+                MainStatement::LetBinding(l) => {
+                    // Get Let-names & types
+                    self.set_let_value_types(l);
+                    // Function definition
+                    let fn_def = self.global_init_fn_def(global_let_statement);
+                    // Get function body
+                    let body = body!(self.fn_body(&l.function_body).unwrap() ret!());
+                    // Generate function
+                    let fn_body_src = fn_body!(fn_def body);
+                    global_let_statement += 1;
+                    // Merge generated code
+                    merge!(src fn_body_src)
+                }
+                MainStatement::Function(f) => {
+                    let fn_def = self.init_fn_def(&f.function_name);
+                    // Get function body
+                    let body = body!(self.fn_body(&f.function_body).unwrap() ret!());
+                    // Generate function
+                    let fn_body_src = fn_body!(fn_def body);
+                    // Merge generated code
+                    merge!(src fn_body_src)
+                }
+                _ => src,
             }
         });
+        // TODO: remove
+        self.global_let_values
+            .iter()
+            .for_each(|(n, _)| println!("\t# [glv] {}", n));
 
         let mut src = let_src;
         if global_let_statement > 0 {
@@ -393,7 +487,7 @@ impl<'a> Codegen<'a> {
 
     pub fn fn_main(ast: &'a Main) -> Result {
         println!("\t#[call] fn_main");
-        let mut codegen = Self::new(&ast);
+        let mut codegen = Self::new(ast);
         let module = codegen.fn_module()?;
         let global_let = codegen.fn_global_let()?;
         let attrs = codegen.fn_attr_group();
@@ -450,7 +544,7 @@ mod tests {
     #[test]
     fn test_codegen_global_let_and_print() {
         let x = main(Span::new(
-            "module name1.name2\nlet x1 = 10\nlet main = printfn \"Res: %A\" x1",
+            "module name1.name2\nlet x1 = 10\nlet main () = printfn \"Res: %A\" x1",
         ))
         .unwrap();
         assert_eq!(x.0.fragment(), &"");

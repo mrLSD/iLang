@@ -74,6 +74,9 @@ impl InstructionSet for GlobalVariable {
     fn is_global(&self) -> bool {
         true
     }
+    fn get_type(&self) -> Option<Type> {
+        Some(self.value_type.clone())
+    }
 }
 
 impl std::fmt::Display for UnnamedAddr {

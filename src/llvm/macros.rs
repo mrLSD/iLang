@@ -50,13 +50,13 @@ macro_rules! alloca {
 macro_rules! arg {
     ($($ty:ident $val:expr)? $(,$ty1:ident $val1:expr)*) => {{
         let mut v = vec![];
-        $( v.push(ArgumentList {
+        $( v.push(crate::llvm::functions::ArgumentList {
             parameter_type: Some($ty),
             attributes: None,
             name: Some(format!("%{}", $val)),
             variable_argument: false,
         });)?
-        $( v.push(ArgumentList {
+        $( v.push(crate::llvm::functions::ArgumentList {
             parameter_type: Some($ty1),
             attributes: None,
             name: Some(format!("%{}", $val1)),
@@ -65,35 +65,36 @@ macro_rules! arg {
         v
     }};
     ($($ty:ident $val:expr)? $(,$ty1:ident $val1:expr)*, ...) => {{
-        let mut v = vec![ArgumentList {
-            parameter_type: None,
-            attributes: None,
-            name: None,
-            variable_argument: true,
-        }];
-        $( v.push(ArgumentList {
+        let mut v = vec![];
+        $( v.push(crate::llvm::functions::ArgumentList {
             parameter_type: Some($ty),
             attributes: None,
             name: Some(format!("%{}", $val)),
             variable_argument: false,
         });)?
-        $( v.push(ArgumentList {
+        $( v.push(crate::llvm::functions::ArgumentList {
             parameter_type: Some($ty1),
             attributes: None,
             name: Some(format!("%{}", $val1)),
             variable_argument: false,
         });)*
+        v.push(crate::llvm::functions::ArgumentList {
+            parameter_type: None,
+            attributes: None,
+            name: None,
+            variable_argument: true,
+        });
         v
     }};
     ($($ty:ident)? $(,$ty1:ident)*) => {{
         let mut v = vec![];
-        $( v.push(ArgumentList {
+        $( v.push(crate::llvm::functions::ArgumentList {
             parameter_type: Some($ty),
             attributes: None,
             name: None,
             variable_argument: false,
         });)?
-        $( v.push(ArgumentList {
+        $( v.push(crate::llvm::functions::ArgumentList {
             parameter_type: Some($ty1),
             attributes: None,
             name: None,
@@ -102,24 +103,25 @@ macro_rules! arg {
         v
     }};
     ($($ty:ident)? $(,$ty1:ident)*, ...) => {{
-        let mut v = vec![ArgumentList {
-            parameter_type: None,
-            attributes: None,
-            name: None,
-            variable_argument: true,
-        }];
-        $( v.push(ArgumentList {
+        let mut v = vec![];
+        $( v.push(crate::llvm::functions::ArgumentList {
             parameter_type: Some($ty),
             attributes: None,
             name: None,
             variable_argument: false,
         });)?
-        $( v.push(ArgumentList {
+        $( v.push(crate::llvm::functions::ArgumentList {
             parameter_type: Some($ty1),
             attributes: None,
             name: None,
             variable_argument: false,
         });)*
+        v.push(crate::llvm::functions::ArgumentList {
+            parameter_type: None,
+            attributes: None,
+            name: None,
+            variable_argument: true,
+        });
         v
     }};
 }
@@ -192,7 +194,7 @@ macro_rules! decl {
     }};
     ($ty:ident $name:ident) => {{
         let mut f_decl = def!($ty $name);
-        let d = FunctionDefinitionType::Declare;
+        let d = crate::llvm::functions::FunctionDefinitionType::Declare;
         def!(f_decl.definition_type d);
         f_decl
     }};
@@ -436,10 +438,10 @@ macro_rules! call {
 		#[allow(unused_mut)]
     	let mut args: Vec< crate::llvm::instructions::terminator::FunctionArg> = vec![];
     	$(
-			args.push(FunctionArg($argty1, $argval1));
+			args.push(crate::llvm::instructions::terminator::FunctionArg($argty1, $argval1));
     	)?
     	$(
-			args.push(FunctionArg($argty2, $argval2));
+			args.push(crate::llvm::instructions::terminator::FunctionArg($argty2, $argval2));
     	)*
 
         Call {

@@ -61,6 +61,6 @@ impl AsChar for char {
     where
         F: Fn(&char) -> bool,
     {
-        x(&self)
+        x(self)
     }
 }

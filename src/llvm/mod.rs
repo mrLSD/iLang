@@ -1,3 +1,4 @@
+use crate::llvm::types::Type;
 use std::fmt::{
     Debug,
     Display,
@@ -52,5 +53,9 @@ pub trait InstructionSet: Debug + Display {
     /// Is it global value
     fn is_global(&self) -> bool {
         false
+    }
+    /// Get type for current value
+    fn get_type(&self) -> Option<Type> {
+        None
     }
 }
