@@ -13,18 +13,14 @@ use crate::llvm::linkage_types::LinkageTypes::{
 use crate::llvm::type_system::aggregate::ArrayType;
 use crate::llvm::type_system::single_value::PointerType;
 use crate::llvm::types::Type;
-use crate::llvm::types::Type::{
-    Integer1,
-    Integer32,
-    Integer8,
-    Void,
-};
+use crate::llvm::types::Type::{Integer1, Integer32, Integer8, Void, Integer64};
 use crate::llvm::InstructionSet;
 use crate::parser::ast::*;
 use std::collections::{
     HashMap,
     HashSet,
 };
+use crate::llvm::instructions::memory_access_addressing_operations::GetElementPtr;
 
 pub type Result = std::result::Result<String, CodegenError>;
 
@@ -42,7 +38,14 @@ pub struct Codegen<'a> {
     let_values: HashSet<String>,
     global_let_values: HashMap<LetValueName, ValueType>,
     global_let_expressions: Vec<String>,
+    function_declarations: Vec<FunctionDeclaration>,
     ast: &'a Main<'a>,
+}
+
+#[derive(Debug, Clone)]
+pub struct FunctionDeclaration {
+    name: String,
+    declaration: String,
 }
 
 #[derive(Debug, Clone)]
@@ -101,6 +104,7 @@ impl<'a> Codegen<'a> {
             let_values: HashSet::new(),
             global_let_values: HashMap::new(),
             global_let_expressions: vec![],
+            function_declarations: vec![],
             ast,
         }
     }
@@ -213,10 +217,34 @@ impl<'a> Codegen<'a> {
             x.append(&mut res);
             x
         });
+        let a1 = load!(Integer32 "1", "2");
+        let gty = Type::Array(ArrayType((s.len() + 1) as i32, Box::new(Type::Integer8)));
+        let ge1 = getelementptr!(Integer64 inbounds "el", "@.str" => [Integer64 0, Integer64 0]);
+        
+        // Set function declaration
         let ty1 = Type::Pointer(PointerType(Box::new(Integer8)));
+        let ty2 = ty1.clone();
+        let ty3 = ty1.clone();
         let mut fn_decl = decl!(Integer32 fn_name);
         decl!(fn_decl.argument_list arg!(ty1, ...));
-        println!("\t#[function_call] params: {:?} #{}", params.len(), fn_decl);
+        self.function_declarations.push(FunctionDeclaration {
+            name: fn_name.to_string(),
+            declaration: fn_decl.to_string(),
+        });
+        
+        let fn_call = call!(Integer32 => @fn_name arg!(ty2, ...) => [ty3 "%el".to_string(), Integer32 "%4".to_string()]);
+
+        // let name = format!("__global_let_init.{}", i);
+        // let call_fn = call!(Void => @name vec![] => []);
+        println!(
+            "\t#[function_call] params: {:?} #{} |> {} |> {:?} |> {} |> {} ",
+            params.len(),
+            fn_call,
+            fn_decl,
+            fn_call.function_args,
+            a1,
+            ge1,
+        );
         params
     }
 

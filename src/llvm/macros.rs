@@ -438,10 +438,10 @@ macro_rules! call {
 		#[allow(unused_mut)]
     	let mut args: Vec< crate::llvm::instructions::terminator::FunctionArg> = vec![];
     	$(
-			args.push(FunctionArg($argty1, $argval1));
+			args.push(crate::llvm::instructions::terminator::FunctionArg($argty1, $argval1));
     	)?
     	$(
-			args.push(FunctionArg($argty2, $argval2));
+			args.push(crate::llvm::instructions::terminator::FunctionArg($argty2, $argval2));
     	)*
 
         Call {
