@@ -11,10 +11,12 @@ use crate::llvm::linkage_types::LinkageTypes::{
     Private,
 };
 use crate::llvm::type_system::aggregate::ArrayType;
+use crate::llvm::type_system::single_value::PointerType;
 use crate::llvm::types::Type;
 use crate::llvm::types::Type::{
     Integer1,
     Integer32,
+    Integer8,
     Void,
 };
 use crate::llvm::InstructionSet;
@@ -193,6 +195,7 @@ impl<'a> Codegen<'a> {
         }
     }
 
+    #[allow(clippy::vec_init_then_push)]
     pub fn function_call(&mut self, fc: &FunctionCall) -> VecInstructionSet {
         println!("\t#[call]: function_call: FunctionCall");
         if fc.function_call_name.is_empty() {
@@ -210,7 +213,10 @@ impl<'a> Codegen<'a> {
             x.append(&mut res);
             x
         });
-        println!("\t#[function_call] params: {:?}", params.len());
+        let ty1 = Type::Pointer(PointerType(Box::new(Integer8)));
+        let mut fn_decl = decl!(Integer32 fn_name);
+        decl!(fn_decl.argument_list arg!(ty1, ...));
+        println!("\t#[function_call] params: {:?} #{}", params.len(), fn_decl);
         params
     }
 
@@ -238,7 +244,7 @@ impl<'a> Codegen<'a> {
                 self.function_call(fc)
             }
             FunctionBodyStatement::LetBinding(lb) => {
-                println!("\t#[fn_body_statement] FunctionCall: {:#?}", lb);
+                println!("\t#[fn_body_statement] LetBinding: {:#?}", lb);
                 vec![]
             }
         }
