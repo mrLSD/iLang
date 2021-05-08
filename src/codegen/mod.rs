@@ -202,7 +202,10 @@ impl<'a> Codegen<'a> {
         println!("\t#[function_call] fn_name: {}", fn_name);
         let params: VecInstructionSet = fc.function_value.iter().fold(vec![], |s, v| {
             let mut res = self.function_value(v);
-            println!("\t#[function_call] fn_function_value count: [{}]", res.len());
+            println!(
+                "\t#[function_call] fn_function_value count: [{}]",
+                res.len()
+            );
             let mut x = s;
             x.append(&mut res);
             x
@@ -420,7 +423,7 @@ impl<'a> Codegen<'a> {
 
     pub fn fn_main(ast: &'a Main) -> Result {
         println!("\t#[call] fn_main");
-        let mut codegen = Self::new(&ast);
+        let mut codegen = Self::new(ast);
         let module = codegen.fn_module()?;
         let global_let = codegen.fn_global_let()?;
         let attrs = codegen.fn_attr_group();
