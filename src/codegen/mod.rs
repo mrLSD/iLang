@@ -55,15 +55,14 @@ impl<'a> Codegen<'a> {
         }
     }
 
-    #[allow(clippy::ptr_arg)]
     pub fn expression(&self) -> Result {
-        println!(" # expression");
+        println!("\t#[call] expression");
         let src = "".to_string();
         Ok(src)
     }
 
     pub fn type_expression(&mut self, te: &TypeExpression) -> (String, Option<String>) {
-        println!(" # type_expression: TypeExpression = {:#?}", te.expr);
+        println!("\t#[call] type_expression: TypeExpression = {:#?}", te.expr);
         match te.expr {
             BasicTypeExpression::Number(n) => {
                 let a = alloca!(Integer32 self.ctx.get());
@@ -91,28 +90,31 @@ impl<'a> Codegen<'a> {
     }
 
     pub fn value_expression(&mut self, vle: &ValueExpression) -> (String, Option<String>) {
-        println!(" # value_expression: ValueExpression");
+        println!("\t#[call] value_expression: ValueExpression");
         match vle {
             ValueExpression::ParameterValue(pv) => {
-                println!("ParameterValue: {:#?}", pv);
+                println!("\t#[value_expression] ParameterValue: {:#?}", pv);
                 (";TODO: value_expression".to_string(), None)
                 //unimplemented!();
             }
-            ValueExpression::TypeExpression(te) => self.type_expression(te),
+            ValueExpression::TypeExpression(te) => {
+                println!("\t#[value_expression] TypeExpression");
+                self.type_expression(te)
+            },
         }
     }
 
     pub fn function_value(&mut self, fv: &FunctionValue) -> (String, Option<String>) {
-        println!(" # function_value: FunctionValue");
+        println!("\t#[call] function_value: FunctionValue");
         match fv {
             FunctionValue::ValueList(vl) => vl.iter().fold(("".to_string(), None), |s, vle| {
-                println!("FunctionValue::ValueList");
+                println!("\t#[function_value] FunctionValue::ValueList");
                 let (val_list, res_value) = self.value_expression(vle);
-                println!(" #= FunctionValue::ValueList res_value: {:?}", res_value);
+                println!("\t#[function_value] FunctionValue::ValueList res_value: {:?}", res_value);
                 (bf!(= s.0 val_list), res_value)
             }),
             FunctionValue::Expression(expr) => {
-                println!("FunctionValue::Expression: {:#?}", expr);
+                println!("\t#[function_value] FunctionValue::Expression: {:#?}", expr);
                 ("".to_string(), None)
             }
         }
@@ -122,57 +124,60 @@ impl<'a> Codegen<'a> {
         &mut self,
         efvc: &ExpressionFunctionValueCall,
     ) -> (String, Option<String>) {
-        println!(" # function_value_call: ExpressionFunctionValueCall");
+        println!("\t#[call] function_value_call: ExpressionFunctionValueCall");
         match efvc {
-            ExpressionFunctionValueCall::FunctionValue(ref fv) => self.function_value(fv),
+            ExpressionFunctionValueCall::FunctionValue(ref fv) => {
+                println!("\t#[function_value_call] FunctionValue");
+                self.function_value(fv)
+            },
             ExpressionFunctionValueCall::FunctionCall(ref fc) => {
-                println!("ExpressionFunctionValueCall::FunctionCall: {:#?}", fc);
+                println!("\t#[function_value_call] FunctionCall: {:#?}", fc);
                 ("".into(), None)
             }
         }
     }
 
     pub fn function_call(&mut self, fc: &FunctionCall) -> String {
-        println!(" # function_call: FunctionCall = {:#?}", fc);
+        println!("\t#[call]: function_call: FunctionCall = {:#?}", fc);
         if fc.function_call_name.is_empty() {
             return "".into();
         }
         let fn_name = fc.function_call_name[0].fragment();
-        println!("\t# {}", fn_name);
+        println!("\t#-> fn_name: {}", fn_name);
         let params: Vec<String> = fc.function_value.iter().fold(vec![], |s, v| {
             let x = self.function_value(v);
-            println!("\t# fn_function_value: {:?}", x);
+            println!("\t#[function_call] fn_function_value: {:?}", x);
             let mut data = s;
             data.push("".into());
             data
         });
-        println!("\t# params: {:?}", params);
+        println!("\t#[function_call] params: {:?}", params);
         eprintln!(";TODO: function_call");
         "".into()
     }
 
     pub fn fn_body_statement(&mut self, fbs: &FunctionBodyStatement) -> (String, Option<String>) {
-        println!(" # fn_body_statement: FunctionBodyStatement = {:#?}", fbs);
+        println!("\t#[call] fn_body_statement: FunctionBodyStatement = {:#?}", fbs);
         match fbs {
             FunctionBodyStatement::Expression(e) => {
-                println!("FunctionBodyStatement::Expression");
+                println!("\t#[fn_body_statement] Expression");
                 let res = self.function_value_call(&e.function_statement);
                 if let Some(op) = &e.operation_statement {
-                    println!("operation_statement: {:?}", op);
+                    println!("\t#[fn_body_statement] operation_statement: {:?}", op);
                     if let Some(ex) = &e.expression {
-                        println!("expression: {:?}", ex);
+                        println!("\t#[fn_body_statement] expression: {:?}", ex);
                     } else {
-                        panic!("Expression doesn't exist")
+                        panic!("\t#[fn_body_statement] Expression doesn't exist")
                     }
                 }
                 res
             }
             FunctionBodyStatement::FunctionCall(fc) => {
-                println!("FunctionBodyStatement::FunctionCall");
+                println!("\t#[fn_body_statement] FunctionCall");
                 (self.function_call(fc), None)
             }
             FunctionBodyStatement::LetBinding(lb) => {
-                println!("FunctionBodyStatement::FunctionCall: {:#?}", lb);
+                println!("\t#[fn_body_statement] FunctionCall: {:#?}", lb);
                 ("".into(), None)
             }
         }
@@ -183,7 +188,7 @@ impl<'a> Codegen<'a> {
         acc: Vec<(String, Option<String>)>,
         pvt: &ParameterValueType,
     ) -> Vec<(String, Option<String>)> {
-        println!(" # fn_parameter_value_type: ParameterValueType");
+        println!("\t#[call] fn_parameter_value_type: ParameterValueType");
         match pvt {
             ParameterValueType::Value(v) => {
                 let mut res = acc;
@@ -203,7 +208,7 @@ impl<'a> Codegen<'a> {
         acc: Vec<(String, Option<String>)>,
         pvl: &ParameterValueList,
     ) -> Vec<(String, Option<String>)> {
-        println!(" # fn_parameter_value_list: ParameterValueList");
+        println!("\t#[call] fn_parameter_value_list: ParameterValueList");
         match pvl {
             ParameterValueList::ParameterValue(p) => {
                 let mut res = acc;
@@ -216,13 +221,12 @@ impl<'a> Codegen<'a> {
         }
     }
 
-    #[allow(clippy::ptr_arg)]
     pub fn fn_body(
         &mut self,
         ast: &FunctionBody,
         let_value_name: &Vec<(String, Option<String>)>,
     ) -> Result {
-        println!(" # fn_body: FunctionBody");
+        println!("\t#[call] fn_body: FunctionBody");
         let entry_ctx = Context::new();
         let src = entry!(entry_ctx.get());
         let body_src = ast.iter().fold("".to_string(), |s, b| {
@@ -237,25 +241,24 @@ impl<'a> Codegen<'a> {
                     let l = load!(Integer32 self.ctx.get(), v);
                     let s = store!(Integer32 self.ctx.val(), name);
                     self.ctx.inc();
-                    println!("==1> {:?}\n{:?}\n{:?}", fb, l, s);
+                    println!("\t#-> 1> {:?}\n{:?}\n{:?}", fb, l, s);
                     bf!(=fb bf!(l s))
                 }
             } else {
-                println!("==2> {:?}", fb);
+                println!("\t#-> 2> {:?}", fb);
                 fb
             };
-            println!("==3> {:?} {:?}", s, fb);
+            println!("\t#-> 3> {:?} {:?}", s, fb);
             bf!(= s fb)
         });
-        println!("--> fn_body: {:?}", src);
-        println!("--> fn_body: {:?}", body_src);
+        println!("\t#-> fn_body: {:?}", src);
+        println!("\t#-> fn_body: {:?}", body_src);
         let src = bf!(= src body_src);
 
-        println!("  #= fn_body: {:?}", src);
+        println!("\t#-> fn_body: {:?}", src);
         Ok(src)
     }
 
-    #[allow(clippy::ptr_arg)]
     pub fn fn_module(&self) -> Result {
         let src: String;
         if !self.ast.is_empty() {
@@ -283,10 +286,9 @@ impl<'a> Codegen<'a> {
         }
         Ok(src)
     }
-
-    #[allow(clippy::ptr_arg)]
+    
     pub fn fn_global_let(&mut self) -> Result {
-        println!(" # fn_global_let");
+        println!("\t#[call] fn_global_let");
         let mut global_let_statement = 0;
         let mut let_values: Vec<(String, Option<String>)> = vec![];
         let let_src = self.ast.iter().fold("".to_string(), |s, v| {
@@ -357,9 +359,8 @@ impl<'a> Codegen<'a> {
         merge!(attr0)
     }
 
-    #[allow(clippy::ptr_arg)]
     pub fn fn_main(ast: &'a Main) -> Result {
-        println!(" # fn_main");
+        println!("\t#[call] fn_main");
         let mut codegen = Self::new(&ast);
         let module = codegen.fn_module()?;
         let global_let = codegen.fn_global_let()?;
@@ -413,6 +414,7 @@ mod tests {
         assert!(res.is_ok());
     }
 
+    // Current test
     #[test]
     fn test_codegen_global_let_and_print() {
         let x = main(Span::new(

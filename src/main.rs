@@ -3,6 +3,7 @@
 //! Currently it's Parser stage.
 //!
 #![warn(clippy::all)]
+#![allow(clippy::ptr_arg)]
 use crate::codegen::Codegen;
 use clap::{
     App,
