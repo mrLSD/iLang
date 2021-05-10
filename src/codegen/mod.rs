@@ -139,7 +139,6 @@ impl<'a> Codegen<'a> {
         println!("\t#[call] value_expression: ValueExpression");
         match vle {
             ValueExpression::ParameterValue(pv) => {
-                // TODO: Get value form SOME key-value: parameter-value -> codegen-patam-alias
                 let value_key = pv.fragment();
                 if let Some(x) = self.global_let_values.get(&value_key.to_string()) {
                     println!("\t#[value_expression] ParameterValue: {:#?}", x);
@@ -201,22 +200,15 @@ impl<'a> Codegen<'a> {
         }
         let fn_name = fc.function_call_name[0].fragment();
         println!("\t#[function_call] fn_name: {}", fn_name);
-        let params: Vec<String> = fc.function_value.iter().fold(vec![], |_s, v| {
-            let x = self.function_value(v);
-            //println!("\t#[function_call] fn_function_value: {:?}", x);
-            println!("\t#[function_call] fn_function_value: [{}]", x.len());
-            x.iter().fold(0, |_, v| {
-                println!("\t#[function_call] elem: {:#?}", v);
-                0
-            });
-            // let mut data = vec![];
-            // data.push("".into());
-            // data
-            vec![]
+        let params: VecInstructionSet = fc.function_value.iter().fold(vec![], |s, v| {
+            let mut res = self.function_value(v);
+            println!("\t#[function_call] fn_function_value count: [{}]", res.len());
+            let mut x = s;
+            x.append(&mut res);
+            x
         });
-        println!("\t#[function_call] params: {:?}", params);
-        eprintln!(";TODO: function_call");
-        vec![]
+        println!("\t#[function_call] params: {:?}", params.len());
+        params
     }
 
     pub fn fn_body_statement(&mut self, fbs: &FunctionBodyStatement) -> VecInstructionSet {
