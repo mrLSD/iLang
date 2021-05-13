@@ -342,24 +342,30 @@ impl<'a> Codegen<'a> {
         // Fetch AST tree and generate source code
         let let_src = self.ast.iter().fold("".to_string(), |src, v| {
             // Global let bindings
-            if let MainStatement::LetBinding(l) = v {
-                // Get Let-names & types
-                self.set_let_value_types(l);
-                // Function definition
-                let fn_def = self.global_init_fn_def(global_let_statement);
-                // Get function body
-                let body = body!(self.fn_body(&l.function_body).unwrap() ret!());
-                // Generate function
-                let fn_body_src = fn_body!(fn_def body);
-                global_let_statement += 1;
-                // Merge generated code
-                merge!(src fn_body_src)
-            } else if let MainStatement::Function(_) = v {
-                todo!("should be implemented global functions codegen")
-            } else {
-                src
+            match v {
+                MainStatement::LetBinding(l) => {
+                    // Get Let-names & types
+                    self.set_let_value_types(l);
+                    // Function definition
+                    let fn_def = self.global_init_fn_def(global_let_statement);
+                    // Get function body
+                    let body = body!(self.fn_body(&l.function_body).unwrap() ret!());
+                    // Generate function
+                    let fn_body_src = fn_body!(fn_def body);
+                    global_let_statement += 1;
+                    // Merge generated code
+                    merge!(src fn_body_src)
+                }
+                MainStatement::Function(_) => {
+                    todo!("should be implemented global functions codegen")
+                }
+                _ => src,
             }
         });
+        // TODO: remove
+        self.global_let_values
+            .iter()
+            .for_each(|(n, _)| println!("\t# [glv] {}", n));
 
         let mut src = let_src;
         if global_let_statement > 0 {
