@@ -95,7 +95,8 @@ impl<'a> Codegen<'a> {
         println!("\t#[call] value_expression: ValueExpression");
         match vle {
             ValueExpression::ParameterValue(pv) => {
-                println!("\t#[value_expression] ParameterValue: {:#?}", pv);
+                // TODO: Get value form SOME key-value: parameter-value -> codegen-patam-alias
+                println!("\t#[value_expression] ParameterValue [not-implemented]: {:#?}", pv);
                 vec![]
                 //unimplemented!();
             }
@@ -112,6 +113,7 @@ impl<'a> Codegen<'a> {
             FunctionValue::ValueList(vl) => vl.iter().fold(vec![], |s, vle| {
                 println!("\t#[function_value] ValueList");
                 let mut res = self.value_expression(vle);
+                println!("\t#[function_value] ValueList [{}]", res.len());
                 let mut x = s;
                 x.append(&mut res);
                 x
@@ -126,32 +128,35 @@ impl<'a> Codegen<'a> {
     pub fn function_value_call(
         &mut self,
         efvc: &ExpressionFunctionValueCall,
-    ) -> (String, Option<String>) {
+    ) -> VecInstructionSet {
         println!("\t#[call] function_value_call: ExpressionFunctionValueCall");
         match efvc {
             ExpressionFunctionValueCall::FunctionValue(ref fv) => {
                 println!("\t#[function_value_call] FunctionValue");
-                let _ = self.function_value(fv);
-                ("".into(), None)
+                self.function_value(fv)
             }
             ExpressionFunctionValueCall::FunctionCall(ref fc) => {
                 println!("\t#[function_value_call] FunctionCall: {:#?}", fc);
-                ("".into(), None)
+                vec![]
             }
         }
     }
 
-    pub fn function_call(&mut self, fc: &FunctionCall) -> String {
-        println!("\t#[call]: function_call: FunctionCall = {:#?}", fc);
+    pub fn function_call(&mut self, fc: &FunctionCall) -> VecInstructionSet {
+        println!("\t#[call]: function_call: FunctionCall");
         if fc.function_call_name.is_empty() {
-            return "".into();
+            return vec![];
         }
         let fn_name = fc.function_call_name[0].fragment();
         println!("\t#[function_call] fn_name: {}", fn_name);
         let params: Vec<String> = fc.function_value.iter().fold(vec![], |_s, v| {
-            let _x = self.function_value(v);
+            let x = self.function_value(v);
             //println!("\t#[function_call] fn_function_value: {:?}", x);
-            println!("\t#[function_call] fn_function_value: [not-displayed]");
+            println!("\t#[function_call] fn_function_value: [{}]", x.len());
+            x.iter().fold(0, |_, v| {
+                println!("\t#[function_call] elem: {:#?}", v);
+                0
+            });
             // let mut data = vec![];
             // data.push("".into());
             // data
@@ -159,10 +164,10 @@ impl<'a> Codegen<'a> {
         });
         println!("\t#[function_call] params: {:?}", params);
         eprintln!(";TODO: function_call");
-        "".into()
+        vec![]
     }
 
-    pub fn fn_body_statement(&mut self, fbs: &FunctionBodyStatement) -> (String, Option<String>) {
+    pub fn fn_body_statement(&mut self, fbs: &FunctionBodyStatement) -> VecInstructionSet {
         println!(
             "\t#[call] fn_body_statement: FunctionBodyStatement = {:#?}",
             fbs
@@ -183,11 +188,11 @@ impl<'a> Codegen<'a> {
             }
             FunctionBodyStatement::FunctionCall(fc) => {
                 println!("\t#[fn_body_statement] FunctionCall");
-                (self.function_call(fc), None)
+                self.function_call(fc)
             }
             FunctionBodyStatement::LetBinding(lb) => {
                 println!("\t#[fn_body_statement] FunctionCall: {:#?}", lb);
-                ("".into(), None)
+                vec![]
             }
         }
     }
@@ -239,8 +244,9 @@ impl<'a> Codegen<'a> {
         let entry_ctx = Context::new();
         let src = entry!(entry_ctx.get());
         let body_src = ast.iter().fold("".to_string(), |s, b| {
-            let (fb, res_val) = self.fn_body_statement(b);
-            let fb = if let Some(ref v) = res_val {
+            let statement = self.fn_body_statement(b);
+            statement.iter().fold((),|_, v| println!("\t# {:#?}", v)  );
+            /*let fb = if let Some(ref v) = res_val {
                 if let_value_name.is_empty() {
                     fb
                 } else {
@@ -258,6 +264,8 @@ impl<'a> Codegen<'a> {
                 fb
             };
             println!("\t#[fn_body] 3> {:?} {:?}", s, fb);
+            */
+            let (s, fb) = ("", "");
             bf!(= s fb)
         });
         println!("\t#[fn_body] fn_body: {:?}", src);

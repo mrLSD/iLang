@@ -1,3 +1,5 @@
+use std::fmt::{Debug, Display};
+
 #[macro_use]
 pub mod macros;
 
@@ -31,7 +33,7 @@ pub mod type_system;
 pub mod types;
 pub mod visibility_styles;
 
-pub trait InstructionSet {
+pub trait InstructionSet: Debug + Display {
     /// Set context of input values (it mean increment flow of
     /// context values)
     fn set_context(&mut self, ctx: u64);
