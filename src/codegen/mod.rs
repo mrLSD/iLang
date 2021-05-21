@@ -10,7 +10,6 @@ use crate::llvm::linkage_types::LinkageTypes::{
     Internal,
     Private,
 };
-use crate::llvm::runtime_preemption::RuntimePreemptionSpecifier::DsoLocal;
 use crate::llvm::type_system::aggregate::ArrayType;
 use crate::llvm::types::Type;
 use crate::llvm::types::Type::{
@@ -54,6 +53,7 @@ pub type VecInstructionSet = Vec<Box<dyn InstructionSet>>;
 /// Build in types.
 #[derive(Debug, Clone)]
 pub enum BuildInTypes {
+    Unknown,
     String,
     Int,
     Bool,
@@ -220,51 +220,45 @@ impl<'a> Codegen<'a> {
         }
     }
 
-    pub fn fn_parameter_value_type(
-        &self,
-        acc: Vec<(String, Option<String>)>,
-        pvt: &ParameterValueType,
-    ) -> Vec<(String, Option<String>)> {
+    pub fn fn_parameter_value_type(&self, pvt: &ParameterValueType) -> ValueType {
         println!("\t#[call] fn_parameter_value_type: ParameterValueType");
         match pvt {
-            ParameterValueType::Value(v) => {
-                let mut res = acc;
-                res.push((v.fragment().to_string(), None));
-                res
-            }
+            ParameterValueType::Value(v) => ValueType {
+                value: v.fragment().to_string(),
+                value_type: None,
+            },
             ParameterValueType::ValueType(v, ref t) => {
-                let mut res = acc;
-                res.push((v.fragment().to_string(), Some(t[0].fragment().to_string())));
-                res
+                // TODO: detect type
+                let _ty = t[0].fragment().to_string();
+                ValueType {
+                    value: v.fragment().to_string(),
+                    value_type: Some(BuildInTypes::Unknown),
+                }
             }
         }
     }
 
     pub fn fn_parameter_value_list(&self, pvl: &ParameterValueList) -> Vec<ValueType> {
         println!("\t#[call] fn_parameter_value_list: ParameterValueList");
-        vec![]
-        /*match pvl {
+        match pvl {
             ParameterValueList::ParameterValue(p) => {
-                ValueType {
+                vec![ValueType {
                     value: p.fragment().to_string(),
                     value_type: None,
-                }
+                }]
             }
-            ParameterValueList::ParameterList(pl) => pl
-                .iter()
-                .fold(acc, |acc, v| self.fn_parameter_value_type(acc, v)),
-        }*/
+            ParameterValueList::ParameterList(pl) => pl.iter().fold(vec![], |mut acc, v| {
+                acc.push(self.fn_parameter_value_type(v));
+                acc
+            }),
+        }
     }
 
-    pub fn fn_body(
-        &mut self,
-        ast: &FunctionBody,
-        let_value_name: &Vec<(String, Option<String>)>,
-    ) -> Result {
+    pub fn fn_body(&mut self, ast: &FunctionBody) -> Result {
         println!("\t#[call] fn_body: FunctionBody");
         let entry_ctx = Context::new();
         let src = entry!(entry_ctx.get());
-        let body_src = ast.iter().fold("".to_string(), |s, b| {
+        let body_src = ast.iter().fold("".to_string(), |_, b| {
             let statement = self.fn_body_statement(b);
             statement.iter().fold((), |_, v| println!("\t# {:#?}", v));
             /*let fb = if let Some(ref v) = res_val {
@@ -334,10 +328,10 @@ impl<'a> Codegen<'a> {
         fn_def.to_string()
     }
 
-    fn set_let_value_types(&mut self, l: LetBinding) {
+    fn set_let_value_types(&mut self, l: &LetBinding) {
         for v in l.value_list.iter() {
-            for vt   in self.fn_parameter_value_list(v) {
-                self.global_let_values.insert(vt.value.clone(), vt.clone());
+            for vt in self.fn_parameter_value_list(v) {
+                self.global_let_values.insert(vt.value.clone(), vt);
             }
         }
     }
@@ -345,24 +339,16 @@ impl<'a> Codegen<'a> {
     pub fn fn_global_let(&mut self) -> Result {
         println!("\t#[call] fn_global_let");
         let mut global_let_statement = 0;
-        let mut let_values: Vec<(String, Option<String>)> = vec![];
         // Fetch AST tree and generate source code
         let let_src = self.ast.iter().fold("".to_string(), |src, v| {
             // Global let bindings
             if let MainStatement::LetBinding(l) = v {
                 // Get Let-names & types
-                /*let mut let_value: Vec<(String, Option<String>)> = l
-                .value_list
-                .iter()
-                .fold(vec![], |acc, v| self.fn_parameter_value_list(acc, v));*/
-                let mut let_value = vec![];
-                let let_binding_val = let_value.clone();
-                let_values.append(&mut let_value);
-
+                self.set_let_value_types(l);
                 // Function definition
                 let fn_def = self.global_init_fn_def(global_let_statement);
                 // Get function body
-                let body = body!(self.fn_body(&l.function_body, &let_binding_val).unwrap() ret!());
+                let body = body!(self.fn_body(&l.function_body).unwrap() ret!());
                 // Generate function
                 let fn_body_src = fn_body!(fn_def body);
                 global_let_statement += 1;
@@ -374,20 +360,8 @@ impl<'a> Codegen<'a> {
                 src
             }
         });
-        let globals_from_let = self
-            .global_let_expressions
-            .iter()
-            .fold("".to_string(), |s, l| format!("{}{}\n", s, l));
-        // TODO: remove
-        let globals = let_values.iter().fold(globals_from_let, |s, l| {
-            //self.global_let_values.insert(l.0.clone());
-            let mut g = global!(Global Integer32 &l.0);
-            global!(g.preemption_specifier @DsoLocal);
-            global!(g.initializer_constant @"0".to_string());
-            format!("{}{}\n", s, g)
-        });
 
-        let mut src = merge!(globals let_src);
+        let mut src = let_src;
         if global_let_statement > 0 {
             let global_ctors = "@llvm.global_ctors = appending global [1 x { i32, void ()*, i8* }] [{ i32, void ()*, i8* } { i32 65535, void ()* @_GLOBAL_let_main, i8* null }]\n".to_string();
             let name = "_GLOBAL_let_main";
