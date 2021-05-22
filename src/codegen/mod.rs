@@ -30,6 +30,7 @@ pub enum CodegenError {
     ParseSourceCode,
 }
 
+/// Codegen structure
 #[derive(Debug, Clone)]
 pub struct Codegen<'a> {
     ctx: Context,
@@ -44,7 +45,31 @@ pub struct TypeExpressionResult {
     pub value: String,
 }
 
+/// Instructions set stack for block
 pub type VecInstructionSet = Vec<Box<dyn InstructionSet>>;
+
+/// Build in types.
+#[derive(Debug)]
+pub enum BuildInTypes {
+    String,
+    Int,
+    Bool,
+    Custom(String),
+}
+
+/// Value and their type representation
+#[derive(Debug)]
+pub struct ValueType {
+    pub value: String,
+    pub value_type: Option<BuildInTypes>,
+}
+
+fn let_value_types(l: LetBinding) {
+    l
+        .value_list
+        .iter()
+        .fold(vec![], |acc, v| self.fn_parameter_value_list(acc, v));
+}
 
 impl<'a> Codegen<'a> {
     #[allow(clippy::ptr_arg)]
@@ -304,19 +329,23 @@ impl<'a> Codegen<'a> {
         Ok(src)
     }
 
+    fn global_init_fn_def(&self, global_let_statement: u64) -> String {
+        let name = format!("__global_let_init.{}", global_let_statement);
+        let mut fn_def = def!(Void name);
+        def!(fn_def.linkage @Internal);
+        def!(fn_def.attr_group vec![0]);
+        def!(fn_def.section_name @".text.startup".to_string());
+        fn_def.to_string()
+    }
+
     pub fn fn_global_let(&mut self) -> Result {
         println!("\t#[call] fn_global_let");
         let mut global_let_statement = 0;
         let mut let_values: Vec<(String, Option<String>)> = vec![];
-        let let_src = self.ast.iter().fold("".to_string(), |s, v| {
+        // Fetch AST tree and generate source code
+        let let_src = self.ast.iter().fold("".to_string(), |src, v| {
+            // Global let bindings
             if let MainStatement::LetBinding(l) = v {
-                let name = format!("__global_let_init.{}", global_let_statement);
-                let mut fn_def = def!(Void name);
-                def!(fn_def.linkage @Internal);
-                def!(fn_def.attr_group vec![0]);
-                def!(fn_def.section_name @".text.startup".to_string());
-                global_let_statement += 1;
-
                 // Get Let-names & types
                 let mut let_value: Vec<(String, Option<String>)> = l
                     .value_list
@@ -324,14 +353,20 @@ impl<'a> Codegen<'a> {
                     .fold(vec![], |acc, v| self.fn_parameter_value_list(acc, v));
                 let let_binding_val = let_value.clone();
                 let_values.append(&mut let_value);
-
-                let fn_body_part_src = self.fn_body(&l.function_body, &let_binding_val).unwrap();
-                let ret = ret!();
-                let body = body!(fn_body_part_src ret);
+                
+                // Function definition
+                let fn_def = self.global_init_fn_def(global_let_statement);
+                // Get function body
+                let body = body!(self.fn_body(&l.function_body, &let_binding_val).unwrap() ret!());
+                // Generate function
                 let fn_body_src = fn_body!(fn_def body);
-                merge!(s fn_body_src)
+                global_let_statement += 1;
+                // Merge generated code
+                merge!(src fn_body_src)
+            } else if let MainStatement::Function(_) = v { 
+                todo!("should be implemented global functions codegen")
             } else {
-                s
+                src
             }
         });
         let globals_from_let = self
