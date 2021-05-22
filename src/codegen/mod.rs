@@ -91,37 +91,34 @@ impl<'a> Codegen<'a> {
         }
     }
 
-    pub fn value_expression(&mut self, vle: &ValueExpression) -> (String, Option<String>) {
+    pub fn value_expression(&mut self, vle: &ValueExpression) -> VecInstructionSet {
         println!("\t#[call] value_expression: ValueExpression");
         match vle {
             ValueExpression::ParameterValue(pv) => {
                 println!("\t#[value_expression] ParameterValue: {:#?}", pv);
-                (";TODO: value_expression".to_string(), None)
+                vec![]
                 //unimplemented!();
             }
             ValueExpression::TypeExpression(te) => {
                 println!("\t#[value_expression] TypeExpression");
-                let _ = self.type_expression(te);
-                (";TODO: value_expression".to_string(), None)
+                self.type_expression(te)
             }
         }
     }
 
-    pub fn function_value(&mut self, fv: &FunctionValue) -> (String, Option<String>) {
+    pub fn function_value(&mut self, fv: &FunctionValue) -> VecInstructionSet {
         println!("\t#[call] function_value: FunctionValue");
         match fv {
-            FunctionValue::ValueList(vl) => vl.iter().fold(("".to_string(), None), |s, vle| {
-                println!("\t#[function_value] FunctionValue::ValueList");
-                let (val_list, res_value) = self.value_expression(vle);
-                println!(
-                    "\t#[function_value] res_value: {:?}\n\t{:?}",
-                    val_list, res_value
-                );
-                (bf!(= s.0 val_list), res_value)
+            FunctionValue::ValueList(vl) => vl.iter().fold(vec![], |s, vle| {
+                println!("\t#[function_value] ValueList");
+                let mut res = self.value_expression(vle);
+                let mut x = s;
+                x.append(&mut res);
+                x
             }),
             FunctionValue::Expression(expr) => {
-                println!("\t#[function_value] FunctionValue::Expression: {:#?}", expr);
-                ("".to_string(), None)
+                println!("\t#[function_value] Expression [not impl]: {:#?}", expr);
+                vec![]
             }
         }
     }
@@ -134,7 +131,8 @@ impl<'a> Codegen<'a> {
         match efvc {
             ExpressionFunctionValueCall::FunctionValue(ref fv) => {
                 println!("\t#[function_value_call] FunctionValue");
-                self.function_value(fv)
+                let _ = self.function_value(fv);
+                ("".into(), None)
             }
             ExpressionFunctionValueCall::FunctionCall(ref fc) => {
                 println!("\t#[function_value_call] FunctionCall: {:#?}", fc);
@@ -150,12 +148,14 @@ impl<'a> Codegen<'a> {
         }
         let fn_name = fc.function_call_name[0].fragment();
         println!("\t#[function_call] fn_name: {}", fn_name);
-        let params: Vec<String> = fc.function_value.iter().fold(vec![], |s, v| {
-            let x = self.function_value(v);
-            println!("\t#[function_call] fn_function_value: {:?}", x);
-            let mut data = s;
-            data.push("".into());
-            data
+        let params: Vec<String> = fc.function_value.iter().fold(vec![], |_s, v| {
+            let _x = self.function_value(v);
+            //println!("\t#[function_call] fn_function_value: {:?}", x);
+            println!("\t#[function_call] fn_function_value: [not-displayed]");
+            // let mut data = vec![];
+            // data.push("".into());
+            // data
+            vec![]
         });
         println!("\t#[function_call] params: {:?}", params);
         eprintln!(";TODO: function_call");
