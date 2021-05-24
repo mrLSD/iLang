@@ -14,6 +14,7 @@ use crate::llvm::runtime_preemption::RuntimePreemptionSpecifier::DsoLocal;
 use crate::llvm::type_system::aggregate::ArrayType;
 use crate::llvm::types::Type;
 use crate::llvm::types::Type::{
+    Integer1,
     Integer32,
     Void,
 };
@@ -43,6 +44,8 @@ pub struct TypeExpressionResult {
     pub value: String,
 }
 
+pub type VecInstructionSet = Vec<Box<dyn InstructionSet>>;
+
 impl<'a> Codegen<'a> {
     #[allow(clippy::ptr_arg)]
     fn new(ast: &'a Main) -> Self {
@@ -62,7 +65,7 @@ impl<'a> Codegen<'a> {
         Ok(src)
     }
 
-    pub fn type_expression(&mut self, te: &TypeExpression) -> Vec<Box<dyn InstructionSet>> {
+    pub fn type_expression(&mut self, te: &TypeExpression) -> VecInstructionSet {
         println!("\t#[call] type_expression: TypeExpression = {:#?}", te.expr);
         match te.expr {
             BasicTypeExpression::Number(n) => {
@@ -77,11 +80,14 @@ impl<'a> Codegen<'a> {
                 global!(g.linkage @Private);
                 global!(g.unnamed_addr @UnnamedAddr);
                 global!(g.initializer_constant @Type::raw_string(s));
-                self.global_ctx.inc();
-                self.global_let_expressions.push(g.to_string());
-                vec![]
+                vec![Box::new(g)]
             }
-            _ => unimplemented!(),
+            BasicTypeExpression::Bool(n) => {
+                let mut v: Vec<Box<dyn InstructionSet>> = vec![];
+                v.push(Box::new(alloca!(Integer1 0)));
+                v.push(Box::new(store!(Integer1 n, 0)));
+                v
+            }
         }
     }
 
