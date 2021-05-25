@@ -17,6 +17,7 @@ use crate::llvm::types::Type::{
     Integer32,
     Void,
 };
+use crate::llvm::InstructionSet;
 use crate::parser::ast::*;
 use std::collections::HashSet;
 
@@ -61,29 +62,24 @@ impl<'a> Codegen<'a> {
         Ok(src)
     }
 
-    pub fn type_expression(&mut self, te: &TypeExpression) -> (String, Option<String>) {
+    pub fn type_expression(&mut self, te: &TypeExpression) -> Vec<Box<dyn InstructionSet>> {
         println!("\t#[call] type_expression: TypeExpression = {:#?}", te.expr);
         match te.expr {
             BasicTypeExpression::Number(n) => {
-                let a = alloca!(Integer32 self.ctx.get());
-                let result_val = self.ctx.val();
-                let s = store!(Integer32 n, result_val);
-                self.ctx.inc();
-                self.let_values.insert(result_val.clone());
-                (bf!(a s), Some(result_val))
+                let mut v: Vec<Box<dyn InstructionSet>> = vec![];
+                v.push(Box::new(alloca!(Integer32 0)));
+                v.push(Box::new(store!(Integer32 n, 0)));
+                v
             }
             BasicTypeExpression::String(ref s) => {
                 let gty = Type::Array(ArrayType((s.len() + 1) as i32, Box::new(Type::Integer8)));
-                let val = format!(r#"c"{}\00""#, s);
-                let result_val = format!(".str{}", self.global_ctx.get());
-                self.global_let_values.insert(result_val.clone());
-                let mut g = global!(Constant gty result_val);
+                let mut g = global!(Constant gty 0);
                 global!(g.linkage @Private);
                 global!(g.unnamed_addr @UnnamedAddr);
-                global!(g.initializer_constant @val);
+                global!(g.initializer_constant @Type::raw_string(s));
                 self.global_ctx.inc();
                 self.global_let_expressions.push(g.to_string());
-                ("".into(), Some(result_val))
+                vec![]
             }
             _ => unimplemented!(),
         }
@@ -99,8 +95,9 @@ impl<'a> Codegen<'a> {
             }
             ValueExpression::TypeExpression(te) => {
                 println!("\t#[value_expression] TypeExpression");
-                self.type_expression(te)
-            },
+                let _ = self.type_expression(te);
+                (";TODO: value_expression".to_string(), None)
+            }
         }
     }
 
@@ -110,7 +107,10 @@ impl<'a> Codegen<'a> {
             FunctionValue::ValueList(vl) => vl.iter().fold(("".to_string(), None), |s, vle| {
                 println!("\t#[function_value] FunctionValue::ValueList");
                 let (val_list, res_value) = self.value_expression(vle);
-                println!("\t#[function_value] FunctionValue::ValueList res_value: {:?}", res_value);
+                println!(
+                    "\t#[function_value] res_value: {:?}\n\t{:?}",
+                    val_list, res_value
+                );
                 (bf!(= s.0 val_list), res_value)
             }),
             FunctionValue::Expression(expr) => {
@@ -129,7 +129,7 @@ impl<'a> Codegen<'a> {
             ExpressionFunctionValueCall::FunctionValue(ref fv) => {
                 println!("\t#[function_value_call] FunctionValue");
                 self.function_value(fv)
-            },
+            }
             ExpressionFunctionValueCall::FunctionCall(ref fc) => {
                 println!("\t#[function_value_call] FunctionCall: {:#?}", fc);
                 ("".into(), None)
@@ -143,7 +143,7 @@ impl<'a> Codegen<'a> {
             return "".into();
         }
         let fn_name = fc.function_call_name[0].fragment();
-        println!("\t#-> fn_name: {}", fn_name);
+        println!("\t#[function_call] fn_name: {}", fn_name);
         let params: Vec<String> = fc.function_value.iter().fold(vec![], |s, v| {
             let x = self.function_value(v);
             println!("\t#[function_call] fn_function_value: {:?}", x);
@@ -157,7 +157,10 @@ impl<'a> Codegen<'a> {
     }
 
     pub fn fn_body_statement(&mut self, fbs: &FunctionBodyStatement) -> (String, Option<String>) {
-        println!("\t#[call] fn_body_statement: FunctionBodyStatement = {:#?}", fbs);
+        println!(
+            "\t#[call] fn_body_statement: FunctionBodyStatement = {:#?}",
+            fbs
+        );
         match fbs {
             FunctionBodyStatement::Expression(e) => {
                 println!("\t#[fn_body_statement] Expression");
@@ -239,23 +242,23 @@ impl<'a> Codegen<'a> {
                     // Also currently onlu Global variables
                     let name = format!("@{}", &let_value_name[0].0);
                     let l = load!(Integer32 self.ctx.get(), v);
-                    let s = store!(Integer32 self.ctx.val(), name);
+                    let s = store!(Integer32 0, name);
                     self.ctx.inc();
-                    println!("\t#-> 1> {:?}\n{:?}\n{:?}", fb, l, s);
+                    println!("\t#[fn_body] 1> {:?}\n{:?}\n{:?}", fb, l, s);
                     bf!(=fb bf!(l s))
                 }
             } else {
-                println!("\t#-> 2> {:?}", fb);
+                println!("\t#[fn_body] 2> {:?}", fb);
                 fb
             };
-            println!("\t#-> 3> {:?} {:?}", s, fb);
+            println!("\t#[fn_body] 3> {:?} {:?}", s, fb);
             bf!(= s fb)
         });
-        println!("\t#-> fn_body: {:?}", src);
-        println!("\t#-> fn_body: {:?}", body_src);
+        println!("\t#[fn_body] fn_body: {:?}", src);
+        println!("\t#[fn_body] fn_body: {:?}", body_src);
         let src = bf!(= src body_src);
 
-        println!("\t#-> fn_body: {:?}", src);
+        println!("\t#[fn_body] fn_body: {:?}", src);
         Ok(src)
     }
 
@@ -286,7 +289,7 @@ impl<'a> Codegen<'a> {
         }
         Ok(src)
     }
-    
+
     pub fn fn_global_let(&mut self) -> Result {
         println!("\t#[call] fn_global_let");
         let mut global_let_statement = 0;

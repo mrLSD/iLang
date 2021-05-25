@@ -11,6 +11,7 @@ use crate::llvm::{
     addrspace::AddrSpace,
     align::Alignment,
     types::Type,
+    InstructionSet,
 };
 
 /// The ‘alloca’ instruction allocates memory on the stack frame of the
@@ -49,6 +50,16 @@ pub struct Alloca {
     pub elements: Option<Vec<(Type, i64)>>,
     pub align: Option<Alignment>,
     pub addrspace: Option<AddrSpace>,
+    pub ctx: Option<u64>,
+}
+
+impl InstructionSet for Alloca {
+    fn set_context(&mut self, ctx: u64) {
+        self.ctx = Some(ctx);
+    }
+    fn is_assignment(&self) -> bool {
+        true
+    }
 }
 
 /// The ‘load’ instruction is used to read from memory.
@@ -90,6 +101,16 @@ pub struct Store {
     pub ty_pointer: Type,
     pub pointer: String,
     pub align: Option<Alignment>,
+    pub ctx: Option<u64>,
+}
+
+impl InstructionSet for Store {
+    fn set_context(&mut self, ctx: u64) {
+        self.ctx = Some(ctx);
+    }
+    fn is_read_only_context(&self) -> bool {
+        true
+    }
 }
 
 /// The ‘getelementptr’ instruction is used to get the address of a
@@ -120,7 +141,12 @@ pub struct GetElementPtr {
 
 impl std::fmt::Display for Alloca {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        let mut s = format!("%{} = alloca {}", self.result, self.alloc_ty);
+        let result = if let Some(ctx) = self.ctx {
+            ctx.to_string()
+        } else {
+            self.result.clone()
+        };
+        let mut s = format!("%{} = alloca {}", result, self.alloc_ty);
         if let Some(el) = &self.elements {
             let els = el
                 .iter()
@@ -157,9 +183,14 @@ impl std::fmt::Display for Store {
         if self.volatile.is_some() {
             s = format!("{} volatile", s);
         }
+        let pointer = if let Some(ctx) = self.ctx {
+            ctx.to_string()
+        } else {
+            self.pointer.clone()
+        };
         s = format!(
             "{} {} {}, {}* {}",
-            s, self.ty, self.value, self.ty_pointer, self.pointer
+            s, self.ty, self.value, self.ty_pointer, pointer
         );
         if let Some(v) = &self.align {
             s = format!("{}, {}", s, v);

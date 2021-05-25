@@ -30,6 +30,7 @@ use super::{
     types::Type,
     visibility_styles::VisibilityStyles,
 };
+use crate::llvm::InstructionSet;
 
 #[derive(Debug, Eq, PartialEq, Clone)]
 pub enum UnnamedAddr {
@@ -60,6 +61,19 @@ pub struct GlobalVariable {
     pub comdat: Option<ComDat>,
     pub alignment: Option<Alignment>,
     pub metadata: Option<String>,
+    pub ctx: Option<u64>,
+}
+
+impl InstructionSet for GlobalVariable {
+    fn set_context(&mut self, ctx: u64) {
+        self.ctx = Some(ctx);
+    }
+    fn is_assignment(&self) -> bool {
+        true
+    }
+    fn is_global(&self) -> bool {
+        true
+    }
 }
 
 impl std::fmt::Display for UnnamedAddr {
@@ -86,7 +100,11 @@ impl std::fmt::Display for GlobalVariableKind {
 
 impl std::fmt::Display for GlobalVariable {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        let mut s = format!("@{} =", self.name);
+        let mut s = if let Some(ctx) = self.ctx {
+            format!("@{:?} =", ctx)
+        } else {
+            format!("@{} =", self.name)
+        };
         if self.linkage.is_some() {
             s = format!("{} {}", s, self.linkage.as_ref().unwrap());
         }

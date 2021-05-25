@@ -13,20 +13,22 @@
 macro_rules! alloca {
     ($ty:ident $res:expr) => {
         crate::llvm::instructions::memory_access_addressing_operations::Alloca {
-            result: format!("{}", $res),
+            result: $res.to_string(),
             alloc_ty: $ty,
             elements: None,
             align: None,
             addrspace: None,
+            ctx: None,
         }
     };
     ($ty:ident $res:expr, $align:expr) => {
         crate::llvm::instructions::memory_access_addressing_operations::Alloca {
-            result: stringify!($res).to_string(),
+            result: $res.to_string(),
             alloc_ty: $ty,
             elements: None,
             align: Some(super::align::Alignment($align)),
             addrspace: None,
+            ctx: None,
         }
     };
 }
@@ -261,6 +263,7 @@ macro_rules! global {
             comdat: None,
             alignment: None,
             metadata: None,
+            ctx: None,
         }
     };
 }
@@ -288,6 +291,7 @@ macro_rules! store {
             ty_pointer: $ty,
             pointer: $ptrval.to_string(),
             align: None,
+            ctx: None,
         }
     }};
 }

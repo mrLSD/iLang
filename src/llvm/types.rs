@@ -59,4 +59,8 @@ impl Type {
         let ty2 = Type::Pointer(PointerType(Box::new(ty1)));
         Type::Pointer(PointerType(Box::new(ty2)))
     }
+
+    pub fn raw_string(s: &str) -> String {
+        format!(r#"c"{}\00""#, s)
+    }
 }

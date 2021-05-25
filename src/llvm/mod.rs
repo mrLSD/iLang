@@ -30,3 +30,22 @@ pub mod thread_local_storage;
 pub mod type_system;
 pub mod types;
 pub mod visibility_styles;
+
+pub trait InstructionSet {
+    /// Set context of input values (it mean increment flow of
+    /// context values)
+    fn set_context(&mut self, ctx: u64);
+    /// Is context flow read only. So it mean previos context
+    /// should not be changed/incremented
+    fn is_read_only_context(&self) -> bool {
+        false
+    }
+    /// For current instruction applicable assignment for value
+    fn is_assignment(&self) -> bool {
+        false
+    }
+    /// Is it global value
+    fn is_global(&self) -> bool {
+        false
+    }
+}
