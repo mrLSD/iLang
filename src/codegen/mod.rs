@@ -20,7 +20,10 @@ use crate::llvm::types::Type::{
 };
 use crate::llvm::InstructionSet;
 use crate::parser::ast::*;
-use std::collections::HashSet;
+use std::collections::{
+    HashMap,
+    HashSet,
+};
 
 pub type Result = std::result::Result<String, CodegenError>;
 
@@ -36,7 +39,7 @@ pub struct Codegen<'a> {
     ctx: Context,
     global_ctx: Context,
     let_values: HashSet<String>,
-    global_let_values: HashSet<String>,
+    global_let_values: HashMap<LetValueName, ValueType>,
     global_let_expressions: Vec<String>,
     ast: &'a Main<'a>,
 }
@@ -49,7 +52,7 @@ pub struct TypeExpressionResult {
 pub type VecInstructionSet = Vec<Box<dyn InstructionSet>>;
 
 /// Build in types.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum BuildInTypes {
     String,
     Int,
@@ -57,18 +60,13 @@ pub enum BuildInTypes {
     Custom(String),
 }
 
-/// Value and their type representation
-#[derive(Debug)]
-pub struct ValueType {
-    pub value: String,
-    pub value_type: Option<BuildInTypes>,
-}
+type LetValueName = String;
 
-fn let_value_types(l: LetBinding) {
-    l
-        .value_list
-        .iter()
-        .fold(vec![], |acc, v| self.fn_parameter_value_list(acc, v));
+/// Value and their type representation
+#[derive(Debug, Clone)]
+pub struct ValueType {
+    pub value: LetValueName,
+    pub value_type: Option<BuildInTypes>,
 }
 
 impl<'a> Codegen<'a> {
@@ -78,7 +76,7 @@ impl<'a> Codegen<'a> {
             ctx: Context::new(),
             global_ctx: Context::new(),
             let_values: HashSet::new(),
-            global_let_values: HashSet::new(),
+            global_let_values: HashMap::new(),
             global_let_expressions: vec![],
             ast,
         }
@@ -121,7 +119,10 @@ impl<'a> Codegen<'a> {
         match vle {
             ValueExpression::ParameterValue(pv) => {
                 // TODO: Get value form SOME key-value: parameter-value -> codegen-patam-alias
-                println!("\t#[value_expression] ParameterValue [not-implemented]: {:#?}", pv);
+                println!(
+                    "\t#[value_expression] ParameterValue [not-implemented]: {:#?}",
+                    pv
+                );
                 vec![]
                 //unimplemented!();
             }
@@ -150,10 +151,7 @@ impl<'a> Codegen<'a> {
         }
     }
 
-    pub fn function_value_call(
-        &mut self,
-        efvc: &ExpressionFunctionValueCall,
-    ) -> VecInstructionSet {
+    pub fn function_value_call(&mut self, efvc: &ExpressionFunctionValueCall) -> VecInstructionSet {
         println!("\t#[call] function_value_call: ExpressionFunctionValueCall");
         match efvc {
             ExpressionFunctionValueCall::FunctionValue(ref fv) => {
@@ -242,22 +240,20 @@ impl<'a> Codegen<'a> {
         }
     }
 
-    pub fn fn_parameter_value_list(
-        &self,
-        acc: Vec<(String, Option<String>)>,
-        pvl: &ParameterValueList,
-    ) -> Vec<(String, Option<String>)> {
+    pub fn fn_parameter_value_list(&self, pvl: &ParameterValueList) -> Vec<ValueType> {
         println!("\t#[call] fn_parameter_value_list: ParameterValueList");
-        match pvl {
+        vec![]
+        /*match pvl {
             ParameterValueList::ParameterValue(p) => {
-                let mut res = acc;
-                res.push((p.fragment().to_string(), None));
-                res
+                ValueType {
+                    value: p.fragment().to_string(),
+                    value_type: None,
+                }
             }
             ParameterValueList::ParameterList(pl) => pl
                 .iter()
                 .fold(acc, |acc, v| self.fn_parameter_value_type(acc, v)),
-        }
+        }*/
     }
 
     pub fn fn_body(
@@ -270,7 +266,7 @@ impl<'a> Codegen<'a> {
         let src = entry!(entry_ctx.get());
         let body_src = ast.iter().fold("".to_string(), |s, b| {
             let statement = self.fn_body_statement(b);
-            statement.iter().fold((),|_, v| println!("\t# {:#?}", v)  );
+            statement.iter().fold((), |_, v| println!("\t# {:#?}", v));
             /*let fb = if let Some(ref v) = res_val {
                 if let_value_name.is_empty() {
                     fb
@@ -338,6 +334,14 @@ impl<'a> Codegen<'a> {
         fn_def.to_string()
     }
 
+    fn set_let_value_types(&mut self, l: LetBinding) {
+        for v in l.value_list.iter() {
+            for vt   in self.fn_parameter_value_list(v) {
+                self.global_let_values.insert(vt.value.clone(), vt.clone());
+            }
+        }
+    }
+
     pub fn fn_global_let(&mut self) -> Result {
         println!("\t#[call] fn_global_let");
         let mut global_let_statement = 0;
@@ -347,13 +351,14 @@ impl<'a> Codegen<'a> {
             // Global let bindings
             if let MainStatement::LetBinding(l) = v {
                 // Get Let-names & types
-                let mut let_value: Vec<(String, Option<String>)> = l
-                    .value_list
-                    .iter()
-                    .fold(vec![], |acc, v| self.fn_parameter_value_list(acc, v));
+                /*let mut let_value: Vec<(String, Option<String>)> = l
+                .value_list
+                .iter()
+                .fold(vec![], |acc, v| self.fn_parameter_value_list(acc, v));*/
+                let mut let_value = vec![];
                 let let_binding_val = let_value.clone();
                 let_values.append(&mut let_value);
-                
+
                 // Function definition
                 let fn_def = self.global_init_fn_def(global_let_statement);
                 // Get function body
@@ -363,7 +368,7 @@ impl<'a> Codegen<'a> {
                 global_let_statement += 1;
                 // Merge generated code
                 merge!(src fn_body_src)
-            } else if let MainStatement::Function(_) = v { 
+            } else if let MainStatement::Function(_) = v {
                 todo!("should be implemented global functions codegen")
             } else {
                 src
@@ -373,8 +378,9 @@ impl<'a> Codegen<'a> {
             .global_let_expressions
             .iter()
             .fold("".to_string(), |s, l| format!("{}{}\n", s, l));
+        // TODO: remove
         let globals = let_values.iter().fold(globals_from_let, |s, l| {
-            self.global_let_values.insert(l.0.clone());
+            //self.global_let_values.insert(l.0.clone());
             let mut g = global!(Global Integer32 &l.0);
             global!(g.preemption_specifier @DsoLocal);
             global!(g.initializer_constant @"0".to_string());

@@ -1,4 +1,7 @@
-use std::fmt::{Debug, Display};
+use std::fmt::{
+    Debug,
+    Display,
+};
 
 #[macro_use]
 pub mod macros;
