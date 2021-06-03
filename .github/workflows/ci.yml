@@ -10,9 +10,9 @@ jobs:
       matrix:
         os: 
 #          - ubuntu-16.04
-#          - ubuntu-18.04
+          - ubuntu-18.04
 #          - ubuntu-20.04
-          - windows-latest
+#          - windows-latest
 #          - macos-latest
         rust:
           - stable
@@ -33,7 +33,7 @@ jobs:
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
 
       - name: Install LLVM and Clang
-        uses: KyleMayes/install-llvm-action@v1
+        uses: KyleMayes/install-llvm-action@master
         with:
           version: "11.0"
           directory: ${{ runner.temp }}/llvm
