@@ -16,4 +16,4 @@ clap = "2.33"
 [dependencies.inkwell]
 git = "https://github.com/TheDan64/inkwell"
 branch = "master"
-features = ["llvm10-0-no-llvm-linking"]
+features = ["llvm11-0-no-llvm-linking"]
