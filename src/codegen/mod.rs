@@ -43,6 +43,27 @@ pub struct Codegen<'a> {
     ast: &'a Main<'a>,
 }
 
+#[derive(Debug, Clone)]
+pub struct FunctionParameter {
+    name: String,
+    global: bool,
+}
+
+impl InstructionSet for FunctionParameter {
+    fn set_context(&mut self, _ctx: u64) {}
+}
+
+impl std::fmt::Display for FunctionParameter {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        let s = if self.global {
+            format!("@{{{}}}", self.name)
+        } else {
+            format!("%{{{}}}", self.name)
+        };
+        write!(f, "{}", s)
+    }
+}
+
 pub struct TypeExpressionResult {
     pub value: String,
 }
@@ -119,12 +140,20 @@ impl<'a> Codegen<'a> {
         match vle {
             ValueExpression::ParameterValue(pv) => {
                 // TODO: Get value form SOME key-value: parameter-value -> codegen-patam-alias
-                println!(
-                    "\t#[value_expression] ParameterValue [not-implemented]: {:#?}",
-                    pv
-                );
-                vec![]
-                //unimplemented!();
+                let value_key = pv.fragment();
+                if let Some(x) = self.global_let_values.get(&value_key.to_string()) {
+                    println!("\t#[value_expression] ParameterValue: {:#?}", x);
+                    vec![Box::new(FunctionParameter {
+                        name: x.value.clone(),
+                        global: true,
+                    })]
+                } else {
+                    println!(
+                        "\t#[value_expression] ParameterValue [doesn't exist]: {}",
+                        value_key
+                    );
+                    vec![]
+                }
             }
             ValueExpression::TypeExpression(te) => {
                 println!("\t#[value_expression] TypeExpression");
