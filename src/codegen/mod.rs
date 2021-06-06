@@ -352,6 +352,14 @@ impl<'a> Codegen<'a> {
         fn_def.to_string()
     }
 
+    // Very simplified representation
+    fn init_fn_def(&self, fn_name: &str) -> String {
+        let mut fn_def = def!(Integer32 fn_name);
+        def!(fn_def.linkage @Internal);
+        def!(fn_def.attr_group vec![0]);
+        fn_def.to_string()
+    }
+
     fn set_let_value_types(&mut self, l: &LetBinding) {
         for v in l.value_list.iter() {
             for vt in self.fn_parameter_value_list(v) {
@@ -366,6 +374,7 @@ impl<'a> Codegen<'a> {
         // Fetch AST tree and generate source code
         let let_src = self.ast.iter().fold("".to_string(), |src, v| {
             // Global let bindings
+            println!("{:#?}", v);
             match v {
                 MainStatement::LetBinding(l) => {
                     // Get Let-names & types
@@ -380,8 +389,14 @@ impl<'a> Codegen<'a> {
                     // Merge generated code
                     merge!(src fn_body_src)
                 }
-                MainStatement::Function(_) => {
-                    todo!("should be implemented global functions codegen")
+                MainStatement::Function(f) => {
+                    let fn_def = self.init_fn_def(&f.function_name);
+                    // Get function body
+                    let body = body!(self.fn_body(&f.function_body).unwrap() ret!());
+                    // Generate function
+                    let fn_body_src = fn_body!(fn_def body);
+                    // Merge generated code
+                    merge!(src fn_body_src)
                 }
                 _ => src,
             }
@@ -480,7 +495,7 @@ mod tests {
     #[test]
     fn test_codegen_global_let_and_print() {
         let x = main(Span::new(
-            "module name1.name2\nlet x1 = 10\nlet main = printfn \"Res: %A\" x1",
+            "module name1.name2\nlet x1 = 10\nlet main () = printfn \"Res: %A\" x1",
         ))
         .unwrap();
         assert_eq!(x.0.fragment(), &"");

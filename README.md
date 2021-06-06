@@ -1,6 +1,5 @@
 # iLang functional programming language 
 [![CI Build Status](https://github.com/mrLSD/iLang/workflows/ci/badge.svg)](https://github.com/mrLSD/iLang/actions?query=workflow%3Aci)
-[![Build Status](https://travis-ci.org/mrLSD/iLang.svg?branch=master)](https://travis-ci.org/mrLSD/iLang)
 [![Coverage Status](https://coveralls.io/repos/github/mrLSD/iLang/badge.svg?branch=master)](https://coveralls.io/github/mrLSD/iLang?branch=master)
 
 **iLang** is a functional programming language from scratch.
@@ -22,6 +21,15 @@ Implementation based on *Rust language*
 to achieve the goals of reliability, efficiency, speed, memory safety.
 
 Parsing based on [nom](https://crates.io/crates/nom) a parser combinators library. 
+
+## Requirements
+* Rust 50.0+
+* LLVM 11+
+
+## Supported targets
+* Linux x86
+* macOS x86
+* Windows x86
 
 ## Useful commands
 * `cargo build` - build project
