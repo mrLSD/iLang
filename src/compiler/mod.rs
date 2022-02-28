@@ -79,7 +79,7 @@ pub fn ar_builder(app_name: String, build_dir: &str) -> Result<(), String> {
     let a_file_name = format!("{}/lib{}.a", build_dir, app_name);
 
     Command::new("ar")
-        .args(&["crs", &a_file_name, &obj_file_name])
+        .args(["crs", &a_file_name, &obj_file_name])
         .spawn()
         .map_err(|_| "Failed to run `ar` command".to_string())?
         .wait()
@@ -95,7 +95,7 @@ pub fn ld_builder(app_name: String, build_dir: &str) -> Result<(), String> {
     let obj_file = Path::new(&obj_file_name);
 
     Command::new("ld")
-        .args(&[
+        .args([
             "-o",
             &app_file_name,
             "-dynamic-linker",
@@ -121,7 +121,7 @@ pub fn gcc_builder(app_name: String, build_dir: &str) -> Result<(), String> {
     let obj_file = Path::new(&obj_file_name);
 
     Command::new("gcc")
-        .args(&["-o", &app_file_name, &a_file_name])
+        .args(["-o", &app_file_name, &a_file_name])
         .spawn()
         .map_err(|_| "Failed to run `gcc` command".to_string())?
         .wait()

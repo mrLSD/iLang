@@ -37,6 +37,7 @@ pub enum CodegenError {
 }
 
 /// Codegen structure
+#[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct Codegen<'a> {
     ctx: Context,
@@ -48,6 +49,7 @@ pub struct Codegen<'a> {
     ast: &'a Main<'a>,
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct FunctionDeclaration {
     name: String,
@@ -587,6 +589,7 @@ impl<'a> Codegen<'a> {
     pub fn fn_main(ast: &'a Main) -> Result {
         #[cfg(feature = "fn_main")]
         println!("\t#[call] fn_main");
+
         let mut codegen = Self::new(ast);
         let module = codegen.fn_module()?;
         let global_let = codegen.fn_global_let()?;

@@ -12,7 +12,7 @@
 #[macro_export]
 macro_rules! alloca {
     ($ty:ident $res:expr) => {
-        crate::llvm::instructions::memory_access_addressing_operations::Alloca {
+        $crate::llvm::instructions::memory_access_addressing_operations::Alloca {
             result: $res.to_string(),
             alloc_ty: $ty,
             elements: None,
@@ -22,7 +22,7 @@ macro_rules! alloca {
         }
     };
     ($ty:ident $res:expr, $align:expr) => {
-        crate::llvm::instructions::memory_access_addressing_operations::Alloca {
+        $crate::llvm::instructions::memory_access_addressing_operations::Alloca {
             result: $res.to_string(),
             alloc_ty: $ty,
             elements: None,
@@ -50,13 +50,13 @@ macro_rules! alloca {
 macro_rules! arg {
     ($($ty:ident $val:expr)? $(,$ty1:ident $val1:expr)*) => {{
         let mut v = vec![];
-        $( v.push(crate::llvm::functions::ArgumentList {
+        $( v.push($crate::llvm::functions::ArgumentList {
             parameter_type: Some($ty),
             attributes: None,
             name: Some(format!("%{}", $val)),
             variable_argument: false,
         });)?
-        $( v.push(crate::llvm::functions::ArgumentList {
+        $( v.push($crate::llvm::functions::ArgumentList {
             parameter_type: Some($ty1),
             attributes: None,
             name: Some(format!("%{}", $val1)),
@@ -66,19 +66,19 @@ macro_rules! arg {
     }};
     ($($ty:ident $val:expr)? $(,$ty1:ident $val1:expr)*, ...) => {{
         let mut v = vec![];
-        $( v.push(crate::llvm::functions::ArgumentList {
+        $( v.push($crate::llvm::functions::ArgumentList {
             parameter_type: Some($ty),
             attributes: None,
             name: Some(format!("%{}", $val)),
             variable_argument: false,
         });)?
-        $( v.push(crate::llvm::functions::ArgumentList {
+        $( v.push($crate::llvm::functions::ArgumentList {
             parameter_type: Some($ty1),
             attributes: None,
             name: Some(format!("%{}", $val1)),
             variable_argument: false,
         });)*
-        v.push(crate::llvm::functions::ArgumentList {
+        v.push($crate::llvm::functions::ArgumentList {
             parameter_type: None,
             attributes: None,
             name: None,
@@ -88,13 +88,13 @@ macro_rules! arg {
     }};
     ($($ty:ident)? $(,$ty1:ident)*) => {{
         let mut v = vec![];
-        $( v.push(crate::llvm::functions::ArgumentList {
+        $( v.push($crate::llvm::functions::ArgumentList {
             parameter_type: Some($ty),
             attributes: None,
             name: None,
             variable_argument: false,
         });)?
-        $( v.push(crate::llvm::functions::ArgumentList {
+        $( v.push($crate::llvm::functions::ArgumentList {
             parameter_type: Some($ty1),
             attributes: None,
             name: None,
@@ -104,19 +104,19 @@ macro_rules! arg {
     }};
     ($($ty:ident)? $(,$ty1:ident)*, ...) => {{
         let mut v = vec![];
-        $( v.push(crate::llvm::functions::ArgumentList {
+        $( v.push($crate::llvm::functions::ArgumentList {
             parameter_type: Some($ty),
             attributes: None,
             name: None,
             variable_argument: false,
         });)?
-        $( v.push(crate::llvm::functions::ArgumentList {
+        $( v.push($crate::llvm::functions::ArgumentList {
             parameter_type: Some($ty1),
             attributes: None,
             name: None,
             variable_argument: false,
         });)*
-        v.push(crate::llvm::functions::ArgumentList {
+        v.push($crate::llvm::functions::ArgumentList {
             parameter_type: None,
             attributes: None,
             name: None,
@@ -146,15 +146,15 @@ macro_rules! def {
         $fnval.$attr = Some($val);
     }};
     ($ty:ident $name:ident) => {{
-        crate::llvm::functions::Function {
-            definition_type: crate::llvm::functions::FunctionDefinitionType::Define,
+        $crate::llvm::functions::Function {
+            definition_type: $crate::llvm::functions::FunctionDefinitionType::Define,
             linkage: None,
             preemption_specifier: None,
             visibility: None,
             dll_storage_class: None,
             cconv: None,
             ret_attrs: None,
-            result_type: crate::llvm::types::Type::$ty,
+            result_type: $crate::llvm::types::Type::$ty,
             function_name: $name.to_string(),
             argument_list: vec![],
             unnamed_addr: None,
@@ -194,7 +194,7 @@ macro_rules! decl {
     }};
     ($ty:ident $name:ident) => {{
         let mut f_decl = def!($ty $name);
-        let d = crate::llvm::functions::FunctionDefinitionType::Declare;
+        let d = $crate::llvm::functions::FunctionDefinitionType::Declare;
         def!(f_decl.definition_type d);
         f_decl
     }};
@@ -209,7 +209,7 @@ macro_rules! decl {
 #[macro_export]
 macro_rules! source_file {
     ($name:expr) => {
-        crate::llvm::source_filename::SourceFileName($name.to_string());
+        $crate::llvm::source_filename::SourceFileName($name.to_string())
     };
 }
 
@@ -222,7 +222,7 @@ macro_rules! source_file {
 #[macro_export]
 macro_rules! target_triple {
     ($name:ident) => {
-        crate::llvm::target_triple::TargetTriple(crate::llvm::target_triple::$name.to_string());
+        $crate::llvm::target_triple::TargetTriple($crate::llvm::target_triple::$name.to_string())
     };
 }
 
@@ -249,7 +249,7 @@ macro_rules! global {
         $var.$attr = Some($val);
     }};
     ($kind:ident $ty:ident $name:expr) => {
-        crate::llvm::global_variables::GlobalVariable {
+        $crate::llvm::global_variables::GlobalVariable {
             name: $name.to_string(),
             linkage: None,
             preemption_specifier: None,
@@ -258,7 +258,7 @@ macro_rules! global {
             thread_local: None,
             unnamed_addr: None,
             addrspace: None,
-            global_variable_kind: crate::llvm::global_variables::GlobalVariableKind::$kind,
+            global_variable_kind: $crate::llvm::global_variables::GlobalVariableKind::$kind,
             value_type: $ty,
             initializer_constant: None,
             section: None,
@@ -286,7 +286,7 @@ macro_rules! store {
         $var.$attr = Some($val);
     }};
     ($ty:ident $val:expr, $ptrval:expr) => {{
-        crate::llvm::instructions::memory_access_addressing_operations::Store {
+        $crate::llvm::instructions::memory_access_addressing_operations::Store {
             volatile: None,
             ty: $ty,
             value: $val.to_string(),
@@ -312,7 +312,7 @@ macro_rules! load {
         $var.$attr = Some($val);
     }};
     ($ty:ident $res:expr, $ptrval:expr) => {{
-        crate::llvm::instructions::memory_access_addressing_operations::Load {
+        $crate::llvm::instructions::memory_access_addressing_operations::Load {
             result: $res.to_string(),
             volatile: None,
             ty: $ty,
@@ -336,10 +336,10 @@ macro_rules! load {
 #[macro_export]
 macro_rules! ret {
     ($ty:ident @ $val:expr) => {{
-        crate::llvm::instructions::terminator::Ret(Some(($ty, $val.to_string())))
+        $crate::llvm::instructions::terminator::Ret(Some(($ty, $val.to_string())))
     }};
     () => {{
-        crate::llvm::instructions::terminator::Ret(None)
+        $crate::llvm::instructions::terminator::Ret(None)
     }};
 }
 
@@ -436,12 +436,12 @@ macro_rules! call {
     	)?
 
 		#[allow(unused_mut)]
-    	let mut args: Vec< crate::llvm::instructions::terminator::FunctionArg> = vec![];
+    	let mut args: Vec< $crate::llvm::instructions::terminator::FunctionArg> = vec![];
     	$(
-			args.push(crate::llvm::instructions::terminator::FunctionArg($argty1, $argval1));
+			args.push($crate::llvm::instructions::terminator::FunctionArg($argty1, $argval1));
     	)?
     	$(
-			args.push(crate::llvm::instructions::terminator::FunctionArg($argty2, $argval2));
+			args.push($crate::llvm::instructions::terminator::FunctionArg($argty2, $argval2));
     	)*
 
         Call {

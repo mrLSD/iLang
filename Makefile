@@ -1,12 +1,12 @@
 clippy:
-	@cargo clippy
+	@cargo clippy -- -D warnings
 
 check:
 	@cargo check
 
 release:
 	@cargo build --release
-	
+
 fmt:
 	@cargo +nightly fmt
 
@@ -29,7 +29,7 @@ cover:
 
 tst:
 	@cargo test test_codegen_variable_let_and_print -- --nocapture
-	
+
 x: release
 	@target/release/i-lang tst.i
 	@ls -la build
