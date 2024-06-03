@@ -11,7 +11,7 @@ fmt:
 	@cargo +nightly fmt
 
 test:
-	@cargo test --tests -- --nocapture
+	@cargo test test_expression_values_brackets --tests -- --nocapture
 
 atest:
 	@cargo test --all

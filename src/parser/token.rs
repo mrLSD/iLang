@@ -443,7 +443,7 @@ pub fn function_call(data: Span) -> ParseResult<ast::FunctionCall> {
 /// ```js
 /// function-body = [function-body-statement]*
 /// ```
-pub fn function_body(data: Span) -> ParseResult<ast::FunctionBody> {
+pub fn  function_body(data: Span) -> ParseResult<ast::FunctionBody> {
     #[derive(Debug)]
     struct Block {
         line: u32,

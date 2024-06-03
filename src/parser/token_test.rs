@@ -1487,6 +1487,12 @@ fn test_expression_func_params_in_brackets() {
 }
 
 #[test]
+fn test_expression_values_brackets() {
+    let x = expression(Span::new("(val1 + val2) * (val3 - val4) + 6")).unwrap().1;
+    println!("{:#?}",x);
+}
+
+#[test]
 fn test_expression_values_plus() {
     let x = expression(Span::new("val1 + val2")).unwrap().1;
     match x.function_statement {
